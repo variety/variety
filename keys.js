@@ -1,22 +1,9 @@
 if (typeof collection == "undefined") {
   throw "You have to supply a 'collection' variable, a la \"--eval 'var limit = 10'\"";
 }
-//db.system.js.save( { _id : "getCollection", value : function() { return eval(collection); }} );
 
 if (typeof limit == "undefined") { limit = db[collection].count(); }
 print("Using limit of " + limit);
-
-//var alreadyEmitted = new Array(); // global
-
-//schemaAnalyzerKeyIsPresent = function(toBeEmitted, alreadyEmitted) {
-//  for(key in alreadyEmitted) {
-//    if(key["key"] === toBeEmitted["key"] && key["type"] === toBeEmitted["type"]) {
-//      return true;
-//    }
-//  }
-//  return false;
-//}
-//db.system.js.save( { _id : "schemaAnalyzerKeyIsPresent", value : schemaAnalyzerKeyIsPresent } );
 
 schemaAnalyzerCanHaveChildren = function (v) {
   var isArray = v && 
@@ -34,12 +21,7 @@ schemaAnalyzerMapRecursive = function(parentKey, keys) {
 		
 		key = (parentKey + "." + key).replace(/\.\d+/g,'.XX');
 
-		toBeEmitted = {key: key, type: typeof value};
-
-//		if(!schemaAnalyzerKeyIsPresent(toBeEmitted,alreadyEmitted)) {
-      emit(toBeEmitted, null);
-//      alreadyEmitted.push(toBeEmitted);
-//    }
+    emit({key : key}, {type: schemaAnalyzerTypeOf(value)});
 
     if (schemaAnalyzerCanHaveChildren(value)) {
       schemaAnalyzerMapRecursive(key, value);
@@ -48,22 +30,35 @@ schemaAnalyzerMapRecursive = function(parentKey, keys) {
 }
 db.system.js.save({_id: "schemaAnalyzerMapRecursive", value: schemaAnalyzerMapRecursive});
 
+schemaAnalyzerTypeOf = function(thing) {
+
+  var nativeType = typeof thing;
+  
+  if (!thing || thing === null) { return "null"; }  
+
+  if (nativeType !== "object") {
+    return nativeType;
+  }
+  else {
+    if (thing && thing.constructor === Array) { 
+      return "array";
+    }
+    else {
+      return "object";
+    }
+  }
+}
+db.system.js.save({_id: "schemaAnalyzerTypeOf", value: schemaAnalyzerTypeOf});
+
 map = function() {
 	var keys = this;
-//	var alreadyEmitted = new Array(); // reset global variable
 	
   for (var key in keys) {
 		var value = keys[key];
 		
 		key = key.replace(/\.\d+/g,'.XX');
 		
-		toBeEmitted = {key : key, type : typeof value};
-		
-//		if(!schemaAnalyzerKeyIsPresent(toBeEmitted,alreadyEmitted)) {
-//      emit(toBeEmitted, {occurrences: 1});
-      emit(toBeEmitted, null);
-//      alreadyEmitted.push(toBeEmitted);
-//    }
+    emit({key : key}, {type: schemaAnalyzerTypeOf(value)});
 
     if (schemaAnalyzerCanHaveChildren(value)) {
       schemaAnalyzerMapRecursive(key, value);
@@ -72,32 +67,19 @@ map = function() {
 }
 
 reduce = function(key, values){
-//	var occurrences = 0;
-//	values.forEach(function(value) {
-//		occurrences += value.occurrences;
-//	});
-
-//	return {occurrences: occurrences};
-	return null;
+  var types = [];
+  values.forEach(function(value) {
+    if(types.indexOf(value.type) === -1) {
+      types.push(value.type);
+    }
+  });
+  
+  return { types: types };
 }
-
-//finalize = function(key, value) {
-//	value.percentage = value.occurrences / limit * 100.0;
-//	return value;
-//}
-
-//finalize = function(key, value) {
-//  if(!key["key"].match(/\.XX/)) {
-//    value = collectionDB.count({key: {$exists: true}});
-//  }
-//  return value;
-//}
 
 var resultsCollectionName = collection + "Keys";
 
-//resultsDB[resultsCollectionName].ensureIndex({ "_id.key" : 1 , "_id.type" : 1},{unique : true});
-
-db[collection].mapReduce(map, reduce, { //finalize: finalize, 
+db[collection].mapReduce(map, reduce, {
                                   out: { 
                                     replace : resultsCollectionName, 
                                     db : "schemaAnalyzerResults"},
@@ -107,30 +89,29 @@ db[collection].mapReduce(map, reduce, { //finalize: finalize,
 
 var resultsDB = db.getMongo().getDB("schemaAnalyzerResults");
 
-var keys =  resultsDB[resultsCollectionName].find();
+var numDocuments = db[collection].count();
 
-keys.forEach(function(key) {
-  delete key.value;
-  keyName = key["_id"].key; // should be keys??
+resultsDB[resultsCollectionName].find({}).forEach(function(key) {
+  keyName = key["_id"].key;
+  
+  if(keyName.match(/\.XX$/)) {
+    resultsDB[resultsCollectionName].remove({ "_id" : key["_id"]});
+    return;
+  }
 
   var existsQuery = {};
   existsQuery[keyName] = {$exists: true};
 
-  if(!keyName.match(/\.XX/)) {
-    key.totalOccurences = db[collection].count(existsQuery);
-  }
-  else {
-    var sizeQuery = {};
-    sizeQuery[keyName] = {$size: true};
-    keyName.totalOccurences = db[collection].count(existsQuery) - db[collection].count(sizeQuery);
-  }
+  key.totalOccurrences = db[collection].count(existsQuery);  
+  key.percentContaining = (key.totalOccurrences / numDocuments) * 100
 
+//  delete key.value; // created by our empty reduce()
   resultsDB[resultsCollectionName].save(key);
-  print(tojson(key, '', true));
 });
 
-//> db.users.count({"smartalert.daily": {$exists: true}});
-//23
-//> db.users.count({"smartalert.daily": {$size: 0}});
-//3
+var sortedKeys = resultsDB[resultsCollectionName].find({}).sort({totalOccurrences: -1});
+
+sortedKeys.forEach(function(key) {
+  print(tojson(key, '', true));
+});
 
