@@ -46,15 +46,17 @@ One can apply a "limit" constraint, which analyzes only the newest documents in 
 
 ##### Dependencies #####
 
-Absolutely none, except for MongoDB. Written in 100% JavaScript.
+Absolutely none, except MongoDB. Written in 100% JavaScript.
 
 #### Special Thanks ####
 
-I offer sincere thanks to Kyle Banker (@Hwaet) for writing an unusually good book on MongoDB, thereby teaching me everything I know about it so far.
+I offer sincere thanks to Gaëtan Voyer-Perraul ([@gatesvp] (https://twitter.com/#!/@gatesvp)) and Kristina Chodorow ([@kchodorow] (https://twitter.com/#!/kchodorow)) for answering other people's questions about how to do this on Stack Overflow, thereby providing me with the initial seed of code which grew into this tool.
 
-@gatesvp
-@kchodorow
+Much thanks also, to Kyle Banker ([@Hwaet] (https://twitter.com/#!/hwaet)) for writing an unusually good book on MongoDB, which has taught me everything I know about it so far.
 
-WARNINGS
+##### Stay Safe #####
 
-LICENSE/COPYRIGHT
+I every reason to believe this tool will **not** corrupt your data or harm your computer. But if I were you, I would not use it in a production environment.
+
+
+Released by Maypop Inc, © 2012, under the [MIT License] (http://www.opensource.org/licenses/MIT).
