@@ -1,5 +1,5 @@
 # MongoDB Schema Analyzer #
-It helps you get a sense of your application's schema, as well as any outliers to that schema. Particularly useful when you inherit a codebase with data dump and want to quickly learn how the data's structured. Also useful for finding rare keys.
+This tool helps you get a sense of your application's schema, as well as any outliers to that schema. Particularly useful when you inherit a codebase with data dump and want to quickly learn how the data's structured. Also useful for finding rare keys.
 
 ### An Easy Example ###
 
@@ -12,7 +12,7 @@ We'll make a collection:
 
 So, let's see what we've got here:
 
-	mongo test --eval "var collection = 'users'" keys.js
+	$ mongo test --eval "var collection = 'users'" keys.js
 	
 	{ "_id" : { "key" : "_id" }, "value" : { "types" : [ "object" ] }, "totalOccurrences" : 4, "percentContaining" : 100 }
 	{ "_id" : { "key" : "name" }, "value" : { "types" : [ "string" ] }, "totalOccurrences" : 4, "percentContaining" : 100 }
@@ -30,11 +30,28 @@ Seems like the first document created has a weird legacy key- those damn fools w
 
 Results are stored for future use in a schemaAnalyzerResults database.
 
+### See Progress When Analysis Takes a Long Time ###
+
+Tailing the log is great for this. Mongo provides a "percent complete" measurement for you. These operations can take a long time on huge collections.
+
 ### Analyze Only Recent Documents ###
 
+Perhaps you have a really large collection, and you can't wait a whole day for the Schema Analyzer's results.
 
+Perhaps you want to ignore a collection's oldest documents, and only see what the collection's documents' structures have been looking like, as of late.
 
+One can apply a "limit" constraint, which analyzes only the newest documents in a collection, like so:
 
-SPECIAL THANKS
+	$ mongo test --eval "var collection = 'users', limit = 500" keys.js
 
-LICENSE
+##### Dependencies #####
+
+Absolutely none, except for MongoDB. Written in 100% JavaScript.
+
+#### Special Thanks ####
+
+I offer sincere thanks to Kyle Banker (@Hwaet) for writing an unusually good book on MongoDB, thereby teaching me everything I know about it so far.
+
+WARNINGS
+
+LICENSE/COPYRIGHT
