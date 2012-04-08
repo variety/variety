@@ -52,6 +52,9 @@ Absolutely none, except for MongoDB. Written in 100% JavaScript.
 
 I offer sincere thanks to Kyle Banker (@Hwaet) for writing an unusually good book on MongoDB, thereby teaching me everything I know about it so far.
 
+@gatesvp
+@kchodorow
+
 WARNINGS
 
 LICENSE/COPYRIGHT
