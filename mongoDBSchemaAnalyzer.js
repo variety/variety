@@ -1,8 +1,19 @@
-if (typeof collection == "undefined") {
+/* MongoDB Schema Analyzer
+
+This tool helps you get a sense of your application's schema, as well as any 
+outliers to that schema. Particularly useful when you inherit a codebase with 
+data dump and want to quickly learn how the data's structured. Also useful for 
+finding rare keys.
+
+Please see https://github.com/JamesCropcho/mongodb-schema-analyzer for details.
+
+Released by Maypop Inc, © 2012, under the MIT License. */
+
+if (typeof collection === "undefined") {
   throw "You have to supply a 'collection' variable, à la --eval 'var collection = \"animals\"'";
 }
 
-if (typeof limit == "undefined") { limit = db[collection].count(); }
+if (typeof limit === "undefined") { var limit = db[collection].count(); }
 print("Using limit of " + limit);
 
 schemaAnalyzerCanHaveChildren = function (v) {
@@ -31,13 +42,10 @@ schemaAnalyzerMapRecursive = function(parentKey, keys) {
 db.system.js.save({_id: "schemaAnalyzerMapRecursive", value: schemaAnalyzerMapRecursive});
 
 schemaAnalyzerTypeOf = function(thing) {
+  if (typeof thing === "undefined") { throw "schemaAnalyzerTypeOf() requires an argument"; }
 
-  var nativeType = typeof thing;
-  
-  if (nativeType === "undefined") { throw "need an argument"; }
-
-  if (nativeType !== "object") {  
-    return nativeType;
+  if (typeof thing !== "object") {  
+    return typeof thing;
   }
   else {
     if (thing && thing.constructor === Array) { 
@@ -59,6 +67,8 @@ map = function() {
   for (var key in keys) {
 		var value = keys[key];
 		
+		// Internally, Mongo uses keys like groceries.0, groceries.1, groceries.2 for
+		// items in an array. -JC
 		key = key.replace(/\.\d+/g,'.XX');
 		
     emit({key : key}, {type: schemaAnalyzerTypeOf(value)});
@@ -72,7 +82,9 @@ map = function() {
 reduce = function(key, values){
   var types = [];
   values.forEach(function(value) {
-    if(value.type && types.indexOf(value.type) === -1) {
+    if(types.indexOf(value.type) === -1) {
+      // i.e. "if 'types' does not already have 'value.type', then insert it 
+      // into 'types'." -JC
       types.push(value.type);
     }
   });
@@ -94,11 +106,15 @@ var resultsDB = db.getMongo().getDB("schemaAnalyzerResults");
 
 var numDocuments = db[collection].count();
 
+// Using our method of retrieving keys, Mongo gets confused about the following, and 
+// incorrectly thinks they are keys. -JC
 var blackListKeys = ["_id.equals", "_id.getTimestamp", "_id.isObjectId", "_id.str","_id.tojson"];
 
 resultsDB[resultsCollectionName].find({}).forEach(function(key) {
   keyName = key["_id"].key;
   
+  // We throw away keys which end in an array index, since they are not useful
+  // for our analysis. (We still keep the key of their parent array, though.) -JC
   if(keyName.match(/\.XX$/)) {
     resultsDB[resultsCollectionName].remove({ "_id" : key["_id"]});
     return;
@@ -116,6 +132,9 @@ resultsDB[resultsCollectionName].find({}).forEach(function(key) {
   if(blackListKeyFound) { return; }
   
   if(!(keyName.match(/\.XX/) && !keyName.match(/\.XX$/))) {
+    // i.e. "Unless the key's value is an array which contains arrays"  -JC
+    // ...we do not support totalOccurrences for these keys because it is
+    // a bit too tricky for a 'version 1'. Perhaps we'll support in the future. -JC
     var existsQuery = {};
     existsQuery[keyName] = {$exists: true};
 
