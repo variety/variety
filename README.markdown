@@ -12,7 +12,7 @@ We'll make a collection:
 
 So, let's see what we've got here:
 
-	$ mongo test --eval "var collection = 'users'" keys.js
+	$ mongo test --eval "var collection = 'users'" mongoDBSchemaAnalyzer.js
 	
 	{ "_id" : { "key" : "_id" }, "value" : { "types" : [ "object" ] }, "totalOccurrences" : 4, "percentContaining" : 100 }
 	{ "_id" : { "key" : "name" }, "value" : { "types" : [ "string" ] }, "totalOccurrences" : 4, "percentContaining" : 100 }
@@ -42,7 +42,7 @@ Perhaps you want to ignore a collection's oldest documents, and only see what th
 
 One can apply a "limit" constraint, which analyzes only the newest documents in a collection, like so:
 
-	$ mongo test --eval "var collection = 'users', limit = 500" keys.js
+	$ mongo test --eval "var collection = 'users', limit = 500" mongoDBSchemaAnalyzer.js
 
 ##### Dependencies #####
 

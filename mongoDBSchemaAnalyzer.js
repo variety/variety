@@ -301,7 +301,7 @@ var sortedKeys = resultsDB[resultsCollectionName].find({}).sort({totalOccurrence
 
 sortedKeys.forEach(function(key) {
   print(tojson(key, '', true));
-  print(sprintf("%.3f%%  \t%s\t\t%s", key.percentContaining, key["_id"].key, tojson(key.value.types)));
+//  print(sprintf("%.3f%%  \t%s\t\t%s", key.percentContaining, key["_id"].key, tojson(key.value.types)));
 });
 
 
