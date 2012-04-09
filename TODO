@@ -1,5 +1,3 @@
-a la = > à la
-rename keys.js
 throw "You have to supply a 'collection' variable, a la \"--eval 'var limit = 10'\"";
 is 'limit' broken?
 to readme: contribuing/report issues etc
