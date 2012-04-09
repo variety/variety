@@ -42,11 +42,27 @@ Perhaps you want to ignore a collection's oldest documents, and only see what th
 
 One can apply a "limit" constraint, which analyzes only the newest documents in a collection, like so:
 
-	$ mongo test --eval "var collection = 'users', limit = 500" mongoDBSchemaAnalyzer.js
+	$ mongo test --eval "var collection = 'users', limit = 1" mongoDBSchemaAnalyzer.js
+	
+Let's examine the results closely:
+
+	{ "_id" : { "key" : "_id" }, "value" : { "type" : "object" }, "totalOccurrences" : 4, "percentContaining" : 100 }
+	{ "_id" : { "key" : "name" }, "value" : { "type" : "string" }, "totalOccurrences" : 4, "percentContaining" : 100 }
+	{ "_id" : { "key" : "bio" }, "value" : { "type" : "string" }, "totalOccurrences" : 3, "percentContaining" : 75 }
+
+We are only examining the last document here ("limit = 1"). It belongs to Geneviève, and only contains the _id, name and bio fields. So it makes sense these are the only three keys.
+
+But how can totalOccurrences still reach 4? "limit" specifies how many documents to search for keys. Then, the tool calculates totalOccurrences and percentContaining from _all_ the collection's documents, even those outside the "limit". This tradeoff is meant to give the most bang for our buck, when using "limit" and learning about a collection.
 
 ##### Dependencies #####
 
-Absolutely none, except MongoDB. Written in 100% JavaScript.
+Absolutely none, except MongoDB. Written in 100% JavaScript. _(mongod's "noscripting" may not be set to true.)_
+
+#### Reporting Issues / Contributing ####
+
+Please report any bugs and feature requests on the Github issue tracker. I will read all reports!
+
+I accept pull requests from forks. Very grateful to accept contributions from folks.
 
 #### Special Thanks ####
 
