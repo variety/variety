@@ -94,6 +94,8 @@ var resultsDB = db.getMongo().getDB("schemaAnalyzerResults");
 
 var numDocuments = db[collection].count();
 
+var blackListKeys = ["_id.equals", "_id.getTimestamp", "_id.isObjectId", "_id.str","_id.tojson"];
+
 resultsDB[resultsCollectionName].find({}).forEach(function(key) {
   keyName = key["_id"].key;
   
@@ -102,6 +104,17 @@ resultsDB[resultsCollectionName].find({}).forEach(function(key) {
     return;
   }
 
+  var blackListKeyFound = false;  
+
+  blackListKeys.forEach(function(blackListKey) {
+    if(keyName === blackListKey) {
+      resultsDB[resultsCollectionName].remove({ "_id" : { key: keyName }});
+      blackListKeyFound = true;
+    }
+  });
+
+  if(blackListKeyFound) { return; }
+  
   if(!(keyName.match(/\.XX/) && !keyName.match(/\.XX$/))) {
     var existsQuery = {};
     existsQuery[keyName] = {$exists: true};
