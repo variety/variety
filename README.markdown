@@ -78,7 +78,7 @@ Much thanks also, to Kyle Banker ([@Hwaet] (https://twitter.com/#!/hwaet)) for w
 
 ##### Stay Safe #####
 
-I every reason to believe this tool will **not** corrupt your data or harm your computer. But if I were you, I would not use it in a production environment.
+I have every reason to believe this tool will **not** corrupt your data or harm your computer. But if I were you, I would not use it in a production environment.
 
 
 Released by Maypop Inc, © 2012, under the [MIT License] (http://www.opensource.org/licenses/MIT).
