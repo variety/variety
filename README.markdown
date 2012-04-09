@@ -54,6 +54,12 @@ We are only examining the last document here ("limit = 1"). It belongs to Genevi
 
 But how can totalOccurrences still reach 4? "limit" specifies how many documents to search for keys. Then, the tool calculates totalOccurrences and percentContaining from _all_ the collection's documents, even those outside the "limit". This tradeoff is meant to give the most bang for our buck, when using "limit" and learning about a collection.
 
+##### "But my dad told me MongoDB is a schemaless database!" #####
+
+First of all, your father is a great guy. Moving on...
+
+A Mongo collection does not enforce a predefined schema like a relational database table. Still, documents in real-world collections nearly always have large sections for which the format of the data is the same. In other words, there is a schema to the majority of collections, it's just enforced by the _application_, rather than by the database system. And this schema is allowed to be a bit fuzzy, in the same way that a given table column might not be required in all rows, but to a much greater degree of flexibility. So we examine what percent of documents in the collection contain a key, and we get a feel for, among other things, how crucial that key is to the proper functioning of the application.
+
 ##### Dependencies #####
 
 Absolutely none, except MongoDB. Written in 100% JavaScript. _(mongod's "noscripting" may not be set to true, and 'strict mode' must be disabled.)_
