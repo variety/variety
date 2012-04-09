@@ -36,7 +36,7 @@ Tailing the log is great for this. Mongo provides a "percent complete" measureme
 
 ### Analyze Only Recent Documents ###
 
-Perhaps you have a really large collection, and you can't wait a whole day for the Variety's results.
+Perhaps you have a really large collection, and you can't wait a whole day for Variety's results.
 
 Perhaps you want to ignore a collection's oldest documents, and only see what the collection's documents' structures have been looking like, as of late.
 
