@@ -1,5 +1,5 @@
 if (typeof collection == "undefined") {
-  throw "You have to supply a 'collection' variable, à la \"--eval 'var limit = 10'\"";
+  throw "You have to supply a 'collection' variable, à la --eval 'var collection = \"animals\"'";
 }
 
 if (typeof limit == "undefined") { limit = db[collection].count(); }
