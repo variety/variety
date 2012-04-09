@@ -1,4 +1,4 @@
-# MongoDB Schema Analyzer #
+# Meet Variety, a Lightweight Schema Analyzer for MongoDB ###
 This tool helps you get a sense of your application's schema, as well as any outliers to that schema. Particularly useful when you inherit a codebase with data dump and want to quickly learn how the data's structured. Also useful for finding rare keys.
 
 ### An Easy Example ###
@@ -12,7 +12,7 @@ We'll make a collection:
 
 So, let's see what we've got here:
 
-	$ mongo test --eval "var collection = 'users'" mongoDBSchemaAnalyzer.js
+	$ mongo test --eval "var collection = 'users'" variety.js
 	
 	{ "_id" : { "key" : "_id" }, "value" : { "types" : [ "object" ] }, "totalOccurrences" : 4, "percentContaining" : 100 }
 	{ "_id" : { "key" : "name" }, "value" : { "types" : [ "string" ] }, "totalOccurrences" : 4, "percentContaining" : 100 }
@@ -28,7 +28,7 @@ Interestingly, it looks like "pets" can be either an array or a string. Will thi
 
 Seems like the first document created has a weird legacy key- those damn fools who built the protoype didn't clean up after themselves. If there were a thousand such early documents, I might cross-reference the codebase to confirm they are no longer used, and then delete them all. That way they'll not confuse any future developers.
 
-Results are stored for future use in a schemaAnalyzerResults database.
+Results are stored for future use in a varietyResults database.
 
 ### See Progress When Analysis Takes a Long Time ###
 
@@ -36,13 +36,13 @@ Tailing the log is great for this. Mongo provides a "percent complete" measureme
 
 ### Analyze Only Recent Documents ###
 
-Perhaps you have a really large collection, and you can't wait a whole day for the Schema Analyzer's results.
+Perhaps you have a really large collection, and you can't wait a whole day for the Variety's results.
 
 Perhaps you want to ignore a collection's oldest documents, and only see what the collection's documents' structures have been looking like, as of late.
 
 One can apply a "limit" constraint, which analyzes only the newest documents in a collection, like so:
 
-	$ mongo test --eval "var collection = 'users', limit = 1" mongoDBSchemaAnalyzer.js
+	$ mongo test --eval "var collection = 'users', limit = 1" variety.js
 	
 Let's examine the results closely:
 
@@ -82,4 +82,3 @@ I every reason to believe this tool will **not** corrupt your data or harm your 
 
 
 Released by Maypop Inc, © 2012, under the [MIT License] (http://www.opensource.org/licenses/MIT).
-
