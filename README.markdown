@@ -56,7 +56,7 @@ But how can totalOccurrences still reach 4? "limit" specifies how many documents
 
 ##### Dependencies #####
 
-Absolutely none, except MongoDB. Written in 100% JavaScript. _(mongod's "noscripting" may not be set to true.)_
+Absolutely none, except MongoDB. Written in 100% JavaScript. _(mongod's "noscripting" may not be set to true, and 'strict mode' must be disabled.)_
 
 #### Reporting Issues / Contributing ####
 
