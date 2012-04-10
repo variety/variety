@@ -1,13 +1,16 @@
-/* MongoDB Schema Analyzer
+/* Variety: A MongoDB Schema Analyzer
 
 This tool helps you get a sense of your application's schema, as well as any 
 outliers to that schema. Particularly useful when you inherit a codebase with 
 data dump and want to quickly learn how the data's structured. Also useful for 
 finding rare keys.
 
-Please see https://github.com/JamesCropcho/mongodb-schema-analyzer for details.
+Please see https://github.com/JamesCropcho/variety for details.
 
 Released by Maypop Inc, © 2012, under the MIT License. */
+
+print("Variety: A MongoDB Schema Analyzer")
+print("Version 1.0, released 10 April 2012")
 
 if (typeof collection === "undefined") {
   throw "You have to supply a 'collection' variable, à la --eval 'var collection = \"animals\"'";
@@ -16,7 +19,7 @@ if (typeof collection === "undefined") {
 if (typeof limit === "undefined") { var limit = db[collection].count(); }
 print("Using limit of " + limit);
 
-schemaAnalyzerCanHaveChildren = function (v) {
+varietyCanHaveChildren = function (v) {
   var isArray = v && 
                 typeof v === 'object' && 
                 typeof v.length === 'number' && 
@@ -24,25 +27,25 @@ schemaAnalyzerCanHaveChildren = function (v) {
   var isObject = typeof v === 'object';
   return isArray || isObject;
 }
-db.system.js.save( { _id : "schemaAnalyzerCanHaveChildren", value : schemaAnalyzerCanHaveChildren } );
+db.system.js.save( { _id : "varietyCanHaveChildren", value : varietyCanHaveChildren } );
 	
-schemaAnalyzerMapRecursive = function(parentKey, keys) {
+varietyMapRecursive = function(parentKey, keys) {
   for (var key in keys) {
 		var value = keys[key];
 		
 		key = (parentKey + "." + key).replace(/\.\d+/g,'.XX');
 
-    emit({key : key}, {type: schemaAnalyzerTypeOf(value)});
+    emit({key : key}, {type: varietyTypeOf(value)});
 
-    if (schemaAnalyzerCanHaveChildren(value)) {
-      schemaAnalyzerMapRecursive(key, value);
+    if (varietyCanHaveChildren(value)) {
+      varietyMapRecursive(key, value);
     }
   }
 }
-db.system.js.save({_id: "schemaAnalyzerMapRecursive", value: schemaAnalyzerMapRecursive});
+db.system.js.save({_id: "varietyMapRecursive", value: varietyMapRecursive});
 
-schemaAnalyzerTypeOf = function(thing) {
-  if (typeof thing === "undefined") { throw "schemaAnalyzerTypeOf() requires an argument"; }
+varietyTypeOf = function(thing) {
+  if (typeof thing === "undefined") { throw "varietyTypeOf() requires an argument"; }
 
   if (typeof thing !== "object") {  
     return typeof thing;
@@ -59,7 +62,7 @@ schemaAnalyzerTypeOf = function(thing) {
     }
   }
 }
-db.system.js.save({_id: "schemaAnalyzerTypeOf", value: schemaAnalyzerTypeOf});
+db.system.js.save({_id: "varietyTypeOf", value: varietyTypeOf});
 
 map = function() {
 	var keys = this;
@@ -71,10 +74,10 @@ map = function() {
 		// items in an array. -JC
 		key = key.replace(/\.\d+/g,'.XX');
 		
-    emit({key : key}, {type: schemaAnalyzerTypeOf(value)});
+    emit({key : key}, {type: varietyTypeOf(value)});
 
-    if (schemaAnalyzerCanHaveChildren(value)) {
-      schemaAnalyzerMapRecursive(key, value);
+    if (varietyCanHaveChildren(value)) {
+      varietyMapRecursive(key, value);
     }
   }
 }
@@ -97,12 +100,12 @@ var resultsCollectionName = collection + "Keys";
 db[collection].mapReduce(map, reduce, {
                                   out: { 
                                     replace : resultsCollectionName, 
-                                    db : "schemaAnalyzerResults"},
+                                    db : "varietyResults"},
                                   limit : limit, 
                                   sort : {_id: -1},
                                   scope : { limit : limit }});
 
-var resultsDB = db.getMongo().getDB("schemaAnalyzerResults");
+var resultsDB = db.getMongo().getDB("varietyResults");
 
 var numDocuments = db[collection].count();
 
