@@ -1,5 +1,5 @@
-# Meet Variety, a Lightweight Schema Analyzer for MongoDB ###
-This tool helps you get a sense of your application's schema, as well as any outliers to that schema. Particularly useful when you inherit a codebase with data dump and want to quickly learn how the data's structured. Also useful for finding rare keys.
+# Meet Variety, a Schema Analyzer for MongoDB ###
+This lightweight tool helps you get a sense of your application's schema, as well as any outliers to that schema. Particularly useful when you inherit a codebase with data dump and want to quickly learn how the data's structured. Also useful for finding rare keys.
 
 ### An Easy Example ###
 
