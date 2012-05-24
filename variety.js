@@ -57,6 +57,12 @@ varietyTypeOf = function(thing) {
     else if (thing === null) {
       return "null";
     }
+    else if (thing instanceof Date) {
+      return "date";
+    }
+    else if (thing instanceof ObjectId) {
+      return "objectId";
+    }
     else {
       return "object";
     }
