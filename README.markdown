@@ -5,23 +5,23 @@ This lightweight tool helps you get a sense of your application's schema, as wel
 
 We'll make a collection:
 
-	db.users.insert({name: "Tom", bio: "A nice guy.", pets: ["monkey", "fish"], someWeirdLegacyKey: "I like Ike!"});
-	db.users.insert({name: "Dick", bio: "I swordfight.", birthday: new Date("1974-03-14")});
-	db.users.insert({name: "Harry", pets: "egret", birthday: new Date("1984-03-14")});
-	db.users.insert({name: "Geneviève", bio: "Ça va?"});
-	db.users.insert({name: "Jim", someBinData: new BinData(2,"1234")});
+    db.users.insert({name: "Tom", bio: "A nice guy.", pets: ["monkey", "fish"], someWeirdLegacyKey: "I like Ike!"});
+    db.users.insert({name: "Dick", bio: "I swordfight.", birthday: new Date("1974-03-14")});
+    db.users.insert({name: "Harry", pets: "egret", birthday: new Date("1984-03-14")});
+    db.users.insert({name: "Geneviève", bio: "Ça va?"});
+    db.users.insert({name: "Jim", someBinData: new BinData(2,"1234")});
 
 So, let's see what we've got here:
 
-	$ mongo test --eval "var collection = 'users'" variety.js
+    $ mongo test --eval "var collection = 'users'" variety.js
 	
-        { "_id" : { "key" : "_id" }, "value" : { "types" : [ "objectId" ] }, "totalOccurrences" : 5, "percentContaining" : 100 }
-        { "_id" : { "key" : "name" }, "value" : { "types" : [ "string" ] }, "totalOccurrences" : 5, "percentContaining" : 100 }
-        { "_id" : { "key" : "bio" }, "value" : { "types" : [ "string" ] }, "totalOccurrences" : 3, "percentContaining" : 60 }
-        { "_id" : { "key" : "birthday" }, "value" : { "types" : [ "date" ] }, "totalOccurrences" : 2, "percentContaining" : 40 }
-        { "_id" : { "key" : "pets" }, "value" : { "types" : [ "string", "array" ] }, "totalOccurrences" : 2, "percentContaining" : 40 }
-        { "_id" : { "key" : "someBinData" }, "value" : { "type" : "binData" }, "totalOccurrences" : 1, "percentContaining" : 20 }
-        { "_id" : { "key" : "someWeirdLegacyKey" }, "value" : { "type" : "string" }, "totalOccurrences" : 1, "percentContaining" : 20 }
+    { "_id" : { "key" : "_id" }, "value" : { "types" : [ "objectId" ] }, "totalOccurrences" : 5, "percentContaining" : 100 }
+    { "_id" : { "key" : "name" }, "value" : { "types" : [ "string" ] }, "totalOccurrences" : 5, "percentContaining" : 100 }
+    { "_id" : { "key" : "bio" }, "value" : { "types" : [ "string" ] }, "totalOccurrences" : 3, "percentContaining" : 60 }
+    { "_id" : { "key" : "birthday" }, "value" : { "types" : [ "date" ] }, "totalOccurrences" : 2, "percentContaining" : 40 }
+    { "_id" : { "key" : "pets" }, "value" : { "types" : [ "string", "array" ] }, "totalOccurrences" : 2, "percentContaining" : 40 }
+    { "_id" : { "key" : "someBinData" }, "value" : { "type" : "binData" }, "totalOccurrences" : 1, "percentContaining" : 20 }
+    { "_id" : { "key" : "someWeirdLegacyKey" }, "value" : { "type" : "string" }, "totalOccurrences" : 1, "percentContaining" : 20 }
 
 _("test" is the database containing the collection we are analyzing.)_
 
