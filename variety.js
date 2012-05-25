@@ -25,7 +25,10 @@ varietyCanHaveChildren = function (v) {
                 typeof v.length === 'number' && 
                 !(v.propertyIsEnumerable('length'));
   var isObject = typeof v === 'object';
-  return isArray || isObject;
+  var specialObject = v instanceof Date || 
+                      v instanceof ObjectId ||
+                      v instanceof BinData;
+  return !specialObject && (isArray || isObject);
 }
 db.system.js.save( { _id : "varietyCanHaveChildren", value : varietyCanHaveChildren } );
 	
@@ -56,6 +59,15 @@ varietyTypeOf = function(thing) {
     }
     else if (thing === null) {
       return "null";
+    }
+    else if (thing instanceof Date) {
+      return "date";
+    }
+    else if (thing instanceof ObjectId) {
+      return "objectId";
+    }
+    else if (thing instanceof BinData) {
+      return "binData";
     }
     else {
       return "object";
@@ -109,10 +121,6 @@ var resultsDB = db.getMongo().getDB("varietyResults");
 
 var numDocuments = db[collection].count();
 
-// Using our method of retrieving keys, Mongo gets confused about the following, and 
-// incorrectly thinks they are keys. -JC
-var blackListKeys = ["_id.equals", "_id.getTimestamp", "_id.isObjectId", "_id.str","_id.tojson"];
-
 resultsDB[resultsCollectionName].find({}).forEach(function(key) {
   keyName = key["_id"].key;
   
@@ -123,17 +131,6 @@ resultsDB[resultsCollectionName].find({}).forEach(function(key) {
     return;
   }
 
-  var blackListKeyFound = false;  
-
-  blackListKeys.forEach(function(blackListKey) {
-    if(keyName === blackListKey) {
-      resultsDB[resultsCollectionName].remove({ "_id" : { key: keyName }});
-      blackListKeyFound = true;
-    }
-  });
-
-  if(blackListKeyFound) { return; }
-  
   if(!(keyName.match(/\.XX/) && !keyName.match(/\.XX$/))) {
     // i.e. "Unless the key's value is an array which contains arrays"  -JC
     // ...we do not support totalOccurrences for these keys because it is
