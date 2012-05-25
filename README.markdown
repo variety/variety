@@ -49,9 +49,9 @@ One can apply a "limit" constraint, which analyzes only the newest documents in 
 	
 Let's examine the results closely:
 
-    { "_id" : { "key" : "_id" }, "value" : { "type" : "object" }, "totalOccurrences" : 4, "percentContaining" : 100 }
-    { "_id" : { "key" : "name" }, "value" : { "type" : "string" }, "totalOccurrences" : 4, "percentContaining" : 100 }
-    { "_id" : { "key" : "bio" }, "value" : { "type" : "string" }, "totalOccurrences" : 3, "percentContaining" : 75 }
+    { "_id" : { "key" : "_id" }, "value" : { "type" : "ObjectId" }, "totalOccurrences" : 5, "percentContaining" : 100 }
+    { "_id" : { "key" : "name" }, "value" : { "type" : "String" }, "totalOccurrences" : 5, "percentContaining" : 100 }
+    { "_id" : { "key" : "someBinData" }, "value" : { "type" : "BinData" }, "totalOccurrences" : 1, "percentContaining" : 20 }
 
 We are only examining the last document here ("limit = 1"). It belongs to Geneviève, and only contains the _id, name and bio fields. So it makes sense these are the only three keys.
 
