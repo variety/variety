@@ -51,26 +51,28 @@ varietyTypeOf = function(thing) {
   if (typeof thing === "undefined") { throw "varietyTypeOf() requires an argument"; }
 
   if (typeof thing !== "object") {  
-    return typeof thing;
+    // the messiness below capitalizes the first letter, so the output matches
+    // the other return values below. -JC
+    return (typeof thing)[0].toUpperCase() + (typeof thing).slice(1);
   }
   else {
     if (thing && thing.constructor === Array) { 
-      return "array";
+      return "Array";
     }
     else if (thing === null) {
       return "null";
     }
     else if (thing instanceof Date) {
-      return "date";
+      return "Date";
     }
     else if (thing instanceof ObjectId) {
-      return "objectId";
+      return "ObjectId";
     }
     else if (thing instanceof BinData) {
-      return "binData";
+      return "BinData";
     }
     else {
-      return "object";
+      return "Object";
     }
   }
 }

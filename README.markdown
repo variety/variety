@@ -15,13 +15,13 @@ So, let's see what we've got here:
 
     $ mongo test --eval "var collection = 'users'" variety.js
 	
-    { "_id" : { "key" : "_id" }, "value" : { "types" : [ "objectId" ] }, "totalOccurrences" : 5, "percentContaining" : 100 }
-    { "_id" : { "key" : "name" }, "value" : { "types" : [ "string" ] }, "totalOccurrences" : 5, "percentContaining" : 100 }
-    { "_id" : { "key" : "bio" }, "value" : { "types" : [ "string" ] }, "totalOccurrences" : 3, "percentContaining" : 60 }
-    { "_id" : { "key" : "birthday" }, "value" : { "types" : [ "date" ] }, "totalOccurrences" : 2, "percentContaining" : 40 }
-    { "_id" : { "key" : "pets" }, "value" : { "types" : [ "string", "array" ] }, "totalOccurrences" : 2, "percentContaining" : 40 }
-    { "_id" : { "key" : "someBinData" }, "value" : { "type" : "binData" }, "totalOccurrences" : 1, "percentContaining" : 20 }
-    { "_id" : { "key" : "someWeirdLegacyKey" }, "value" : { "type" : "string" }, "totalOccurrences" : 1, "percentContaining" : 20 }
+    { "_id" : { "key" : "_id" }, "value" : { "types" : [ "ObjectId" ] }, "totalOccurrences" : 5, "percentContaining" : 100 }
+    { "_id" : { "key" : "name" }, "value" : { "types" : [ "String" ] }, "totalOccurrences" : 5, "percentContaining" : 100 }
+    { "_id" : { "key" : "bio" }, "value" : { "types" : [ "String" ] }, "totalOccurrences" : 3, "percentContaining" : 60 }
+    { "_id" : { "key" : "birthday" }, "value" : { "types" : [ "Date" ] }, "totalOccurrences" : 2, "percentContaining" : 40 }
+    { "_id" : { "key" : "pets" }, "value" : { "types" : [ "String", "Array" ] }, "totalOccurrences" : 2, "percentContaining" : 40 }
+    { "_id" : { "key" : "someBinData" }, "value" : { "type" : "BinData" }, "totalOccurrences" : 1, "percentContaining" : 20 }
+    { "_id" : { "key" : "someWeirdLegacyKey" }, "value" : { "type" : "String" }, "totalOccurrences" : 1, "percentContaining" : 20 }
 
 _("test" is the database containing the collection we are analyzing.)_
 
@@ -49,9 +49,9 @@ One can apply a "limit" constraint, which analyzes only the newest documents in 
 	
 Let's examine the results closely:
 
-	{ "_id" : { "key" : "_id" }, "value" : { "type" : "object" }, "totalOccurrences" : 4, "percentContaining" : 100 }
-	{ "_id" : { "key" : "name" }, "value" : { "type" : "string" }, "totalOccurrences" : 4, "percentContaining" : 100 }
-	{ "_id" : { "key" : "bio" }, "value" : { "type" : "string" }, "totalOccurrences" : 3, "percentContaining" : 75 }
+    { "_id" : { "key" : "_id" }, "value" : { "type" : "object" }, "totalOccurrences" : 4, "percentContaining" : 100 }
+    { "_id" : { "key" : "name" }, "value" : { "type" : "string" }, "totalOccurrences" : 4, "percentContaining" : 100 }
+    { "_id" : { "key" : "bio" }, "value" : { "type" : "string" }, "totalOccurrences" : 3, "percentContaining" : 75 }
 
 We are only examining the last document here ("limit = 1"). It belongs to Geneviève, and only contains the _id, name and bio fields. So it makes sense these are the only three keys.
 
