@@ -19,6 +19,9 @@ if (typeof collection === "undefined") {
 if (typeof limit === "undefined") { var limit = db[collection].count(); }
 print("Using limit of " + limit);
 
+if (typeof maxDepth === "undefined") { var maxDepth = 99; }
+print("Using maxDepth of " + maxDepth);
+
 varietyCanHaveChildren = function (v) {
   var isArray = v && 
                 typeof v === 'object' && 
@@ -32,7 +35,7 @@ varietyCanHaveChildren = function (v) {
 }
 db.system.js.save( { _id : "varietyCanHaveChildren", value : varietyCanHaveChildren } );
 	
-varietyMapRecursive = function(parentKey, keys) {
+varietyMapRecursive = function(parentKey, keys, level) {
   for (var key in keys) {
 		var value = keys[key];
 		
@@ -40,8 +43,8 @@ varietyMapRecursive = function(parentKey, keys) {
 
     emit({key : key}, {type: varietyTypeOf(value)});
 
-    if (varietyCanHaveChildren(value)) {
-      varietyMapRecursive(key, value);
+    if (level < maxDepth - 1 && varietyCanHaveChildren(value)) {
+      varietyMapRecursive(key, value, level + 1);
     }
   }
 }
@@ -91,7 +94,7 @@ map = function() {
     emit({key : key}, {type: varietyTypeOf(value)});
 
     if (varietyCanHaveChildren(value)) {
-      varietyMapRecursive(key, value);
+      varietyMapRecursive(key, value, 1);
     }
   }
 }
@@ -117,7 +120,7 @@ db[collection].mapReduce(map, reduce, {
                                     db : "varietyResults"},
                                   limit : limit, 
                                   sort : {_id: -1},
-                                  scope : { limit : limit }});
+                                  scope : { limit : limit, maxDepth:maxDepth }});
 
 var resultsDB = db.getMongo().getDB("varietyResults");
 
