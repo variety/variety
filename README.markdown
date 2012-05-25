@@ -67,7 +67,7 @@ One can apply a "maxDepth" constraint, which limits the depth variety will recur
 
 The default will traverse all the way to the bottom of that structure:
 
-        $ mongo test --eval "var collection = 'users'" variety.js
+    $ mongo test --eval "var collection = 'users'" variety.js
   
     ...
     { "_id" : { "key" : "someNestedObject" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 2, "percentContaining" : 33.33333333333333 }
@@ -77,7 +77,7 @@ The default will traverse all the way to the bottom of that structure:
     { "_id" : { "key" : "someNestedObject.a.b.c.d" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 2, "percentContaining" : 33.33333333333333 }
     { "_id" : { "key" : "someNestedObject.a.b.c.d.e" }, "value" : { "types" : [ "Number" ] }, "totalOccurrences" : 2, "percentContaining" : 33.33333333333333 }   
  
-        $ mongo test --eval "var collection = 'users', maxDepth = 3" variety.js
+    $ mongo test --eval "var collection = 'users', maxDepth = 3" variety.js
 
     ...
     { "_id" : { "key" : "someNestedObject" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 2, "percentContaining" : 33.33333333333333 }
