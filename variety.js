@@ -10,7 +10,7 @@ Please see https://github.com/JamesCropcho/variety for details.
 Released by Maypop Inc, © 2012, under the MIT License. */
 
 print("Variety: A MongoDB Schema Analyzer")
-print("Version 1.0, released 10 April 2012")
+print("Version 1.0.1, released 25 May 2012")
 
 if (typeof collection === "undefined") {
   throw "You have to supply a 'collection' variable, à la --eval 'var collection = \"animals\"'. Please see https://github.com/JamesCropcho/variety for details.";
