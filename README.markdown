@@ -57,6 +57,35 @@ We are only examining the last document here ("limit = 1"). It belongs to Genevi
 
 But how can totalOccurrences still reach 4? "limit" specifies how many documents to search for keys. Then, the tool calculates totalOccurrences and percentContaining from _all_ the collection's documents, even those outside the "limit". This tradeoff is meant to give the most bang for our buck, when using "limit" and learning about a collection.
 
+### Analyze Documents to a Maximum Depth
+
+Perhaps you have a potentially very deep nested object structure, and you don't want to see more than a few levels deep in the analysis.
+
+One can apply a "maxDepth" constraint, which limits the depth variety will recursively search to find new objects.
+
+    db.users.insert({name:"Walter", someNestedObject:{a:{b:{c:{d:{e:1}}}}}});
+
+The default will traverse all the way to the bottom of that structure:
+
+    $ mongo test --eval "var collection = 'users'" variety.js
+  
+    ...
+    { "_id" : { "key" : "someNestedObject" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
+    { "_id" : { "key" : "someNestedObject.a" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
+    { "_id" : { "key" : "someNestedObject.a.b" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
+    { "_id" : { "key" : "someNestedObject.a.b.c" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
+    { "_id" : { "key" : "someNestedObject.a.b.c.d" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
+    { "_id" : { "key" : "someNestedObject.a.b.c.d.e" }, "value" : { "types" : [ "Number" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }   
+ 
+    $ mongo test --eval "var collection = 'users', maxDepth = 3" variety.js
+
+    ...
+    { "_id" : { "key" : "someNestedObject" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
+    { "_id" : { "key" : "someNestedObject.a" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
+    { "_id" : { "key" : "someNestedObject.a.b" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
+
+As you can see, variety only traversed three levels deep.
+
 ##### "But my dad told me MongoDB is a schemaless database!" #####
 
 First of all, your father is a great guy. Moving on...

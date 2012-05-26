@@ -12,12 +12,44 @@ Released by Maypop Inc, © 2012, under the MIT License. */
 print("Variety: A MongoDB Schema Analyzer")
 print("Version 1.0.1, released 25 May 2012")
 
+var dbs = new Array();
+var emptyDbs = new Array();
+db.adminCommand('listDatabases').databases.forEach(function(d){
+  if(db.getSisterDB(d.name).getCollectionNames().length > 0) {
+    dbs.push(d.name);
+  }
+  if(db.getSisterDB(d.name).getCollectionNames().length == 0) {
+    emptyDbs.push(d.name);
+  }
+});
+
+if (emptyDbs.indexOf(db.getName()) != -1) {
+  throw "The database specified ("+ db +") is empty.\n"+ 
+        "Possible database options are: " + dbs.join(", ") + ".";
+}
+
+if (dbs.indexOf(db.getName()) == -1) {
+  throw "The database specified ("+ db +") does not exist.\n"+ 
+        "Possible database options are: " + dbs.join(", ") + ".";
+}
+
+var collNames = db.getCollectionNames().join(", ");
 if (typeof collection === "undefined") {
-  throw "You have to supply a 'collection' variable, à la --eval 'var collection = \"animals\"'. Please see https://github.com/JamesCropcho/variety for details.";
+  throw "You have to supply a 'collection' variable, à la --eval 'var collection = \"animals\"'.\n"+ 
+        "Possible collection options for database specified: " + collNames + ".\n"+
+        "Please see https://github.com/JamesCropcho/variety for details.";
+} 
+
+if (db[collection].count() == 0) {
+  throw "The collection specified (" + collection + ") in the database specified ("+ db +") does not exist or is empty.\n"+ 
+        "Possible collection options for database specified: " + collNames + ".";
 }
 
 if (typeof limit === "undefined") { var limit = db[collection].count(); }
 print("Using limit of " + limit);
+
+if (typeof maxDepth === "undefined") { var maxDepth = 99; }
+print("Using maxDepth of " + maxDepth);
 
 varietyCanHaveChildren = function (v) {
   var isArray = v && 
@@ -32,7 +64,7 @@ varietyCanHaveChildren = function (v) {
 }
 db.system.js.save( { _id : "varietyCanHaveChildren", value : varietyCanHaveChildren } );
 	
-varietyMapRecursive = function(parentKey, keys) {
+varietyMapRecursive = function(parentKey, keys, level) {
   for (var key in keys) {
 		var value = keys[key];
 		
@@ -40,8 +72,8 @@ varietyMapRecursive = function(parentKey, keys) {
 
     emit({key : key}, {type: varietyTypeOf(value)});
 
-    if (varietyCanHaveChildren(value)) {
-      varietyMapRecursive(key, value);
+    if (level < maxDepth - 1 && varietyCanHaveChildren(value)) {
+      varietyMapRecursive(key, value, level + 1);
     }
   }
 }
@@ -69,7 +101,14 @@ varietyTypeOf = function(thing) {
       return "ObjectId";
     }
     else if (thing instanceof BinData) {
-      return "BinData";
+      var binDataTypes = {};
+      binDataTypes[0x00] = "generic";
+      binDataTypes[0x01] = "function";
+      binDataTypes[0x02] = "old";
+      binDataTypes[0x03] = "UUID";
+      binDataTypes[0x05] = "MD5";
+      binDataTypes[0x80] = "user";
+      return "BinData-" + binDataTypes[thing.subtype()];
     }
     else {
       return "Object";
@@ -90,8 +129,8 @@ map = function() {
 		
     emit({key : key}, {type: varietyTypeOf(value)});
 
-    if (varietyCanHaveChildren(value)) {
-      varietyMapRecursive(key, value);
+    if (varietyCanHaveChildren(value) && maxDepth > 1) {
+      varietyMapRecursive(key, value, 1);
     }
   }
 }
@@ -117,7 +156,7 @@ db[collection].mapReduce(map, reduce, {
                                     db : "varietyResults"},
                                   limit : limit, 
                                   sort : {_id: -1},
-                                  scope : { limit : limit }});
+                                  scope : { limit : limit, maxDepth:maxDepth }});
 
 var resultsDB = db.getMongo().getDB("varietyResults");
 
@@ -133,16 +172,17 @@ resultsDB[resultsCollectionName].find({}).forEach(function(key) {
     return;
   }
 
-  if(!(keyName.match(/\.XX/) && !keyName.match(/\.XX$/))) {
-    // i.e. "Unless the key's value is an array which contains arrays"  -JC
-    // ...we do not support totalOccurrences for these keys because it is
-    // a bit too tricky for a 'version 1'. Perhaps we'll support in the future. -JC
-    var existsQuery = {};
-    existsQuery[keyName] = {$exists: true};
-
-    key.totalOccurrences = db[collection].count(existsQuery);  
-    key.percentContaining = (key.totalOccurrences / numDocuments) * 100;
+  if(keyName.match(/\.XX/)) {
+    // exists query checks for embedded values for an array 
+    // ie. match {arr:[{x:1}]} with {"arr.x":{$exists:true}}
+    // just need to pull out .XX in this case
+    keyName = keyName.replace(/.XX/g,"");    
   }
+  var existsQuery = {};
+  existsQuery[keyName] = {$exists: true};
+
+  key.totalOccurrences = db[collection].count(existsQuery);  
+  key.percentContaining = (key.totalOccurrences / numDocuments) * 100;
 
   resultsDB[resultsCollectionName].save(key);
 });
