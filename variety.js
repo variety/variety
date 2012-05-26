@@ -93,7 +93,7 @@ map = function() {
 		
     emit({key : key}, {type: varietyTypeOf(value)});
 
-    if (varietyCanHaveChildren(value)) {
+    if (varietyCanHaveChildren(value) && maxDepth > 1) {
       varietyMapRecursive(key, value, 1);
     }
   }
