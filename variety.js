@@ -12,9 +12,37 @@ Released by Maypop Inc, © 2012, under the MIT License. */
 print("Variety: A MongoDB Schema Analyzer")
 print("Version 1.0.1, released 25 May 2012")
 
+var dbs = new Array();
+var emptyDbs = new Array();
+db.adminCommand('listDatabases').databases.forEach(function(d){
+  if(db.getSisterDB(d.name).getCollectionNames().length > 0) {
+    dbs.push(d.name);
+  }
+  if(db.getSisterDB(d.name).getCollectionNames().length == 0) {
+    emptyDbs.push(d.name);
+  }
+});
+
+if (emptyDbs.indexOf(db.getName()) != -1) {
+  throw "The database specified ("+ db +") is empty.\n"+ 
+        "Possible database options are: " + dbs.join(", ") + ".";
+}
+
+if (dbs.indexOf(db.getName()) == -1) {
+  throw "The database specified ("+ db +") does not exist.\n"+ 
+        "Possible database options are: " + dbs.join(", ") + ".";
+}
+
+var collNames = db.getCollectionNames().join(", ");
 if (typeof collection === "undefined") {
-  var collNames = db.getCollectionNames();
-  throw "You have to supply a 'collection' variable, à la --eval 'var collection = \"animals\"'. Possible collection options for database specified: " + collNames.join(", ") + ". Please see https://github.com/JamesCropcho/variety for details.";
+  throw "You have to supply a 'collection' variable, à la --eval 'var collection = \"animals\"'.\n"+ 
+        "Possible collection options for database specified: " + collNames + ".\n"+
+        "Please see https://github.com/JamesCropcho/variety for details.";
+} 
+
+if (db[collection].count() == 0) {
+  throw "The collection specified (" + collection + ") in the database specified ("+ db +") does not exist or is empty.\n"+ 
+        "Possible collection options for database specified: " + collNames + ".";
 }
 
 if (typeof limit === "undefined") { var limit = db[collection].count(); }
