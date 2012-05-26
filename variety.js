@@ -136,16 +136,17 @@ resultsDB[resultsCollectionName].find({}).forEach(function(key) {
     return;
   }
 
-  if(!(keyName.match(/\.XX/) && !keyName.match(/\.XX$/))) {
-    // i.e. "Unless the key's value is an array which contains arrays"  -JC
-    // ...we do not support totalOccurrences for these keys because it is
-    // a bit too tricky for a 'version 1'. Perhaps we'll support in the future. -JC
-    var existsQuery = {};
-    existsQuery[keyName] = {$exists: true};
-
-    key.totalOccurrences = db[collection].count(existsQuery);  
-    key.percentContaining = (key.totalOccurrences / numDocuments) * 100;
+  if(keyName.match(/\.XX/)) {
+    // exists query checks for embedded values for an array 
+    // ie. match {arr:[{x:1}]} with {"arr.x":{$exists:true}}
+    // just need to pull out .XX in this case
+    keyName = keyName.replace(/.XX/g,"");    
   }
+  var existsQuery = {};
+  existsQuery[keyName] = {$exists: true};
+
+  key.totalOccurrences = db[collection].count(existsQuery);  
+  key.percentContaining = (key.totalOccurrences / numDocuments) * 100;
 
   resultsDB[resultsCollectionName].save(key);
 });
