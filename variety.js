@@ -72,7 +72,14 @@ varietyTypeOf = function(thing) {
       return "ObjectId";
     }
     else if (thing instanceof BinData) {
-      return "BinData";
+      var binDataTypes = {};
+      binDataTypes[0x00] = "generic";
+      binDataTypes[0x01] = "function";
+      binDataTypes[0x02] = "old";
+      binDataTypes[0x03] = "UUID";
+      binDataTypes[0x05] = "MD5";
+      binDataTypes[0x80] = "user";
+      return "BinData-" + binDataTypes[thing.subtype()];
     }
     else {
       return "Object";
