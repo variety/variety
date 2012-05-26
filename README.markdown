@@ -70,19 +70,19 @@ The default will traverse all the way to the bottom of that structure:
     $ mongo test --eval "var collection = 'users'" variety.js
   
     ...
-    { "_id" : { "key" : "someNestedObject" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 2, "percentContaining" : 33.33333333333333 }
-    { "_id" : { "key" : "someNestedObject.a" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 2, "percentContaining" : 33.33333333333333 }
-    { "_id" : { "key" : "someNestedObject.a.b" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 2, "percentContaining" : 33.33333333333333 }
-    { "_id" : { "key" : "someNestedObject.a.b.c" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 2, "percentContaining" : 33.33333333333333 }
-    { "_id" : { "key" : "someNestedObject.a.b.c.d" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 2, "percentContaining" : 33.33333333333333 }
-    { "_id" : { "key" : "someNestedObject.a.b.c.d.e" }, "value" : { "types" : [ "Number" ] }, "totalOccurrences" : 2, "percentContaining" : 33.33333333333333 }   
+    { "_id" : { "key" : "someNestedObject" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
+    { "_id" : { "key" : "someNestedObject.a" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
+    { "_id" : { "key" : "someNestedObject.a.b" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
+    { "_id" : { "key" : "someNestedObject.a.b.c" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
+    { "_id" : { "key" : "someNestedObject.a.b.c.d" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
+    { "_id" : { "key" : "someNestedObject.a.b.c.d.e" }, "value" : { "types" : [ "Number" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }   
  
     $ mongo test --eval "var collection = 'users', maxDepth = 3" variety.js
 
     ...
-    { "_id" : { "key" : "someNestedObject" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 2, "percentContaining" : 33.33333333333333 }
-    { "_id" : { "key" : "someNestedObject.a" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 2, "percentContaining" : 33.33333333333333 }
-    { "_id" : { "key" : "someNestedObject.a.b" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 2, "percentContaining" : 33.33333333333333 }
+    { "_id" : { "key" : "someNestedObject" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
+    { "_id" : { "key" : "someNestedObject.a" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
+    { "_id" : { "key" : "someNestedObject.a.b" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
 
 As you can see, variety only traversed three levels deep.
 
