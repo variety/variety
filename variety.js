@@ -13,7 +13,8 @@ print("Variety: A MongoDB Schema Analyzer")
 print("Version 1.0.1, released 25 May 2012")
 
 if (typeof collection === "undefined") {
-  throw "You have to supply a 'collection' variable, à la --eval 'var collection = \"animals\"'. Please see https://github.com/JamesCropcho/variety for details.";
+  var collNames = db.getCollectionNames();
+  throw "You have to supply a 'collection' variable, à la --eval 'var collection = \"animals\"'. Possible collection options for database specified: " + collNames.join(", ") + ". Please see https://github.com/JamesCropcho/variety for details.";
 }
 
 if (typeof limit === "undefined") { var limit = db[collection].count(); }
