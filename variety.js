@@ -62,7 +62,6 @@ varietyCanHaveChildren = function (v) {
                       v instanceof BinData;
   return !specialObject && (isArray || isObject);
 }
-db.system.js.save( { _id : "varietyCanHaveChildren", value : varietyCanHaveChildren } );
 	
 varietyTypeOf = function(thing) {
   if (typeof thing === "undefined") { throw "varietyTypeOf() requires an argument"; }
@@ -100,10 +99,9 @@ varietyTypeOf = function(thing) {
     }
   }
 }
-db.system.js.save({_id: "varietyTypeOf", value: varietyTypeOf});
 
+// store results here (no map reduce limit!)
 var varietyResults = {};
-var countResults = 0;
 
 var addTypeToArray = function(arr, value) {
   var t = varietyTypeOf(value);
@@ -152,7 +150,6 @@ var mapRecursive = function(parentKey, obj, level){
 
 // main cursor
 db[collection].find().sort({_id: -1}).limit(limit).forEach(function(obj) {
-  countResults++;
   for (var key in obj) {
     if(obj.hasOwnProperty(key)) {
       var value = obj[key];
