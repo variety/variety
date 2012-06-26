@@ -151,7 +151,7 @@ var mapRecursive = function(parentKey, obj, level){
 }
 
 // main cursor
-db[collection].find().forEach(function(obj) {
+db[collection].find().sort({_id: -1}).limit(limit).forEach(function(obj) {
   countResults++;
   for (var key in obj) {
     if(obj.hasOwnProperty(key)) {
@@ -193,6 +193,12 @@ resultsDB[resultsCollectionName].find({}).forEach(function(key) {
     // just need to pull out .XX in this case
     keyName = keyName.replace(/.XX/g,"");    
   }
+  // we don't need to set it if limit isn't being used. (it's set above.)
+  if(limit < numDocuments) {
+    var existsQuery = {};
+    existsQuery[keyName] = {$exists: true};
+    key.totalOccurrences = db[collection].count(existsQuery);
+  }  
   key.percentContaining = (key.totalOccurrences / numDocuments) * 100;
   resultsDB[resultsCollectionName].save(key);
 });
