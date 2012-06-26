@@ -104,7 +104,7 @@ I accept pull requests from forks. Very grateful to accept contributions from fo
 
 #### Special Thanks ####
 
-I offer sincere thanks to Wes Freeman (wfreeman) for contiued deveopment of Variety.
+I offer sincere thanks to Wes Freeman (wfreeman) for continued development of Variety.
 
 Additional special thanks to Gaëtan Voyer-Perraul ([@gatesvp] (https://twitter.com/#!/@gatesvp)) and Kristina Chodorow ([@kchodorow] (https://twitter.com/#!/kchodorow)) for answering other people's questions about how to do this on Stack Overflow, thereby providing me with the initial seed of code which grew into this tool.
 
