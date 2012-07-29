@@ -5,12 +5,12 @@ outliers to that schema. Particularly useful when you inherit a codebase with
 data dump and want to quickly learn how the data's structured. Also useful for 
 finding rare keys.
 
-Please see https://github.com/JamesCropcho/variety for details.
+Please see https://github.com/variety/variety for details.
 
 Released by Maypop Inc, © 2012, under the MIT License. */
 
 print("Variety: A MongoDB Schema Analyzer")
-print("Version 1.2, released 28 July 2012")
+print("Version 1.2.1, released 29 July 2012")
 
 var dbs = new Array();
 var emptyDbs = new Array();
@@ -100,9 +100,6 @@ varietyTypeOf = function(thing) {
   }
 }
 
-// store results here (no map reduce limit!)
-var varietyResults = {};
-
 var addTypeToArray = function(arr, value) {
   var t = varietyTypeOf(value);
   var found = false;
@@ -117,10 +114,10 @@ var addTypeToArray = function(arr, value) {
   }
 }
 
-var addVarietyResult = function(key, value) {
-  cur = varietyResults[key];
+var addRecordResult = function(key, value, result) {
+  cur = result[key];
   if(cur == null) {
-    varietyResults[key] = {"_id":{"key":key},"value": {"type": varietyTypeOf(value)}, totalOccurrences:1};
+    result[key] = {"_id":{"key":key},"value": {"type": varietyTypeOf(value)}, totalOccurrences:1};
   } else {
     var type = varietyTypeOf(value);
     if(cur.value.type != type) {
@@ -130,19 +127,49 @@ var addVarietyResult = function(key, value) {
     } else if(!cur.value.type) {
       addTypeToArray(cur.value.types, type);
     }
-    cur.totalOccurrences++;
-    varietyResults[key] = cur;
+    result[key] = cur;
   }
 }
 
-var mapRecursive = function(parentKey, obj, level){
+var mapRecursive = function(parentKey, obj, level, result) {
   for (var key in obj) {
     if(obj.hasOwnProperty(key)) {
       var value = obj[key];
       key = (parentKey + "." + key).replace(/\.\d+/g,'.XX');
-      addVarietyResult(key, value);
+      addRecordResult(key, value, result);
       if (level < maxDepth - 1 && varietyCanHaveChildren(value)) {
-        mapRecursive(key, value, level + 1);
+        mapRecursive(key, value, level + 1, result);
+      }
+    }
+  }
+}
+
+// store results here (no map reduce limit!)
+var varietyResults = {};
+
+var addVarietyResults = function(result) {
+  for(var key in result) {
+    if(result.hasOwnProperty(key)) {
+      cur = varietyResults[key];
+      var value = result[key];
+      if(cur == null) {
+        varietyResults[key] = value;
+      } else {
+        if(value.type && value.type == cur.value.type) {
+          
+        } else {
+          for(type in value.types) {
+            if(cur.value.type != type) {
+              cur.value.types = [cur.value.type];
+              delete cur.value["type"];
+              addTypeToArray(cur.value.types, type);
+            } else if(!cur.value.type) {
+              addTypeToArray(cur.value.types, type);
+            }
+          }
+        }
+        cur.totalOccurrences++;
+        varietyResults[key] = cur;
       }
     }
   }
@@ -150,15 +177,17 @@ var mapRecursive = function(parentKey, obj, level){
 
 // main cursor
 db[collection].find().sort({_id: -1}).limit(limit).forEach(function(obj) {
+  var recordResult = {};
   for (var key in obj) {
     if(obj.hasOwnProperty(key)) {
       var value = obj[key];
-      addVarietyResult(key, value);
+      addRecordResult(key, value, recordResult);
       if (maxDepth > 1 && varietyCanHaveChildren(value)) {
-        mapRecursive(key, value, 1);
+        mapRecursive(key, value, 1, recordResult);
       }
     }
   }
+  addVarietyResults(recordResult);
 });
 
 var resultsDB = db.getMongo().getDB("varietyResults");
@@ -196,7 +225,7 @@ resultsDB[resultsCollectionName].find({}).forEach(function(key) {
     existsQuery[keyName] = {$exists: true};
     key.totalOccurrences = db[collection].count(existsQuery);
   }  
-  key.percentContaining = (key.totalOccurrences / numDocuments) * 100;
+  key.percentContaining = (key.totalOccurrences / numDocuments) * 100.0;
   resultsDB[resultsCollectionName].save(key);
 });
 
