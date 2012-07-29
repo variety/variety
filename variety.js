@@ -62,23 +62,7 @@ varietyCanHaveChildren = function (v) {
                       v instanceof BinData;
   return !specialObject && (isArray || isObject);
 }
-db.system.js.save( { _id : "varietyCanHaveChildren", value : varietyCanHaveChildren } );
 	
-varietyMapRecursive = function(parentKey, keys, level) {
-  for (var key in keys) {
-		var value = keys[key];
-		
-		key = (parentKey + "." + key).replace(/\.\d+/g,'.XX');
-
-    emit({key : key}, {type: varietyTypeOf(value)});
-
-    if (level < maxDepth - 1 && varietyCanHaveChildren(value)) {
-      varietyMapRecursive(key, value, level + 1);
-    }
-  }
-}
-db.system.js.save({_id: "varietyMapRecursive", value: varietyMapRecursive});
-
 varietyTypeOf = function(thing) {
   if (typeof thing === "undefined") { throw "varietyTypeOf() requires an argument"; }
 
@@ -115,55 +99,83 @@ varietyTypeOf = function(thing) {
     }
   }
 }
-db.system.js.save({_id: "varietyTypeOf", value: varietyTypeOf});
 
-map = function() {
-	var keys = this;
-	
-  for (var key in keys) {
-		var value = keys[key];
-		
-		// Internally, Mongo uses keys like groceries.0, groceries.1, groceries.2 for
-		// items in an array. -JC
-		key = key.replace(/\.\d+/g,'.XX');
-		
-    emit({key : key}, {type: varietyTypeOf(value)});
+// store results here (no map reduce limit!)
+var varietyResults = {};
 
-    if (varietyCanHaveChildren(value) && maxDepth > 1) {
-      varietyMapRecursive(key, value, 1);
+var addTypeToArray = function(arr, value) {
+  var t = varietyTypeOf(value);
+  var found = false;
+  for(var i=0; i< arr.length; i++) {
+    if(arr[i] == t) {
+      found = true;
+      break;
+    }
+  }
+  if(!found) {
+    arr.push(t);
+  }
+}
+
+var addVarietyResult = function(key, value) {
+  cur = varietyResults[key];
+  if(cur == null) {
+    varietyResults[key] = {"_id":{"key":key},"value": {"type": varietyTypeOf(value)}, totalOccurrences:1};
+  } else {
+    var type = varietyTypeOf(value);
+    if(cur.value.type != type) {
+      cur.value.types = [cur.value.type];
+      delete cur.value["type"];
+      addTypeToArray(cur.value.types, type);
+    } else if(!cur.value.type) {
+      addTypeToArray(cur.value.types, type);
+    }
+    cur.totalOccurrences++;
+    varietyResults[key] = cur;
+  }
+}
+
+var mapRecursive = function(parentKey, obj, level){
+  for (var key in obj) {
+    if(obj.hasOwnProperty(key)) {
+      var value = obj[key];
+      key = (parentKey + "." + key).replace(/\.\d+/g,'.XX');
+      addVarietyResult(key, value);
+      if (level < maxDepth - 1 && varietyCanHaveChildren(value)) {
+        mapRecursive(key, value, level + 1);
+      }
     }
   }
 }
 
-reduce = function(key, values){
-  var types = [];
-  values.forEach(function(value) {
-    if(types.indexOf(value.type) === -1) {
-      // i.e. "if 'types' does not already have 'value.type', then insert it 
-      // into 'types'." -JC
-      types.push(value.type);
+// main cursor
+db[collection].find().sort({_id: -1}).limit(limit).forEach(function(obj) {
+  for (var key in obj) {
+    if(obj.hasOwnProperty(key)) {
+      var value = obj[key];
+      addVarietyResult(key, value);
+      if (maxDepth > 1 && varietyCanHaveChildren(value)) {
+        mapRecursive(key, value, 1);
+      }
     }
-  });
-  
-  return { types: types };
-}
-
-var resultsCollectionName = collection + "Keys";
-
-db[collection].mapReduce(map, reduce, {
-                                  out: { 
-                                    replace : resultsCollectionName, 
-                                    db : "varietyResults"},
-                                  limit : limit, 
-                                  sort : {_id: -1},
-                                  scope : { limit : limit, maxDepth:maxDepth }});
+  }
+});
 
 var resultsDB = db.getMongo().getDB("varietyResults");
+var resultsCollectionName = collection + "Keys";
+
+// replace results collection
+print("creating results collection: "+resultsCollectionName);
+resultsDB[resultsCollectionName].drop();
+for(result in varietyResults) {
+  resultsDB[resultsCollectionName].insert(varietyResults[result]); 
+}
 
 var numDocuments = db[collection].count();
 
+print("removing leaf arrays in results collection, and getting percentages");
 resultsDB[resultsCollectionName].find({}).forEach(function(key) {
-  keyName = key["_id"].key;
+  var keyName = key["_id"].key;
   
   // We throw away keys which end in an array index, since they are not useful
   // for our analysis. (We still keep the key of their parent array, though.) -JC
@@ -178,18 +190,17 @@ resultsDB[resultsCollectionName].find({}).forEach(function(key) {
     // just need to pull out .XX in this case
     keyName = keyName.replace(/.XX/g,"");    
   }
-  var existsQuery = {};
-  existsQuery[keyName] = {$exists: true};
-
-  key.totalOccurrences = db[collection].count(existsQuery);  
+  // we don't need to set it if limit isn't being used. (it's set above.)
+  if(limit < numDocuments) {
+    var existsQuery = {};
+    existsQuery[keyName] = {$exists: true};
+    key.totalOccurrences = db[collection].count(existsQuery);
+  }  
   key.percentContaining = (key.totalOccurrences / numDocuments) * 100;
-
   resultsDB[resultsCollectionName].save(key);
 });
 
 var sortedKeys = resultsDB[resultsCollectionName].find({}).sort({totalOccurrences: -1});
-
 sortedKeys.forEach(function(key) {
   print(tojson(key, '', true));
 });
-
