@@ -2,4 +2,4 @@
 
 (25 May 2012) Thanks to @wfreeman, we now recognize the Date, ObjectID and BinData types.
 
-(28 July 2012) Removed map/reduce to avoid certain bugs.
+(28 July 2012) Version 1.2: Removed map/reduce to avoid certain bugs, which also simplified some of the calculations.
