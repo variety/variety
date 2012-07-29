@@ -102,9 +102,12 @@ Please report any bugs and feature requests on the Github issue tracker. I will 
 
 I accept pull requests from forks. Very grateful to accept contributions from folks.
 
-#### Special Thanks ####
+#### Core Maintainers ####
 
-I offer sincere thanks to Wes Freeman (wfreeman) for continued development of Variety.
+* Wes Freeman ([software/chess blog] (http://wes.skeweredrook.com))
+* James Cropcho (original creator of Variety) ([Twitter] (https://twitter.com/Cropcho))
+
+#### Special Thanks ####
 
 Additional special thanks to Gaëtan Voyer-Perraul ([@gatesvp] (https://twitter.com/#!/@gatesvp)) and Kristina Chodorow ([@kchodorow] (https://twitter.com/#!/kchodorow)) for answering other people's questions about how to do this on Stack Overflow, thereby providing me with the initial seed of code which grew into this tool.
 
