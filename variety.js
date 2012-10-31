@@ -14,6 +14,12 @@ print("Version 1.2.1, released 29 July 2012")
 
 var dbs = new Array();
 var emptyDbs = new Array();
+
+if (typeof db_name === "string") {
+  db = db.getMongo().getDB( db_name );
+}
+
+
 db.adminCommand('listDatabases').databases.forEach(function(d){
   if(db.getSisterDB(d.name).getCollectionNames().length > 0) {
     dbs.push(d.name);
