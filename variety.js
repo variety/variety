@@ -10,7 +10,7 @@ Please see https://github.com/variety/variety for details.
 Released by Maypop Inc, © 2012, under the MIT License. */
 
 print("Variety: A MongoDB Schema Analyzer")
-print("Version 1.2.1, released 29 July 2012")
+print("Version 1.2.2, released 04 November 2012")
 
 var dbs = new Array();
 var emptyDbs = new Array();
