@@ -1,4 +1,6 @@
-(03 November 2012) Version 1.2.2: Added support for db_name, allowing people using admin authentication to specify a db name to use, since they must connect to the admin db.
+(03 November 2012) Version 1.2.2: Thanks to @kmcgrath: Added support for db_name, allowing people using admin authentication to specify a db name to use, since they must connect to the admin db.
+
+(29 July 2012) Version 1.2.1: Fixed bug with occurrence calculation.
 
 (28 July 2012) Version 1.2: Removed map/reduce to avoid certain bugs, which also simplified some of the calculations.
 
