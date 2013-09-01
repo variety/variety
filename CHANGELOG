@@ -1,3 +1,5 @@
+(01 September 2013) Version 1.2.3: Thanks to @rugbyhead: Now handles query-based filtering.
+
 (03 November 2012) Version 1.2.2: Thanks to @kmcgrath: Added support for db_name, allowing people using admin authentication to specify a db name to use, since they must connect to the admin db.
 
 (29 July 2012) Version 1.2.1: Fixed bug with occurrence calculation.
