@@ -51,7 +51,10 @@ if (db[collection].count() == 0) {
         "Possible collection options for database specified: " + collNames + ".";
 }
 
-if (typeof limit === "undefined") { var limit = db[collection].count(); }
+if (typeof query === "undefined") { var query = {}; }
+print("Using query of " + query.toSource());
+
+if (typeof limit === "undefined") { var limit = db[collection].find(query).count(); }
 print("Using limit of " + limit);
 
 if (typeof maxDepth === "undefined") { var maxDepth = 99; }
@@ -182,7 +185,7 @@ var addVarietyResults = function(result) {
 }
 
 // main cursor
-db[collection].find().sort({_id: -1}).limit(limit).forEach(function(obj) {
+db[collection].find(query).sort({_id: -1}).limit(limit).forEach(function(obj) {
   var recordResult = {};
   for (var key in obj) {
     if(obj.hasOwnProperty(key)) {
@@ -229,7 +232,7 @@ resultsDB[resultsCollectionName].find({}).forEach(function(key) {
   if(limit < numDocuments) {
     var existsQuery = {};
     existsQuery[keyName] = {$exists: true};
-    key.totalOccurrences = db[collection].count(existsQuery);
+    key.totalOccurrences = db[collection].find(query).count(existsQuery);
   }  
   key.percentContaining = (key.totalOccurrences / numDocuments) * 100.0;
   resultsDB[resultsCollectionName].save(key);

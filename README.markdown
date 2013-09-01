@@ -86,6 +86,14 @@ The default will traverse all the way to the bottom of that structure:
 
 As you can see, variety only traversed three levels deep.
 
+### Analyze a subset of Documents ###
+
+Perhaps you have a large collection, or you only care about some subset of the documents.
+
+One can apply a "query" contraint, which takes a standard Mongo query object, to filter the set of documents required before analysis.
+
+    $ mongo test --eval "var collection = 'users', query = {'caredAbout':true}" variety.js
+
 ##### "But my dad told me MongoDB is a schemaless database!" #####
 
 First of all, your father is a great guy. Moving on...
