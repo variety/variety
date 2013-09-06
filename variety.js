@@ -52,7 +52,7 @@ if (db[collection].count() == 0) {
 }
 
 if (typeof query === "undefined") { var query = {}; }
-print("Using query of " + query.toSource());
+print("Using query of " + JSON.stringify(query));
 
 if (typeof limit === "undefined") { var limit = db[collection].find(query).count(); }
 print("Using limit of " + limit);
