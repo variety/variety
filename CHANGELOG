@@ -1,3 +1,5 @@
+(05 December 2013) Version 1.2.4: Thanks to @jmargeta: Bugfix for newer mongo versions that don't support the JSON object.
+
 (01 September 2013) Version 1.2.3: Thanks to @rugbyhead: Now handles query-based filtering.
 
 (03 November 2012) Version 1.2.2: Thanks to @kmcgrath: Added support for db_name, allowing people using admin authentication to specify a db name to use, since they must connect to the admin db.
