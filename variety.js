@@ -7,7 +7,7 @@ finding rare keys.
 
 Please see https://github.com/variety/variety for details.
 
-Released by Maypop Inc, © 2012, under the MIT License. */
+Released by Maypop Inc, © 2012-2014, under the MIT License. */
 
 print("Variety: A MongoDB Schema Analyzer")
 print("Version 1.2.4, released 05 December 2013")

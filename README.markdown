@@ -126,4 +126,4 @@ Much thanks also, to Kyle Banker ([@Hwaet] (https://twitter.com/#!/hwaet)) for w
 I have every reason to believe this tool will **not** corrupt your data or harm your computer. But if I were you, I would not use it in a production environment.
 
 
-Released by Maypop Inc, © 2013, under the [MIT License] (http://www.opensource.org/licenses/MIT).
+Released by Maypop Inc, © 2012-2014, under the [MIT License] (http://www.opensource.org/licenses/MIT).
