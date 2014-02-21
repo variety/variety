@@ -60,6 +60,9 @@ print("Using limit of " + limit);
 if (typeof maxDepth === "undefined") { var maxDepth = 99; }
 print("Using maxDepth of " + maxDepth);
 
+if (typeof sort === "undefined") { var sort = {_id: -1}; }
+print("Using sort of " + tojson(sort));
+
 varietyCanHaveChildren = function (v) {
   var isArray = v && 
                 typeof v === 'object' && 
@@ -185,7 +188,7 @@ var addVarietyResults = function(result) {
 }
 
 // main cursor
-db[collection].find(query).sort({_id: -1}).limit(limit).forEach(function(obj) {
+db[collection].find(query).sort(sort).limit(limit).forEach(function(obj) {
   var recordResult = {};
   for (var key in obj) {
     if(obj.hasOwnProperty(key)) {
