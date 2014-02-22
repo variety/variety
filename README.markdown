@@ -94,6 +94,14 @@ One can apply a "query" contraint, which takes a standard Mongo query object, to
 
     $ mongo test --eval "var collection = 'users', query = {'caredAbout':true}" variety.js
 
+### Analyze Documents Sorted in a particular order ###
+
+Perhaps you want to analyze a subset of documents sorted in an order other than creation order, say, for example, sorted by when documents were updated.
+
+One can apply a "sort" constraint, which analyzes documents in the specified order like so:
+
+    $ mongo test --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
+
 ##### "But my dad told me MongoDB is a schemaless database!" #####
 
 First of all, your father is a great guy. Moving on...
