@@ -43,7 +43,7 @@ Perhaps you have a really large collection, and you can't wait a whole day for V
 
 Perhaps you want to ignore a collection's oldest documents, and only see what the collection's documents' structures have been looking like, as of late.
 
-One can apply a "limit" constraint, which analyzes only the newest documents in a collection, like so:
+One can apply a "limit" constraint, which analyzes only the newest documents in a collection ([unless sorting](https://github.com/variety/variety#analyze-documents-sorted-in-a-particular-order)), like so:
 
 	$ mongo test --eval "var collection = 'users', limit = 1" variety.js
 	
