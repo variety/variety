@@ -9,11 +9,11 @@ Please see https://github.com/variety/variety for details.
 
 Released by Maypop Inc, © 2012-2014, under the MIT License. */
 
-print("Variety: A MongoDB Schema Analyzer")
-print("Version 1.2.5, released 21 February 2014")
+print("Variety: A MongoDB Schema Analyzer");
+print("Version 1.2.6, released 28 March 2014");
 
-var dbs = new Array();
-var emptyDbs = new Array();
+var dbs = [];
+var emptyDbs = [];
 
 if (typeof db_name === "string") {
   db = db.getMongo().getDB( db_name );
@@ -24,17 +24,17 @@ db.adminCommand('listDatabases').databases.forEach(function(d){
   if(db.getSisterDB(d.name).getCollectionNames().length > 0) {
     dbs.push(d.name);
   }
-  if(db.getSisterDB(d.name).getCollectionNames().length == 0) {
+  if(db.getSisterDB(d.name).getCollectionNames().length === 0) {
     emptyDbs.push(d.name);
   }
 });
 
-if (emptyDbs.indexOf(db.getName()) != -1) {
+if (emptyDbs.indexOf(db.getName()) !== -1) {
   throw "The database specified ("+ db +") is empty.\n"+ 
         "Possible database options are: " + dbs.join(", ") + ".";
 }
 
-if (dbs.indexOf(db.getName()) == -1) {
+if (dbs.indexOf(db.getName()) === -1) {
   throw "The database specified ("+ db +") does not exist.\n"+ 
         "Possible database options are: " + dbs.join(", ") + ".";
 }
@@ -46,7 +46,7 @@ if (typeof collection === "undefined") {
         "Please see https://github.com/JamesCropcho/variety for details.";
 } 
 
-if (db[collection].count() == 0) {
+if (db[collection].count() === 0) {
   throw "The collection specified (" + collection + ") in the database specified ("+ db +") does not exist or is empty.\n"+ 
         "Possible collection options for database specified: " + collNames + ".";
 }
@@ -73,7 +73,7 @@ varietyCanHaveChildren = function (v) {
                       v instanceof ObjectId ||
                       v instanceof BinData;
   return !specialObject && (isArray || isObject);
-}
+};
 	
 varietyTypeOf = function(thing) {
   if (typeof thing === "undefined") { throw "varietyTypeOf() requires an argument"; }
@@ -110,13 +110,13 @@ varietyTypeOf = function(thing) {
       return "Object";
     }
   }
-}
+};
 
 var addTypeToArray = function(arr, value) {
   var t = varietyTypeOf(value);
   var found = false;
   for(var i=0; i< arr.length; i++) {
-    if(arr[i] == t) {
+    if(arr[i] === t) {
       found = true;
       break;
     }
@@ -124,24 +124,24 @@ var addTypeToArray = function(arr, value) {
   if(!found) {
     arr.push(t);
   }
-}
+};
 
 var addRecordResult = function(key, value, result) {
   cur = result[key];
-  if(cur == null) {
+  if(!cur) {
     result[key] = {"_id":{"key":key},"value": {"type": varietyTypeOf(value)}, totalOccurrences:1};
   } else {
     var type = varietyTypeOf(value);
-    if(cur.value.type != type) {
+    if(cur.value.type !== type) {
       cur.value.types = [cur.value.type];
-      delete cur.value["type"];
+      delete cur.value.type;
       addTypeToArray(cur.value.types, type);
     } else if(!cur.value.type) {
       addTypeToArray(cur.value.types, type);
     }
     result[key] = cur;
   }
-}
+};
 
 var mapRecursive = function(parentKey, obj, level, result) {
   for (var key in obj) {
@@ -154,7 +154,7 @@ var mapRecursive = function(parentKey, obj, level, result) {
       }
     }
   }
-}
+};
 
 // store results here (no map reduce limit!)
 var varietyResults = {};
@@ -164,16 +164,16 @@ var addVarietyResults = function(result) {
     if(result.hasOwnProperty(key)) {
       cur = varietyResults[key];
       var value = result[key];
-      if(cur == null) {
+      if(!cur) {
         varietyResults[key] = value;
       } else {
-        if(value.type && value.type == cur.value.type) {
+        if(value.type && value.type === cur.value.type) {
           
         } else {
-          for(type in value.types) {
-            if(cur.value.type != type) {
+          for(var type in value.types) {
+            if(cur.value.type !== type) {
               cur.value.types = [cur.value.type];
-              delete cur.value["type"];
+              delete cur.value.type;
               addTypeToArray(cur.value.types, type);
             } else if(!cur.value.type) {
               addTypeToArray(cur.value.types, type);
@@ -185,7 +185,7 @@ var addVarietyResults = function(result) {
       }
     }
   }
-}
+};
 
 // main cursor
 db[collection].find(query).sort(sort).limit(limit).forEach(function(obj) {
@@ -208,7 +208,7 @@ var resultsCollectionName = collection + "Keys";
 // replace results collection
 print("creating results collection: "+resultsCollectionName);
 resultsDB[resultsCollectionName].drop();
-for(result in varietyResults) {
+for(var result in varietyResults) {
   resultsDB[resultsCollectionName].insert(varietyResults[result]); 
 }
 
@@ -216,12 +216,12 @@ var numDocuments = db[collection].count();
 
 print("removing leaf arrays in results collection, and getting percentages");
 resultsDB[resultsCollectionName].find({}).forEach(function(key) {
-  var keyName = key["_id"].key;
+  var keyName = key._id.key;
   
   // We throw away keys which end in an array index, since they are not useful
   // for our analysis. (We still keep the key of their parent array, though.) -JC
   if(keyName.match(/\.XX$/)) {
-    resultsDB[resultsCollectionName].remove({ "_id" : key["_id"]});
+    resultsDB[resultsCollectionName].remove({ "_id" : key._id});
     return;
   }
 

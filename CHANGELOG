@@ -1,3 +1,5 @@
+(28 March 2014) Version 1.2.6: @jamescropcho has made variety.js pass JSHint analysis.
+
 (21 February 2014) Version 1.2.5: Thanks to @nitindhar7: Adds a sort option, so you can be more choosy with your limit.
 
 (05 December 2013) Version 1.2.4: Thanks to @jmargeta: Bugfix for newer mongo versions that don't support the JSON object.
