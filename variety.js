@@ -43,7 +43,7 @@ var collNames = db.getCollectionNames().join(", ");
 if (typeof collection === "undefined") {
   throw "You have to supply a 'collection' variable, à la --eval 'var collection = \"animals\"'.\n"+ 
         "Possible collection options for database specified: " + collNames + ".\n"+
-        "Please see https://github.com/JamesCropcho/variety for details.";
+        "Please see https://github.com/variety/variety for details.";
 } 
 
 if (db[collection].count() === 0) {
