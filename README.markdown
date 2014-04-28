@@ -1,6 +1,8 @@
 # Meet Variety, a Schema Analyzer for MongoDB ###
 This lightweight tool helps you get a sense of your application's schema, as well as any outliers to that schema. Particularly useful when you inherit a codebase with data dump and want to quickly learn how the data's structured. Also useful for finding rare keys.
 
+[![Build Status](https://travis-ci.org/variety/variety.svg?branch=master)](https://travis-ci.org/variety/variety)
+
 ### An Easy Example ###
 
 We'll make a collection:
