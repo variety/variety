@@ -63,17 +63,7 @@ print("Using maxDepth of " + maxDepth);
 if (typeof sort === "undefined") { var sort = {_id: -1}; }
 print("Using sort of " + tojson(sort));
 
-varietyCanHaveChildren = function (v) {
-  var isArray = v && 
-                typeof v === 'object' && 
-                typeof v.length === 'number' && 
-                !(v.propertyIsEnumerable('length'));
-  var isObject = typeof v === 'object';
-  var specialObject = v instanceof Date || 
-                      v instanceof ObjectId ||
-                      v instanceof BinData;
-  return !specialObject && (isArray || isObject);
-};
+
 	
 varietyTypeOf = function(thing) {
   if (typeof thing === "undefined") { throw "varietyTypeOf() requires an argument"; }
@@ -112,95 +102,75 @@ varietyTypeOf = function(thing) {
   }
 };
 
-var addTypeToArray = function(arr, value) {
-  var t = varietyTypeOf(value);
-  var found = false;
-  for(var i=0; i< arr.length; i++) {
-    if(arr[i] === t) {
-      found = true;
-      break;
-    }
-  }
-  if(!found) {
-    arr.push(t);
-  }
-};
+//flattens object keys to 1D. i.e. {'key1':1,{'key2':{'key3':2}}} becomes {'key1':1,'key2.key3':2}
+//we assume no '.' characters in the keys, which is an OK assumption for MongoDB
+function serializeDoc(doc, maxDepth){
+	var result = {};
+	
+	//determining if an object is a Hash vs Array vs something else is hard
+	function isHash(v) {
+  	var isArray = Array.isArray(v);
+  	var isObject = typeof v === 'object';
+  	var specialObject = v instanceof Date || 
+                      v instanceof ObjectId ||
+                      v instanceof BinData;
+  	return !specialObject && !isArray && isObject;
+	};
+	
+	function serialize(document, parentKey, maxDepth){
+		for(var key in document){
+			//skip over inherited properties such as string, length, etch
+			if(!(document.hasOwnProperty(key)))
+				continue
+			var value = document[key];
+			//objects are skipped here and recursed into later
+			//if(typeof value != "object") 
+			result[parentKey+key] = value;
+			//it's an object, recurse...only if we haven't reached max depth
+			if(isHash(value) && (maxDepth > 0)){
+				serialize(value, parentKey+key+".",maxDepth-1);
+				}
+		}
+	}
+	serialize(doc, "", maxDepth)
+	return result
+}
 
-var addRecordResult = function(key, value, result) {
-  cur = result[key];
-  if(!cur) {
-    result[key] = {"_id":{"key":key},"value": {"type": varietyTypeOf(value)}, totalOccurrences:1};
-  } else {
-    var type = varietyTypeOf(value);
-    if(cur.value.type !== type) {
-      cur.value.types = [cur.value.type];
-      delete cur.value.type;
-      addTypeToArray(cur.value.types, type);
-    } else if(!cur.value.type) {
-      addTypeToArray(cur.value.types, type);
-    }
-    result[key] = cur;
-  }
-};
 
-var mapRecursive = function(parentKey, obj, level, result) {
-  for (var key in obj) {
-    if(obj.hasOwnProperty(key)) {
-      var value = obj[key];
-      key = (parentKey + "." + key).replace(/\.\d+/g,'.XX');
-      addRecordResult(key, value, result);
-      if (level < maxDepth - 1 && varietyCanHaveChildren(value)) {
-        mapRecursive(key, value, level + 1, result);
-      }
-    }
-  }
-};
-
-// store results here (no map reduce limit!)
-var varietyResults = {};
-
-var addVarietyResults = function(result) {
-  for(var key in result) {
-    if(result.hasOwnProperty(key)) {
-      cur = varietyResults[key];
-      var value = result[key];
-      if(!cur) {
-        varietyResults[key] = value;
-      } else {
-        if(value.type && value.type === cur.value.type) {
-          
-        } else {
-          for(var type in value.types) {
-            if(cur.value.type !== type) {
-              cur.value.types = [cur.value.type];
-              delete cur.value.type;
-              addTypeToArray(cur.value.types, type);
-            } else if(!cur.value.type) {
-              addTypeToArray(cur.value.types, type);
-            }
-          }
-        }
-        cur.totalOccurrences++;
-        varietyResults[key] = cur;
-      }
-    }
-  }
-};
-
+var interimResults = {} //hold results here until converted to final format
 // main cursor
 db[collection].find(query).sort(sort).limit(limit).forEach(function(obj) {
-  var recordResult = {};
-  for (var key in obj) {
-    if(obj.hasOwnProperty(key)) {
-      var value = obj[key];
-      addRecordResult(key, value, recordResult);
-      if (maxDepth > 1 && varietyCanHaveChildren(value)) {
-        mapRecursive(key, value, 1, recordResult);
-      }
-    }
-  }
-  addVarietyResults(recordResult);
+	//printjson(obj)
+	flattened = serializeDoc(obj, maxDepth);
+	//printjson(flattened)
+	for (key in flattened){
+		var value = flattened[key];
+		var valueType = varietyTypeOf(value);
+		if(!(key in interimResults)){ //if it's a new key we haven't seen yet
+			//for the moment, store 'types' as a dictionary.  An easy way to prevent duplicates
+			var newEntry = {'types':{},'totalOccurrences':1};
+			newEntry['types'][valueType] = true;
+			interimResults[key] = newEntry;
+		}
+		else{ //we've seen this key before
+			interimResults[key]['types'][valueType] = true;
+			interimResults[key]['totalOccurrences']++;
+		}
+	} 
 });
+
+
+var varietyResults = {};
+//now convert the interimResults into the proper format
+for(key in interimResults){
+	var entry = interimResults[key];
+	var newEntry = {};
+	newEntry['_id'] = {'key':key};
+	newEntry['value'] = {'types':Object.keys(entry['types'])};
+	newEntry['totalOccurrences'] = entry['totalOccurrences'];
+	newEntry['percentContaining'] = entry['totalOccurrences']*100/limit;
+	varietyResults[key] = newEntry;
+}
 
 var resultsDB = db.getMongo().getDB("varietyResults");
 var resultsCollectionName = collection + "Keys";
