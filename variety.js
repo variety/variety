@@ -8,14 +8,13 @@ finding rare keys.
 Please see https://github.com/variety/variety for details.
 
 Released by Maypop Inc, © 2012-2014, under the MIT License. */
-
-print("Variety: A MongoDB Schema Analyzer");
-print("Version 1.3.0, released 30 May 2014");
+print('Variety: A MongoDB Schema Analyzer');
+print('Version 1.3.0, released 30 May 2014');
 
 var dbs = [];
 var emptyDbs = [];
 
-if (typeof db_name === "string") {
+if (typeof db_name === 'string') {
   db = db.getMongo().getDB( db_name );
 }
 
@@ -30,74 +29,74 @@ db.adminCommand('listDatabases').databases.forEach(function(d){
 });
 
 if (emptyDbs.indexOf(db.getName()) !== -1) {
-  throw "The database specified ("+ db +") is empty.\n"+ 
-        "Possible database options are: " + dbs.join(", ") + ".";
+  throw 'The database specified ('+ db +') is empty.\n'+ 
+        'Possible database options are: ' + dbs.join(', ') + '.';
 }
 
 if (dbs.indexOf(db.getName()) === -1) {
-  throw "The database specified ("+ db +") does not exist.\n"+ 
-        "Possible database options are: " + dbs.join(", ") + ".";
+  throw 'The database specified ('+ db +') does not exist.\n'+ 
+        'Possible database options are: ' + dbs.join(', ') + '.';
 }
 
-var collNames = db.getCollectionNames().join(", ");
-if (typeof collection === "undefined") {
-  throw "You have to supply a 'collection' variable, à la --eval 'var collection = \"animals\"'.\n"+ 
-        "Possible collection options for database specified: " + collNames + ".\n"+
-        "Please see https://github.com/variety/variety for details.";
+var collNames = db.getCollectionNames().join(', ');
+if (typeof collection === 'undefined') {
+  throw 'You have to supply a \'collection\' variable, à la --eval \'var collection = "animals"\'.\n'+ 
+        'Possible collection options for database specified: ' + collNames + '.\n'+
+        'Please see https://github.com/variety/variety for details.';
 } 
 
 if (db[collection].count() === 0) {
-  throw "The collection specified (" + collection + ") in the database specified ("+ db +") does not exist or is empty.\n"+ 
-        "Possible collection options for database specified: " + collNames + ".";
+  throw 'The collection specified (' + collection + ') in the database specified ('+ db +') does not exist or is empty.\n'+ 
+        'Possible collection options for database specified: ' + collNames + '.';
 }
 
-if (typeof query === "undefined") { var query = {}; }
-print("Using query of " + tojson(query));
+if (typeof query === 'undefined') { var query = {}; }
+print('Using query of ' + tojson(query));
 
-if (typeof limit === "undefined") { var limit = db[collection].find(query).count(); }
-print("Using limit of " + limit);
+if (typeof limit === 'undefined') { var limit = db[collection].find(query).count(); }
+print('Using limit of ' + limit);
 
-if (typeof maxDepth === "undefined") { var maxDepth = 99; }
-print("Using maxDepth of " + maxDepth);
+if (typeof maxDepth === 'undefined') { var maxDepth = 99; }
+print('Using maxDepth of ' + maxDepth);
 
-if (typeof sort === "undefined") { var sort = {_id: -1}; }
-print("Using sort of " + tojson(sort));
+if (typeof sort === 'undefined') { var sort = {_id: -1}; }
+print('Using sort of ' + tojson(sort));
 
 
 	
 varietyTypeOf = function(thing) {
-  if (typeof thing === "undefined") { throw "varietyTypeOf() requires an argument"; }
+  if (typeof thing === 'undefined') { throw 'varietyTypeOf() requires an argument'; }
 
-  if (typeof thing !== "object") {  
+  if (typeof thing !== 'object') {  
     // the messiness below capitalizes the first letter, so the output matches
     // the other return values below. -JC
     return (typeof thing)[0].toUpperCase() + (typeof thing).slice(1);
   }
   else {
     if (thing && thing.constructor === Array) { 
-      return "Array";
+      return 'Array';
     }
     else if (thing === null) {
-      return "null";
+      return 'null';
     }
     else if (thing instanceof Date) {
-      return "Date";
+      return 'Date';
     }
     else if (thing instanceof ObjectId) {
-      return "ObjectId";
+      return 'ObjectId';
     }
     else if (thing instanceof BinData) {
       var binDataTypes = {};
-      binDataTypes[0x00] = "generic";
-      binDataTypes[0x01] = "function";
-      binDataTypes[0x02] = "old";
-      binDataTypes[0x03] = "UUID";
-      binDataTypes[0x05] = "MD5";
-      binDataTypes[0x80] = "user";
-      return "BinData-" + binDataTypes[thing.subtype()];
+      binDataTypes[0x00] = 'generic';
+      binDataTypes[0x01] = 'function';
+      binDataTypes[0x02] = 'old';
+      binDataTypes[0x03] = 'UUID';
+      binDataTypes[0x05] = 'MD5';
+      binDataTypes[0x80] = 'user';
+      return 'BinData-' + binDataTypes[thing.subtype()];
     }
     else {
-      return "Object";
+      return 'Object';
     }
   }
 };
@@ -115,35 +114,35 @@ function serializeDoc(doc, maxDepth){
                       v instanceof ObjectId ||
                       v instanceof BinData;
   	return !specialObject && !isArray && isObject;
-	};
+	}
 	
 	function serialize(document, parentKey, maxDepth){
 		for(var key in document){
 			//skip over inherited properties such as string, length, etch
-			if(!(document.hasOwnProperty(key)))
-				continue
+			if(!(document.hasOwnProperty(key))) {
+				continue;
+			}
 			var value = document[key];
 			//objects are skipped here and recursed into later
-			//if(typeof value != "object") 
+			//if(typeof value != 'object') 
 			result[parentKey+key] = value;
 			//it's an object, recurse...only if we haven't reached max depth
-			if(isHash(value) && (maxDepth > 0)){
-				serialize(value, parentKey+key+".",maxDepth-1);
-				}
+			if(isHash(value) && (maxDepth > 0)) {
+				serialize(value, parentKey+key+'.',maxDepth-1);
+			}
 		}
 	}
-	serialize(doc, "", maxDepth)
-	return result
+	serialize(doc, '', maxDepth);
+	return result;
 }
 
-
-var interimResults = {} //hold results here until converted to final format
+var interimResults = {}; //hold results here until converted to final format
 // main cursor
 db[collection].find(query).sort(sort).limit(limit).forEach(function(obj) {
 	//printjson(obj)
 	flattened = serializeDoc(obj, maxDepth);
 	//printjson(flattened)
-	for (key in flattened){
+	for (var key in flattened){
 		var value = flattened[key];
 		var valueType = varietyTypeOf(value);
 		if(!(key in interimResults)){ //if it's a new key we haven't seen yet
@@ -162,7 +161,7 @@ db[collection].find(query).sort(sort).limit(limit).forEach(function(obj) {
 
 var varietyResults = {};
 //now convert the interimResults into the proper format
-for(key in interimResults){
+for(var key in interimResults){
 	var entry = interimResults[key];
 	var newEntry = {};
 	newEntry['_id'] = {'key':key};
@@ -172,11 +171,11 @@ for(key in interimResults){
 	varietyResults[key] = newEntry;
 }
 
-var resultsDB = db.getMongo().getDB("varietyResults");
-var resultsCollectionName = collection + "Keys";
+var resultsDB = db.getMongo().getDB('varietyResults');
+var resultsCollectionName = collection + 'Keys';
 
 // replace results collection
-print("creating results collection: "+resultsCollectionName);
+print('creating results collection: '+resultsCollectionName);
 resultsDB[resultsCollectionName].drop();
 for(var result in varietyResults) {
   resultsDB[resultsCollectionName].insert(varietyResults[result]); 
@@ -184,22 +183,22 @@ for(var result in varietyResults) {
 
 var numDocuments = db[collection].count();
 
-print("removing leaf arrays in results collection, and getting percentages");
+print('removing leaf arrays in results collection, and getting percentages');
 resultsDB[resultsCollectionName].find({}).forEach(function(key) {
   var keyName = key._id.key;
   
   // We throw away keys which end in an array index, since they are not useful
   // for our analysis. (We still keep the key of their parent array, though.) -JC
   if(keyName.match(/\.XX$/)) {
-    resultsDB[resultsCollectionName].remove({ "_id" : key._id});
+    resultsDB[resultsCollectionName].remove({ '_id' : key._id});
     return;
   }
 
   if(keyName.match(/\.XX/)) {
     // exists query checks for embedded values for an array 
-    // ie. match {arr:[{x:1}]} with {"arr.x":{$exists:true}}
+    // ie. match {arr:[{x:1}]} with {'arr.x':{$exists:true}}
     // just need to pull out .XX in this case
-    keyName = keyName.replace(/.XX/g,"");    
+    keyName = keyName.replace(/.XX/g,'');    
   }
   // we don't need to set it if limit isn't being used. (it's set above.)
   if(limit < numDocuments) {
