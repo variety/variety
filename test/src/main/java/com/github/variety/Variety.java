@@ -39,7 +39,7 @@ public class Variety {
     private String query;
     private String sort;
 
-    private boolean verbose;
+    private boolean verbose = true;
 
     /**
      * Create variety wrapper with defined connection do analysed database and collection
