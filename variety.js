@@ -107,13 +107,14 @@ function serializeDoc(doc, maxDepth){
 	var result = {};
 	
 	//determining if an object is a Hash vs Array vs something else is hard
+	//returns true, if object in argument may have nested objects and makes sense to analyse its content
 	function isHash(v) {
   	var isArray = Array.isArray(v);
   	var isObject = typeof v === 'object';
   	var specialObject = v instanceof Date || 
                       v instanceof ObjectId ||
                       v instanceof BinData;
-  	return !specialObject && !isArray && isObject;
+  	return !specialObject && (isArray || isObject);
 	}
 	
 	function serialize(document, parentKey, maxDepth){
@@ -144,6 +145,10 @@ db[collection].find(query).sort(sort).limit(limit).forEach(function(obj) {
 	//printjson(flattened)
 	for (var key in flattened){
 		var value = flattened[key];
+
+		//translate unnamed object key from {_parent_name_}.{_index_} to {_parent_name_}.XX
+		key = key.replace(/\.\d+/g,'.XX');
+
 		var valueType = varietyTypeOf(value);
 		if(!(key in interimResults)){ //if it's a new key we haven't seen yet
 			//for the moment, store 'types' as a dictionary.  An easy way to prevent duplicates
