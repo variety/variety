@@ -1,11 +1,9 @@
-language: node_js
+language: java
+jdk:
+  - oraclejdk8
 services: mongodb
-node_js:
-  - "0.11"
 install:
  - npm install jshint -g
- - npm install jasmine-node -g
- - npm install mongodb -g
 script:
  - jshint variety.js
- - test/tests.sh
+ - cd test && mvn test
