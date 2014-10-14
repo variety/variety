@@ -11,7 +11,7 @@ import org.junit.Test;
 
 public class MaxDepthAnalysisTest {
 
-    private static final double EXPECTED_PERCENTS = 100; //TODO: why documentation mentions be 16.66666666666666, when there is only one document at all ?
+    private static final double EXPECTED_PERCENTS = 100;
     private Variety variety;
 
     @Before
@@ -47,8 +47,7 @@ public class MaxDepthAnalysisTest {
     public void testLimitedDepthAnalysis() throws Exception {
         final VarietyAnalysis analysis = variety.withMaxDepth(3).runAnalysis();
 
-        // TODO: depth 3 means 'someNestedObject.a.b' or 'someNestedObject.a.b.c'? Documentation describes the first variant, variety counts also second.
-        // FIXME: Assert.assertEquals("Variety results have not correct count of entries", 5, analysis.getResultsCollection().count()); // 5 results, including '_id' and 'name'
+        Assert.assertEquals("Variety results have not correct count of entries", 5, analysis.getResultsCollection().count()); // 5 results, including '_id' and 'name'
 
         analysis.verifyResult("_id", 1, EXPECTED_PERCENTS, "ObjectId");
         analysis.verifyResult("name", 1, EXPECTED_PERCENTS, "String");

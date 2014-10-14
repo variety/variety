@@ -128,7 +128,7 @@ function serializeDoc(doc, maxDepth){
 			//if(typeof value != 'object') 
 			result[parentKey+key] = value;
 			//it's an object, recurse...only if we haven't reached max depth
-			if(isHash(value) && (maxDepth > 0)) {
+			if(isHash(value) && (maxDepth > 1)) {
 				serialize(value, parentKey+key+'.',maxDepth-1);
 			}
 		}
