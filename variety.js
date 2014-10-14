@@ -209,7 +209,7 @@ resultsDB[resultsCollectionName].find({}).forEach(function(key) {
   if(limit < numDocuments) {
     var existsQuery = {};
     existsQuery[keyName] = {$exists: true};
-    key.totalOccurrences = db[collection].find(query).count(existsQuery);
+    key.totalOccurrences = db[collection].count(existsQuery);
   }  
   key.percentContaining = (key.totalOccurrences / numDocuments) * 100.0;
   resultsDB[resultsCollectionName].save(key);
