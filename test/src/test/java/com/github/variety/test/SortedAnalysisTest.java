@@ -49,14 +49,11 @@ public class SortedAnalysisTest {
 
         Assert.assertEquals(5, analysis.getResultsCollection().count());
 
-        // TODO: are those percentContaining numbers correct? Should percents be limited to all data or query data?
-        // Why total counts are always 5, when 'someWeirdLegacyKey' has only one object?
-        // Keys and types are correct, total count and percents seems not right.
         analysis.verifyResult("_id", 5, 100, "ObjectId");
         analysis.verifyResult("name", 5, 100, "String");
-        analysis.verifyResult("bio", 5, 100, "String");
-        analysis.verifyResult("pets", 5, 100, "Array");
-        analysis.verifyResult("someWeirdLegacyKey", 5, 100, "String");
+        analysis.verifyResult("bio", 3, 60, "String");
+        analysis.verifyResult("pets", 2, 40, "Array");
+        analysis.verifyResult("someWeirdLegacyKey", 1, 20, "String");
 
     }
 }

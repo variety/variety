@@ -32,7 +32,6 @@ public class LimitResultsAnalysisTest {
         analysis.verifyResult("_id", 5, 100, "ObjectId");
         analysis.verifyResult("name", 5, 100, "String");
 
-        // TODO: there is only one document with 'someBinData'. Why variety returns 5/100% instead of 1/20% ?
-        // FIXME: analysis.verifyResult("someBinData", 1, 20, "BinData-old");
+        analysis.verifyResult("someBinData", 1, 20, "BinData-old");
     }
 }

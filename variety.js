@@ -128,7 +128,7 @@ function serializeDoc(doc, maxDepth){
 			//if(typeof value != 'object') 
 			result[parentKey+key] = value;
 			//it's an object, recurse...only if we haven't reached max depth
-			if(isHash(value) && (maxDepth > 0)) {
+			if(isHash(value) && (maxDepth > 1)) {
 				serialize(value, parentKey+key+'.',maxDepth-1);
 			}
 		}
@@ -209,7 +209,7 @@ resultsDB[resultsCollectionName].find({}).forEach(function(key) {
   if(limit < numDocuments) {
     var existsQuery = {};
     existsQuery[keyName] = {$exists: true};
-    key.totalOccurrences = db[collection].find(query).count(existsQuery);
+    key.totalOccurrences = db[collection].count(existsQuery);
   }  
   key.percentContaining = (key.totalOccurrences / numDocuments) * 100.0;
   resultsDB[resultsCollectionName].save(key);
