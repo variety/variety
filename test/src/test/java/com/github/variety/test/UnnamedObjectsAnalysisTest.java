@@ -5,6 +5,7 @@ import com.github.variety.VarietyAnalysis;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -33,20 +34,15 @@ public class UnnamedObjectsAnalysisTest {
     public void testUnnamedObjects() throws Exception {
         final VarietyAnalysis analysis = variety.runAnalysis();
 
+        Assert.assertEquals(6, analysis.getResultsCollection().count());
+
         analysis.verifyResult("_id", 2, 100, "ObjectId");
         analysis.verifyResult("title", 2, 100, "String");
         analysis.verifyResult("comments", 2, 100, "Array");
 
-
-        // TODO: current version of variety is not able to handle unnamed inside objects. Earlier they were marked with XX. key prefix.
-        // Now the unnamed object are skipped and not analysed at all. Example of earlier version results can be seen
-        // in issue https://github.com/variety/variety/issues/29
-
-        // There should be 6 different keys: _id, title, comments and three from anonymous objects: comments.XX.author, comments.XX.body, comments.XX.visible
-        // FIXME: Assert.assertEquals(6, analysis.getResultsCollection().count());
-
-        // FIXME: analysis.verifyResult("comments.XX.author", 2, 100, "String");
-        // FIXME: analysis.verifyResult("comments.XX.body", 2, 100, "String");
-        // FIXME: analysis.verifyResult("comments.XX.visible", 1, 50, "Boolean");
+        // unnamed objects are prefixed with .XX key
+        analysis.verifyResult("comments.XX.author", 2, 100, "String");
+        analysis.verifyResult("comments.XX.body", 2, 100, "String");
+        analysis.verifyResult("comments.XX.visible", 1, 50, "Boolean");
     }
 }
