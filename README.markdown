@@ -122,6 +122,7 @@ I accept pull requests from forks. Very grateful to accept contributions from fo
 
 #### Core Maintainers ####
 
+* Tomáš Dvořák ([personal website] (http://www.tomas-dvorak.cz/))
 * Wes Freeman ([software/chess blog] (http://wes.skeweredrook.com))
 * James Cropcho (original creator of Variety) ([Twitter] (https://twitter.com/Cropcho))
 
