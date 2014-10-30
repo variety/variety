@@ -62,7 +62,7 @@ print('Using maxDepth of ' + maxDepth);
 if (typeof sort === 'undefined') { var sort = {_id: -1}; }
 print('Using sort of ' + tojson(sort));
 
-if (typeof outputFormat === 'undefined') { var outputFormat = "ascii" }
+if (typeof outputFormat === 'undefined') { var outputFormat = "ascii"; }
 print('Using outputFormat of ' + outputFormat);
 
 
@@ -226,16 +226,16 @@ if(outputFormat === 'json') {
 } else {  // output nice ascii table with results
   var table = [["key", "types", "occurrences", "percents"], ["", "", "", ""]]; // header + delimiter rows
   sortedKeys.forEach(function(key) {
-    table.push([key._id.key, key.value.types.toString(), key.totalOccurrences, key.percentContaining])
+    table.push([key._id.key, key.value.types.toString(), key.totalOccurrences, key.percentContaining]);
   });
 
-  function colMaxWidth(arr, index) {
-   return Math.max.apply(null, arr.map(function(row){return row[index].toString().length}));
-  }
+  var colMaxWidth = function(arr, index) {
+   return Math.max.apply(null, arr.map(function(row){return row[index].toString().length;}));
+  };
 
-  function pad(width, string, symbol) { return (width <= string.length) ? string : pad(width, string + symbol, symbol); }
+  var pad = function(width, string, symbol) { return (width <= string.length) ? string : pad(width, string + symbol, symbol); };
 
   table.forEach(function(row, ri){
-    print("| " + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell, ri == 1 ? "-" : " ")}).join(" | ") + " |");
+    print("| " + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell, ri == 1 ? "-" : " ");}).join(" | ") + " |");
   });
 }
