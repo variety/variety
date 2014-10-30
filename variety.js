@@ -62,8 +62,10 @@ print('Using maxDepth of ' + maxDepth);
 if (typeof sort === 'undefined') { var sort = {_id: -1}; }
 print('Using sort of ' + tojson(sort));
 
+if (typeof outputFormat === 'undefined') { var outputFormat = "ascii" }
+print('Using outputFormat of ' + outputFormat);
 
-	
+
 varietyTypeOf = function(thing) {
   if (typeof thing === 'undefined') { throw 'varietyTypeOf() requires an argument'; }
 
@@ -160,7 +162,7 @@ db[collection].find(query).sort(sort).limit(limit).forEach(function(obj) {
 			interimResults[key]['types'][valueType] = true;
 			interimResults[key]['totalOccurrences']++;
 		}
-	} 
+	}
 });
 
 
@@ -216,6 +218,24 @@ resultsDB[resultsCollectionName].find({}).forEach(function(key) {
 });
 
 var sortedKeys = resultsDB[resultsCollectionName].find({}).sort({totalOccurrences: -1});
-sortedKeys.forEach(function(key) {
-  print(tojson(key, '', true));
-});
+
+if(outputFormat === 'json') {
+  sortedKeys.forEach(function(key) {
+    print(tojson(key, '', true));
+  });
+} else {  // output nice ascii table with results
+  var table = [["key", "types", "occurrences", "percents"], ["", "", "", ""]]; // header + delimiter rows
+  sortedKeys.forEach(function(key) {
+    table.push([key._id.key, key.value.types.toString(), key.totalOccurrences, key.percentContaining])
+  });
+
+  function colMaxWidth(arr, index) {
+   return Math.max.apply(null, arr.map(function(row){return row[index].toString().length}));
+  }
+
+  function pad(width, string, symbol) { return (width <= string.length) ? string : pad(width, string + symbol, symbol); }
+
+  table.forEach(function(row, ri){
+    print("| " + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell, ri == 1 ? "-" : " ")}).join(" | ") + " |");
+  });
+}

@@ -23,11 +23,14 @@ public class Variety {
      * Hardcoded database name in variety.js for analysis results
      */
     public static final String VARIETY_RESULTS_DBNAME = "varietyResults";
+    public static final String FORMAT_JSON = "json";
+    public static final String FORMAT_ASCII = "ascii";
 
     public static final String PARAM_QUERY = "query";
     public static final String PARAM_SORT = "sort";
     public static final String PARAM_MAXDEPTH = "maxDepth";
     public static final String PARAM_LIMIT = "limit";
+    public static final String PARAM_OUTPUT_FORMAT = "outputFormat";
 
 
     private final String inputDatabase;
@@ -38,6 +41,7 @@ public class Variety {
     private Integer maxDepth;
     private String query;
     private String sort;
+    private String outputFormat;
 
     private boolean verbose = true;
 
@@ -99,6 +103,11 @@ public class Variety {
         return this;
     }
 
+    public Variety withFormat(final String format) {
+        this.outputFormat = format;
+        return this;
+    }
+
     /**
      * Enable analysis output stdout of script to stdout of java process.
      * Deprecated because it should only be used for debugging of test, not real/production tests itself. If you
@@ -152,6 +161,10 @@ public class Variety {
 
         if(sort != null && !sort.isEmpty()) {
             args.add(PARAM_SORT + " = " + sort);
+        }
+
+        if(outputFormat != null) {
+            args.add(PARAM_OUTPUT_FORMAT + " = '" + outputFormat + "'");
         }
 
         return args.toString();

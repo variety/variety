@@ -9,12 +9,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/**
- * Variety outputs json-like results to stdout. Lets verify that.
- */
-public class JsonOutputTest {
+public class OutputFormatTest {
 
     private Variety variety;
 
@@ -32,7 +30,7 @@ public class JsonOutputTest {
 
     @Test
     public void verifyJsonEntries() throws Exception {
-        final VarietyAnalysis analysis = variety.runAnalysis();
+        final VarietyAnalysis analysis = variety.withFormat(Variety.FORMAT_JSON).runAnalysis();
 
         // TODO: output itself is not valid JSON. It contains mongo shell output (can be removed with --quiet) and variety execution info.
         // At the end of output, there are printed records from result collection, every record on new line.
@@ -46,5 +44,29 @@ public class JsonOutputTest {
 
         // there should be seven different json results in the stdout
         Assert.assertEquals(7, objects.count());
+    }
+
+    @Test
+    public void verifyAsciiTableOutput() throws Exception {
+        final VarietyAnalysis analysis = variety.withFormat(Variety.FORMAT_ASCII).runAnalysis();
+
+        // filter only lines starting with character '|'
+        final String actual = Stream.of(analysis.getStdOut().split("\n"))
+                .filter(line -> line.startsWith("|"))
+                .collect(Collectors.joining("\n"));
+
+        final String expected =
+                "| key                | types        | occurrences | percents |\n" +
+                "| ------------------ | ------------ | ----------- | -------- |\n" +
+                "| _id                | ObjectId     | 5           | 100      |\n" +
+                "| name               | String       | 5           | 100      |\n" +
+                "| bio                | String       | 3           | 60       |\n" +
+                "| pets               | String,Array | 2           | 40       |\n" +
+                "| birthday           | String       | 2           | 40       |\n" +
+                "| someBinData        | BinData-old  | 1           | 20       |\n" +
+                "| someWeirdLegacyKey | String       | 1           | 20       |";
+
+        Assert.assertEquals(expected, actual);
+
     }
 }
