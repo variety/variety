@@ -3,6 +3,13 @@ This lightweight tool helps you get a sense of your application's schema, as wel
 
 [![Build Status](https://travis-ci.org/variety/variety.svg?branch=master)](https://travis-ci.org/variety/variety)
 
+***
+
+_“I happen to slowly be falling in love with Variety! It is actually one of the most useful tools to get a sense for a messy/unknown data set, and I have put it in a few of our exercises at Zipfian Academy.”_
+
+Jon Dinu  
+_Co-founder of [Zipfian Academy](http://www.zipfianacademy.com/)_
+
 ### An Easy Example ###
 
 We'll make a collection:
