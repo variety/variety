@@ -10,6 +10,10 @@ _“I happen to slowly be falling in love with Variety! It is actually one of th
 Jon Dinu  
 _Co-founder of [Zipfian Academy](http://www.zipfianacademy.com/)_
 
+***
+
+Also featured on the [official MongoDB blog](http://blog.mongodb.org/post/21923016898/meet-variety-a-schema-analyzer-for-mongodb).
+
 ### An Easy Example ###
 
 We'll make a collection:
