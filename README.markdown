@@ -143,6 +143,10 @@ Additional special thanks to Gaëtan Voyer-Perraul ([@gatesvp] (https://twitter.
 
 Much thanks also, to Kyle Banker ([@Hwaet] (https://twitter.com/#!/hwaet)) for writing an unusually good book on MongoDB, which has taught me everything I know about it so far.
 
+#### Tools Which Use Variety (Open Source) ####
+
+* [MightyMightyMongo](https://github.com/JacobGH111/mightymightymongo) (experimental): a browser-based GUI for exploring MongoDB collections, it allows users to also view Variety results. The project is not directly affiliated with Variety, however the creator/core committer has also contributed to Variety.
+
 ##### Stay Safe #####
 
 I have every reason to believe this tool will **not** corrupt your data or harm your computer. But if I were you, I would not use it in a production environment.
