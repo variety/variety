@@ -235,7 +235,11 @@ if(outputFormat === 'json') {
 
   var pad = function(width, string, symbol) { return (width <= string.length) ? string : pad(width, string + symbol, symbol); };
 
+  var output = "";
   table.forEach(function(row, ri){
-    print("| " + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell, ri == 1 ? "-" : " ");}).join(" | ") + " |");
+    output += ("| " + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell, ri == 1 ? "-" : " ");}).join(" | ") + " |\n");
   });
+  var lineLength = output.split("\n")[0].length - 2; // length of first (header) line minus two chars for edges
+  var border = "+" + pad(lineLength, "", "-") + "+";
+  print(border + "\n" + output + border);
 }
