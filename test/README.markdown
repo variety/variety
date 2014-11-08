@@ -44,7 +44,7 @@ VarietyAnalysis analysis = new Variety("test", "users")
 ```VarietyAnalysis``` is the actual analysis result. Main purpose is to easy verify results:
 
 ```
-public void verifyResult(final String key, final double totalOccurrences, final double percentContaining, final String... types)
+verifyResult(String key, double totalOccurrences, double percentContaining, String... types)
 ```
 If the result does not match expectations, AssertionError is thrown (standard JUnit behavior).
 
