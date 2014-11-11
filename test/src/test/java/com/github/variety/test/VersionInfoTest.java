@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
  */
 public class VersionInfoTest {
 
-    public static final Pattern VARIETYJS_PATTERN = Pattern.compile("print\\('(.+), released (.+)'\\).*");
+    public static final Pattern VARIETYJS_PATTERN = Pattern.compile("\\w+\\('(.+), released (.+)'\\).*");
     public static final Pattern CHANGELOG_PATTERN = Pattern.compile("\\((.+)\\)(.+):(.*)");
     
     private List<String> varietyLines;
