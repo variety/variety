@@ -8,8 +8,15 @@ finding rare keys.
 Please see https://github.com/variety/variety for details.
 
 Released by Maypop Inc, © 2012-2014, under the MIT License. */
-print('Variety: A MongoDB Schema Analyzer');
-print('Version 1.4.1, released 14 Oct 2014');
+
+var log = function(message) {
+  if(!__quiet) { // mongo shell param, coming from https://github.com/mongodb/mongo/blob/5fc306543cd3ba2637e5cb0662cc375f36868b28/src/mongo/shell/dbshell.cpp#L624
+      print(message);
+    }
+};
+
+log('Variety: A MongoDB Schema Analyzer');
+log('Version 1.4.1, released 14 Oct 2014');
 
 var dbs = [];
 var emptyDbs = [];
@@ -51,19 +58,21 @@ if (db[collection].count() === 0) {
 }
 
 if (typeof query === 'undefined') { var query = {}; }
-print('Using query of ' + tojson(query));
+log('Using query of ' + tojson(query));
 
 if (typeof limit === 'undefined') { var limit = db[collection].find(query).count(); }
-print('Using limit of ' + limit);
+log('Using limit of ' + limit);
 
 if (typeof maxDepth === 'undefined') { var maxDepth = 99; }
-print('Using maxDepth of ' + maxDepth);
+log('Using maxDepth of ' + maxDepth);
 
 if (typeof sort === 'undefined') { var sort = {_id: -1}; }
-print('Using sort of ' + tojson(sort));
+log('Using sort of ' + tojson(sort));
+
+if (typeof outputFormat === 'undefined') { var outputFormat = "ascii"; }
+log('Using outputFormat of ' + outputFormat);
 
 
-	
 varietyTypeOf = function(thing) {
   if (typeof thing === 'undefined') { throw 'varietyTypeOf() requires an argument'; }
 
@@ -160,7 +169,7 @@ db[collection].find(query).sort(sort).limit(limit).forEach(function(obj) {
 			interimResults[key]['types'][valueType] = true;
 			interimResults[key]['totalOccurrences']++;
 		}
-	} 
+	}
 });
 
 
@@ -180,15 +189,15 @@ var resultsDB = db.getMongo().getDB('varietyResults');
 var resultsCollectionName = collection + 'Keys';
 
 // replace results collection
-print('creating results collection: '+resultsCollectionName);
+log('creating results collection: '+resultsCollectionName);
 resultsDB[resultsCollectionName].drop();
 for(var result in varietyResults) {
-  resultsDB[resultsCollectionName].insert(varietyResults[result]); 
+  resultsDB[resultsCollectionName].insert(varietyResults[result]);
 }
 
 var numDocuments = db[collection].count();
 
-print('removing leaf arrays in results collection, and getting percentages');
+log('removing leaf arrays in results collection, and getting percentages');
 resultsDB[resultsCollectionName].find({}).forEach(function(key) {
   var keyName = key._id.key;
   
@@ -216,6 +225,26 @@ resultsDB[resultsCollectionName].find({}).forEach(function(key) {
 });
 
 var sortedKeys = resultsDB[resultsCollectionName].find({}).sort({totalOccurrences: -1});
-sortedKeys.forEach(function(key) {
-  print(tojson(key, '', true));
-});
+
+if(outputFormat === 'json') {
+  printjson(sortedKeys.toArray()); // valid formatted json output, compressed variant is printjsononeline()
+} else {  // output nice ascii table with results
+  var table = [["key", "types", "occurrences", "percents"], ["", "", "", ""]]; // header + delimiter rows
+  sortedKeys.forEach(function(key) {
+    table.push([key._id.key, key.value.types.toString(), key.totalOccurrences, key.percentContaining]);
+  });
+
+  var colMaxWidth = function(arr, index) {
+   return Math.max.apply(null, arr.map(function(row){return row[index].toString().length;}));
+  };
+
+  var pad = function(width, string, symbol) { return (width <= string.length) ? string : pad(width, string + symbol, symbol); };
+
+  var output = "";
+  table.forEach(function(row, ri){
+    output += ("| " + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell, ri == 1 ? "-" : " ");}).join(" | ") + " |\n");
+  });
+  var lineLength = output.split("\n")[0].length - 2; // length of first (header) line minus two chars for edges
+  var border = "+" + pad(lineLength, "", "-") + "+";
+  print(border + "\n" + output + border);
+}

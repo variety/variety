@@ -11,7 +11,9 @@ import java.io.InputStreamReader;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.StringJoiner;
 
 /**
@@ -23,12 +25,14 @@ public class Variety {
      * Hardcoded database name in variety.js for analysis results
      */
     public static final String VARIETY_RESULTS_DBNAME = "varietyResults";
+    public static final String FORMAT_JSON = "json";
+    public static final String FORMAT_ASCII = "ascii";
 
     public static final String PARAM_QUERY = "query";
     public static final String PARAM_SORT = "sort";
     public static final String PARAM_MAXDEPTH = "maxDepth";
     public static final String PARAM_LIMIT = "limit";
-
+    public static final String PARAM_OUTPUT_FORMAT = "outputFormat";
 
     private final String inputDatabase;
     private final String inputCollection;
@@ -38,8 +42,10 @@ public class Variety {
     private Integer maxDepth;
     private String query;
     private String sort;
+    private String outputFormat;
+    private boolean quiet;
 
-    private boolean verbose = true;
+    private boolean isStdoutForwarded = true;
 
     /**
      * Create variety wrapper with defined connection do analysed database and collection
@@ -99,14 +105,28 @@ public class Variety {
         return this;
     }
 
+    public Variety withFormat(final String format) {
+        this.outputFormat = format;
+        return this;
+    }
+
+    /**
+     * Wrapper for command line option '--quiet', that is passed to mongo shell. Variety is able to read this option
+     * and mute its logs with metadata.
+     */
+    public Variety withQuiet(boolean quiet) {
+        this.quiet = quiet;
+        return this;
+    }
+
     /**
      * Enable analysis output stdout of script to stdout of java process.
      * Deprecated because it should only be used for debugging of test, not real/production tests itself. If you
      * need to read stdout of variety, it can be accessed through {@link VarietyAnalysis#getStdOut()}
      */
     @Deprecated()
-    public Variety verbose() {
-        this.verbose = true;
+    public Variety withStdoutForwarded(final boolean isStdoutForwarded) {
+        this.isStdoutForwarded = isStdoutForwarded;
         return this;
     }
 
@@ -117,15 +137,26 @@ public class Variety {
      * @throws InterruptedException
      */
     public VarietyAnalysis runAnalysis() throws IOException, InterruptedException {
-        final String[] commands = new String[]{"mongo", this.inputDatabase,  "--eval", buildParams(), getVarietyPath()};
-        final Process child = Runtime.getRuntime().exec(commands);
+
+        List<String> commands = new ArrayList<>();
+        commands.add("mongo");
+        commands.add(this.inputDatabase);
+        if(quiet) {
+            commands.add("--quiet");
+        }
+        commands.add("--eval");
+        commands.add(buildParams());
+        commands.add(getVarietyPath());
+
+        final String[] cmdarray = commands.toArray(new String[commands.size()]);
+        final Process child = Runtime.getRuntime().exec(cmdarray);
 
         final int returnCode = child.waitFor();
         final String stdOut = readStream(child.getInputStream());
 
         if(returnCode != 0) {
-            throw new RuntimeException("Failed to execute variety.js with arguments: " + Arrays.toString(commands) + ".\n" + stdOut);
-        } else if(verbose) {
+            throw new RuntimeException("Failed to execute variety.js with arguments: " + Arrays.toString(cmdarray) + ".\n" + stdOut);
+        } else if(isStdoutForwarded) {
             System.out.println(stdOut);
         }
         return new VarietyAnalysis(mongoClient, inputCollection, stdOut);
@@ -152,6 +183,10 @@ public class Variety {
 
         if(sort != null && !sort.isEmpty()) {
             args.add(PARAM_SORT + " = " + sort);
+        }
+
+        if(outputFormat != null) {
+            args.add(PARAM_OUTPUT_FORMAT + " = '" + outputFormat + "'");
         }
 
         return args.toString();

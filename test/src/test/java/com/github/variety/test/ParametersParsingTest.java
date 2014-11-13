@@ -79,6 +79,27 @@ public class ParametersParsingTest {
         }
     }
 
+    @Test
+    public void testDefaultOutputFormatParam() throws Exception {
+        final VarietyAnalysis analysis = variety.runAnalysis(); // format option not provided
+        final Map<String, String> params = getParamsMap(analysis.getStdOut());
+        Assert.assertEquals("ascii", params.get(Variety.PARAM_OUTPUT_FORMAT));
+    }
+
+    @Test
+    public void testAsciiOutputFormatParam() throws Exception {
+        final VarietyAnalysis analysis = variety.withFormat(Variety.FORMAT_ASCII).runAnalysis();
+        final Map<String, String> params = getParamsMap(analysis.getStdOut());
+        Assert.assertEquals("ascii", params.get(Variety.PARAM_OUTPUT_FORMAT));
+    }
+
+    @Test
+    public void testJsonOutputFormatParam() throws Exception {
+        final VarietyAnalysis analysis = variety.withFormat(Variety.FORMAT_JSON).runAnalysis();
+        final Map<String, String> params = getParamsMap(analysis.getStdOut());
+        Assert.assertEquals("json", params.get(Variety.PARAM_OUTPUT_FORMAT));
+    }
+
     /**
      * @param stdout Text from mongo shell, containing variety config output + json results
      * @return Map of config values
