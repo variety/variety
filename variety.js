@@ -227,9 +227,7 @@ resultsDB[resultsCollectionName].find({}).forEach(function(key) {
 var sortedKeys = resultsDB[resultsCollectionName].find({}).sort({totalOccurrences: -1});
 
 if(outputFormat === 'json') {
-  sortedKeys.forEach(function(key) {
-    print(tojson(key, '', true));
-  });
+  printjson(sortedKeys.toArray()); // valid formatted json output, compressed variant is printjsononeline()
 } else {  // output nice ascii table with results
   var table = [["key", "types", "occurrences", "percents"], ["", "", "", ""]]; // header + delimiter rows
   sortedKeys.forEach(function(key) {
