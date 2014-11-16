@@ -22,8 +22,8 @@ class SampleData {
             "| _id                | ObjectId     | 5           | 100      |\n" +
             "| name               | String       | 5           | 100      |\n" +
             "| bio                | String       | 3           | 60       |\n" +
-            "| pets               | String,Array | 2           | 40       |\n" +
             "| birthday           | String       | 2           | 40       |\n" +
+            "| pets               | String,Array | 2           | 40       |\n" +
             "| someBinData        | BinData-old  | 1           | 20       |\n" +
             "| someWeirdLegacyKey | String       | 1           | 20       |\n" +
             "+------------------------------------------------------------+";
