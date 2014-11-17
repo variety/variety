@@ -47,7 +47,7 @@ if (dbs.indexOf(db.getName()) === -1) {
 
 var collNames = db.getCollectionNames().join(', ');
 if (typeof collection === 'undefined') {
-  throw 'You have to supply a \'collection\' variable, à la --eval \'var collection = "animals"\'.\n'+ 
+  throw 'You have to supply a \'collection\' variable, à la --eval \'var collection = "animals"\'.\n'+
         'Possible collection options for database specified: ' + collNames + '.\n'+
         'Please see https://github.com/variety/variety for details.';
 } 
@@ -69,7 +69,7 @@ log('Using maxDepth of ' + maxDepth);
 if (typeof sort === 'undefined') { var sort = {_id: -1}; }
 log('Using sort of ' + tojson(sort));
 
-if (typeof outputFormat === 'undefined') { var outputFormat = "ascii"; }
+if (typeof outputFormat === 'undefined') { var outputFormat = 'ascii'; }
 log('Using outputFormat of ' + outputFormat);
 
 
@@ -224,14 +224,14 @@ resultsDB[resultsCollectionName].find({}).forEach(function(key) {
   resultsDB[resultsCollectionName].save(key);
 });
 
-var sortedKeys = resultsDB[resultsCollectionName].find({}).sort({totalOccurrences: -1});
+var sortedKeys = resultsDB[resultsCollectionName].find({}).sort({totalOccurrences: -1, '_id.key': 1}); // occurrences count & alphabetical order
 
 if(outputFormat === 'json') {
   printjson(sortedKeys.toArray()); // valid formatted json output, compressed variant is printjsononeline()
 } else {  // output nice ascii table with results
-  var table = [["key", "types", "occurrences", "percents"], ["", "", "", ""]]; // header + delimiter rows
+  var table = [['key', 'types', 'occurrences', 'percents'], ['', '', '', '']]; // header + delimiter rows
   sortedKeys.forEach(function(key) {
-    table.push([key._id.key, key.value.types.toString(), key.totalOccurrences, key.percentContaining]);
+    table.push([key._id.key, key.value.types.toString(), key.totalOccurrences.toString(), key.percentContaining.toString()]);
   });
 
   var colMaxWidth = function(arr, index) {
@@ -240,11 +240,11 @@ if(outputFormat === 'json') {
 
   var pad = function(width, string, symbol) { return (width <= string.length) ? string : pad(width, string + symbol, symbol); };
 
-  var output = "";
+  var output = '';
   table.forEach(function(row, ri){
-    output += ("| " + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell, ri == 1 ? "-" : " ");}).join(" | ") + " |\n");
+    output += ('| ' + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell, ri == 1 ? '-' : ' ');}).join(' | ') + ' |\n');
   });
-  var lineLength = output.split("\n")[0].length - 2; // length of first (header) line minus two chars for edges
-  var border = "+" + pad(lineLength, "", "-") + "+";
-  print(border + "\n" + output + border);
+  var lineLength = output.split('\n')[0].length - 2; // length of first (header) line minus two chars for edges
+  var border = '+' + pad(lineLength, '', '-') + '+';
+  print(border + '\n' + output + border);
 }
