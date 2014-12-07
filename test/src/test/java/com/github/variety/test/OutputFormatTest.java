@@ -1,9 +1,7 @@
 package com.github.variety.test;
 
 import com.github.variety.Variety;
-import com.github.variety.VarietyAnalysis;
-import com.mongodb.BasicDBList;
-import com.mongodb.util.JSON;
+import com.github.variety.validator.ResultsValidator;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -30,21 +28,18 @@ public class OutputFormatTest {
 
     @Test
     public void verifyJsonEntries() throws Exception {
-        final VarietyAnalysis analysis = variety
+        final ResultsValidator analysis = variety
                 .withQuiet(true) // do not output any other metadata, only results
                 .withFormat(Variety.FORMAT_JSON)
-                .runAnalysis();
-
-        // Verify, that output is parse-able json by transforming stdout to json
-        final BasicDBList parsed = (BasicDBList) JSON.parse(analysis.getStdOut());
+                .runJsonAnalysis();
 
         // there should be seven different json results
-        Assert.assertEquals(7, parsed.size());
+        Assert.assertEquals(7, analysis.getResultsCount());
     }
 
     @Test
     public void verifyAsciiTableOutput() throws Exception {
-        final VarietyAnalysis analysis = variety.withFormat(Variety.FORMAT_ASCII).runAnalysis();
+        final ResultsValidator analysis = variety.withFormat(Variety.FORMAT_ASCII).runDatabaseAnalysis();
 
         // filter only lines starting with character '|'
         final String actual = Stream.of(analysis.getStdOut().split("\n"))

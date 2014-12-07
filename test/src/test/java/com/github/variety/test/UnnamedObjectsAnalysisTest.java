@@ -1,7 +1,7 @@
 package com.github.variety.test;
 
 import com.github.variety.Variety;
-import com.github.variety.VarietyAnalysis;
+import com.github.variety.validator.ResultsValidator;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 import org.junit.After;
@@ -32,17 +32,17 @@ public class UnnamedObjectsAnalysisTest {
 
     @Test
     public void testUnnamedObjects() throws Exception {
-        final VarietyAnalysis analysis = variety.runAnalysis();
+        final ResultsValidator analysis = variety.runDatabaseAnalysis();
 
-        Assert.assertEquals(6, analysis.getResultsCollection().count());
+        Assert.assertEquals(6, analysis.getResultsCount());
 
-        analysis.verifyResult("_id", 2, 100, "ObjectId");
-        analysis.verifyResult("title", 2, 100, "String");
-        analysis.verifyResult("comments", 2, 100, "Array");
+        analysis.validate("_id", 2, 100, "ObjectId");
+        analysis.validate("title", 2, 100, "String");
+        analysis.validate("comments", 2, 100, "Array");
 
         // unnamed objects are prefixed with .XX key
-        analysis.verifyResult("comments.XX.author", 2, 100, "String");
-        analysis.verifyResult("comments.XX.body", 2, 100, "String");
-        analysis.verifyResult("comments.XX.visible", 1, 50, "Boolean");
+        analysis.validate("comments.XX.author", 2, 100, "String");
+        analysis.validate("comments.XX.body", 2, 100, "String");
+        analysis.validate("comments.XX.visible", 1, 50, "Boolean");
     }
 }

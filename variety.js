@@ -72,7 +72,7 @@ log('Using sort of ' + tojson(sort));
 if (typeof outputFormat === 'undefined') { var outputFormat = 'ascii'; }
 log('Using outputFormat of ' + outputFormat);
 
-if (typeof persistResults === 'undefined') { var persistResults = true; }
+if (typeof persistResults === 'undefined') { var persistResults = false; }
 log('Using persistResults of ' + persistResults);
 
 varietyTypeOf = function(thing) {

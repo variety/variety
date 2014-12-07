@@ -1,5 +1,8 @@
 package com.github.variety;
 
+import com.github.variety.validator.DbResultsValidator;
+import com.github.variety.validator.JsonResultsValidator;
+import com.github.variety.validator.ResultsValidator;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.MongoClient;
@@ -33,6 +36,7 @@ public class Variety {
     public static final String PARAM_MAXDEPTH = "maxDepth";
     public static final String PARAM_LIMIT = "limit";
     public static final String PARAM_OUTPUT_FORMAT = "outputFormat";
+    public static final String PARAM_PERSIST_RESULTS = "persistResults";
 
     private final String inputDatabase;
     private final String inputCollection;
@@ -44,8 +48,7 @@ public class Variety {
     private String sort;
     private String outputFormat;
     private boolean quiet;
-
-    private boolean isStdoutForwarded = true;
+    private boolean persistResults;
 
     /**
      * Create variety wrapper with defined connection do analysed database and collection
@@ -105,6 +108,10 @@ public class Variety {
         return this;
     }
 
+    /**
+     * Variety wrapper for {@code format} option.
+     * @param format valid values are either 'json' or 'ascii'
+     */
     public Variety withFormat(final String format) {
         this.outputFormat = format;
         return this;
@@ -114,31 +121,25 @@ public class Variety {
      * Wrapper for command line option '--quiet', that is passed to mongo shell. Variety is able to read this option
      * and mute its logs with metadata.
      */
-    public Variety withQuiet(boolean quiet) {
+    public Variety withQuiet(final boolean quiet) {
         this.quiet = quiet;
         return this;
     }
 
     /**
-     * Enable analysis output stdout of script to stdout of java process.
-     * Deprecated because it should only be used for debugging of test, not real/production tests itself. If you
-     * need to read stdout of variety, it can be accessed through {@link VarietyAnalysis#getStdOut()}
+     * Variety wrapper for {@code persistResults} option
      */
-    @Deprecated()
-    public Variety withStdoutForwarded(final boolean isStdoutForwarded) {
-        this.isStdoutForwarded = isStdoutForwarded;
+    public Variety withPersistResults(final boolean persistResults) {
+        this.persistResults = persistResults;
         return this;
     }
 
     /**
      * Executes mongo shell with configured variety options and variety.js script in path.
-     * @return Results of analysis including stdout of variety.js and verifier of collected keys
-     * @throws IOException
-     * @throws InterruptedException
+     * @return Stdout of variety.js
      */
-    public VarietyAnalysis runAnalysis() throws IOException, InterruptedException {
-
-        List<String> commands = new ArrayList<>();
+    private String runAnalysis() throws IOException, InterruptedException {
+        final List<String> commands = new ArrayList<>();
         commands.add("mongo");
         commands.add(this.inputDatabase);
         if(quiet) {
@@ -156,10 +157,19 @@ public class Variety {
 
         if(returnCode != 0) {
             throw new RuntimeException("Failed to execute variety.js with arguments: " + Arrays.toString(cmdarray) + ".\n" + stdOut);
-        } else if(isStdoutForwarded) {
-            System.out.println(stdOut);
         }
-        return new VarietyAnalysis(mongoClient, inputCollection, stdOut);
+        System.out.println(stdOut);
+        return stdOut;
+    }
+
+    public ResultsValidator runJsonAnalysis() throws IOException, InterruptedException {
+        final String stdOut = withFormat(FORMAT_JSON).withQuiet(true).runAnalysis();
+        return new JsonResultsValidator(stdOut);
+    }
+
+    public ResultsValidator runDatabaseAnalysis() throws IOException, InterruptedException {
+        final String stdOut = withFormat(FORMAT_ASCII).withPersistResults(true).runAnalysis();
+        return new DbResultsValidator(mongoClient, inputCollection, stdOut);
     }
 
     /**
@@ -189,6 +199,9 @@ public class Variety {
             args.add(PARAM_OUTPUT_FORMAT + " = '" + outputFormat + "'");
         }
 
+        if(persistResults) {
+            args.add(PARAM_PERSIST_RESULTS + " = " + persistResults);
+        }
         return args.toString();
     }
 

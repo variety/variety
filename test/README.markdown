@@ -30,35 +30,42 @@ Wrapper can be created with this command:
 Variety wrapper = new Variety("test", "users");
 ```
 
-Where the first parameter is analyzed database name and second analyzed collection name. Wrapper is written following
+where the first parameter is analyzed database name and second analyzed collection name. Wrapper is written following
 [builder pattern](https://en.wikipedia.org/wiki/Builder_pattern):
 
 ```
-VarietyAnalysis analysis = new Variety("test", "users")
+ResultsValidator analysis = new Variety("test", "users")
                 .withMaxDepth(10)
                 .withSort("{name:-1}")
                 .withLimit(5)
-                .runAnalysis();
+                .runDatabaseAnalysis();
 ```
 
-```VarietyAnalysis``` is the actual analysis result. Main purpose is to easy verify results:
+```ResultsValidator``` is the actual analysis result. Main purpose is to easy verify results:
 
 ```
-verifyResult(String key, double totalOccurrences, double percentContaining, String... types)
+validate(String key, double totalOccurrences, double percentContaining, String... types)
 ```
-If the result does not match expectations, AssertionError is thrown (standard JUnit behavior).
+If the result does not match expectations, AssertionError is thrown (standard JUnit behavior). There are two possibilities,
+how to obtain results. Variety can store results in collection in MongoDB, or output results as a valid JSON to standard
+output. This two ways have own representations in wrapper:
+
+- runDatabaseAnalysis
+- runJsonAnalysis
+
+Both of them preset important options for Variety (quiet, persistResults, outputFormat) to comply with validator.
 
 
 ## Tests lifecycle
  - Initialization, prepare data. Every test has method annotated with `@Before`.
- - Variety analysis, run variety.js against prepared data and verify results. See `Variety.java`, method `runAnalysis()` and methods annotated with `@Test`.
+ - Variety analysis, run variety.js against prepared data and verify results. See `Variety.java`, method `runDatabaseAnalysis()` and methods annotated with `@Test`.
  - Resources cleanup, see method annotated with `@After`.
 
 ## Used databases and collections
 Tests use two databases, `test` and `varietyResults`. In DB `test`, there will be created collection `users`.
 Collection is later analyzed by variety and results stored in DB `varietyResults`, collection `usersKeys`.
 
-Cleanup method should remove both test and analysis data.
+Cleanup method should remove both test and analysis data. In case of JSON validator, there is no results db/collection created.
 
 ## Contribute
 You can extend current test cases or create new JUnit test. All tests under `test/src/test/` are automatically included into run.
