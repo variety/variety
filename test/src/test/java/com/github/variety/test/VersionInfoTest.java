@@ -17,8 +17,8 @@ import java.util.regex.Pattern;
  */
 public class VersionInfoTest {
 
-    public static final Pattern VARIETYJS_PATTERN = Pattern.compile("\\w+\\('(.+), released (.+)'\\).*");
-    public static final Pattern CHANGELOG_PATTERN = Pattern.compile("\\((.+)\\)(.+):(.*)");
+    private static final Pattern VARIETYJS_PATTERN = Pattern.compile("\\w+\\('(.+), released (.+)'\\).*");
+    private static final Pattern CHANGELOG_PATTERN = Pattern.compile("\\((.+)\\)(.+):(.*)");
     
     private List<String> varietyLines;
     private List<String> changelogLines;
@@ -41,24 +41,24 @@ public class VersionInfoTest {
                 getChangelogDate(changelogLines), getVarietyDate(varietyLines));
     }
 
-    private String getVarietyVersion(List<String> variety) {
+    private String getVarietyVersion(final List<String> variety) {
         return getVarietyPatternGroup(variety, 1);
     }
 
-    private String getVarietyDate(List<String> variety) {
+    private String getVarietyDate(final List<String> variety) {
         return getVarietyPatternGroup(variety, 2);
     }
 
-    private String getChangelogDate(List<String> changelog) {
+    private String getChangelogDate(final List<String> changelog) {
         return getChangelogPatternGroup(changelog, 1);
     }
 
-    private String getChangelogVersion(List<String> changelog) {
+    private String getChangelogVersion(final List<String> changelog) {
         return getChangelogPatternGroup(changelog, 2);
     }
 
     private String getVarietyPatternGroup(final List<String> variety, final int group) {
-        for (String line : variety) {
+        for (final String line : variety) {
             final Matcher matcher = VARIETYJS_PATTERN.matcher(line);
             if (matcher.matches()) {
                 return matcher.group(group);
@@ -75,7 +75,7 @@ public class VersionInfoTest {
         return matcher.group(group).trim();
     }
 
-    private Path getFile(String filename) {
+    private Path getFile(final String filename) {
         // on linux could it be for example /{path_to_project}/variety/test/target/test-classes
         final String testClassesPath = this.getClass().getResource("/").getFile();
 

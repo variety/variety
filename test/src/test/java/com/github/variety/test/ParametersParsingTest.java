@@ -1,7 +1,7 @@
 package com.github.variety.test;
 
 import com.github.variety.Variety;
-import com.github.variety.VarietyAnalysis;
+import com.github.variety.validator.ResultsValidator;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -35,7 +35,7 @@ public class ParametersParsingTest {
      */
     @Test
     public void verifyDefaultResultsStdout() throws Exception {
-        final VarietyAnalysis analysis = variety.runAnalysis();
+        final ResultsValidator analysis = variety.runDatabaseAnalysis();
 
         final Map<String, String> params = getParamsMap(analysis.getStdOut());
 
@@ -50,12 +50,12 @@ public class ParametersParsingTest {
      */
     @Test
     public void verifyRestrictedResultsStdout() throws Exception {
-        final VarietyAnalysis analysis = variety
+        final ResultsValidator analysis = variety
                 .withQuery("{name:'Harry'}")
                 .withSort("{name:1}")
                 .withMaxDepth(5)
                 .withLimit(2)
-                .runAnalysis();
+                .runDatabaseAnalysis();
 
         final Map<String, String> params = getParamsMap(analysis.getStdOut());
 
@@ -72,7 +72,7 @@ public class ParametersParsingTest {
     public void testUnknownCollectionResponse() throws Exception {
         this.variety = new Variety("test", "--unknown--");
         try {
-            variety.runAnalysis();
+            variety.runDatabaseAnalysis();
             Assert.fail("It should throw exception");
         } catch (final RuntimeException e) {
             Assert.assertTrue(e.getMessage().contains("does not exist or is empty"));
@@ -81,23 +81,30 @@ public class ParametersParsingTest {
 
     @Test
     public void testDefaultOutputFormatParam() throws Exception {
-        final VarietyAnalysis analysis = variety.runAnalysis(); // format option not provided
+        final ResultsValidator analysis = variety.runDatabaseAnalysis(); // format option not provided
         final Map<String, String> params = getParamsMap(analysis.getStdOut());
         Assert.assertEquals("ascii", params.get(Variety.PARAM_OUTPUT_FORMAT));
     }
 
     @Test
     public void testAsciiOutputFormatParam() throws Exception {
-        final VarietyAnalysis analysis = variety.withFormat(Variety.FORMAT_ASCII).runAnalysis();
+        final ResultsValidator analysis = variety.withFormat(Variety.FORMAT_ASCII).runDatabaseAnalysis();
         final Map<String, String> params = getParamsMap(analysis.getStdOut());
         Assert.assertEquals("ascii", params.get(Variety.PARAM_OUTPUT_FORMAT));
     }
 
     @Test
-    public void testJsonOutputFormatParam() throws Exception {
-        final VarietyAnalysis analysis = variety.withFormat(Variety.FORMAT_JSON).runAnalysis();
+    public void testPersistResultsParam() throws Exception {
+        final ResultsValidator analysis = variety.runDatabaseAnalysis();
         final Map<String, String> params = getParamsMap(analysis.getStdOut());
-        Assert.assertEquals("json", params.get(Variety.PARAM_OUTPUT_FORMAT));
+        Assert.assertEquals("true", params.get(Variety.PARAM_PERSIST_RESULTS));
+    }
+
+    @Test
+    public void testJsonOutputFormatParam() throws Exception {
+        final ResultsValidator analysis = variety.withFormat(Variety.FORMAT_JSON).runJsonAnalysis();
+        // verify, that result is clean parsable json with 7 entries found
+        Assert.assertEquals(7, analysis.getResultsCount());
     }
 
     /**

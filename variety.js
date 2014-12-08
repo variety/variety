@@ -72,6 +72,8 @@ log('Using sort of ' + tojson(sort));
 if (typeof outputFormat === 'undefined') { var outputFormat = 'ascii'; }
 log('Using outputFormat of ' + outputFormat);
 
+if (typeof persistResults === 'undefined') { var persistResults = false; }
+log('Using persistResults of ' + persistResults);
 
 varietyTypeOf = function(thing) {
   if (typeof thing === 'undefined') { throw 'varietyTypeOf() requires an argument'; }
@@ -173,7 +175,7 @@ db[collection].find(query).sort(sort).limit(limit).forEach(function(obj) {
 });
 
 
-var varietyResults = {};
+var varietyResults = [];
 //now convert the interimResults into the proper format
 for(var key in interimResults){
 	var entry = interimResults[key];
@@ -182,55 +184,59 @@ for(var key in interimResults){
 	newEntry['value'] = {'types':Object.keys(entry['types'])};
 	newEntry['totalOccurrences'] = entry['totalOccurrences'];
 	newEntry['percentContaining'] = entry['totalOccurrences']*100/limit;
-	varietyResults[key] = newEntry;
-}
-
-var resultsDB = db.getMongo().getDB('varietyResults');
-var resultsCollectionName = collection + 'Keys';
-
-// replace results collection
-log('creating results collection: '+resultsCollectionName);
-resultsDB[resultsCollectionName].drop();
-for(var result in varietyResults) {
-  resultsDB[resultsCollectionName].insert(varietyResults[result]);
+	varietyResults.push(newEntry);
 }
 
 var numDocuments = db[collection].count();
 
-log('removing leaf arrays in results collection, and getting percentages');
-resultsDB[resultsCollectionName].find({}).forEach(function(key) {
-  var keyName = key._id.key;
-  
-  // We throw away keys which end in an array index, since they are not useful
-  // for our analysis. (We still keep the key of their parent array, though.) -JC
-  if(keyName.match(/\.XX$/)) {
-    resultsDB[resultsCollectionName].remove({ '_id' : key._id});
-    return;
-  }
+// We throw away keys which end in an array index, since they are not useful
+// for our analysis. (We still keep the key of their parent array, though.) -JC
+var filter = function(item) {
+  return !item._id.key.match(/\.XX$/);
+};
 
+var map = function(item) {
+  var keyName = item._id.key;
   if(keyName.match(/\.XX/)) {
-    // exists query checks for embedded values for an array 
+    // exists query checks for embedded values for an array
     // ie. match {arr:[{x:1}]} with {'arr.x':{$exists:true}}
     // just need to pull out .XX in this case
-    keyName = keyName.replace(/.XX/g,'');    
+    keyName = keyName.replace(/.XX/g,'');
   }
   // we don't need to set it if limit isn't being used. (it's set above.)
   if(limit < numDocuments) {
     var existsQuery = {};
     existsQuery[keyName] = {$exists: true};
-    key.totalOccurrences = db[collection].count(existsQuery);
-  }  
-  key.percentContaining = (key.totalOccurrences / numDocuments) * 100.0;
-  resultsDB[resultsCollectionName].save(key);
-});
+    item.totalOccurrences = db[collection].count(existsQuery);
+  }
+  item.percentContaining = (item.totalOccurrences / numDocuments) * 100.0;
+  return item;
+};
 
-var sortedKeys = resultsDB[resultsCollectionName].find({}).sort({totalOccurrences: -1, '_id.key': 1}); // occurrences count & alphabetical order
+// sort desc by totalOccurrences or by key asc if occurrences equal
+var comparator = function(a, b) {
+  var countsDiff = b.totalOccurrences - a.totalOccurrences;
+  return countsDiff !== 0 ? countsDiff : a._id.key.localeCompare(b._id.key);
+};
+
+log('removing leaf arrays in results collection, and getting percentages');
+varietyResults = varietyResults.filter(filter).map(map).sort(comparator);
+
+if(persistResults) {
+  var resultsDB = db.getMongo().getDB('varietyResults');
+  var resultsCollectionName = collection + 'Keys';
+
+  // replace results collection
+  log('creating results collection: '+resultsCollectionName);
+  resultsDB[resultsCollectionName].drop();
+  resultsDB[resultsCollectionName].insert(varietyResults);
+}
 
 if(outputFormat === 'json') {
-  printjson(sortedKeys.toArray()); // valid formatted json output, compressed variant is printjsononeline()
+  printjson(varietyResults); // valid formatted json output, compressed variant is printjsononeline()
 } else {  // output nice ascii table with results
   var table = [['key', 'types', 'occurrences', 'percents'], ['', '', '', '']]; // header + delimiter rows
-  sortedKeys.forEach(function(key) {
+  varietyResults.forEach(function(key) {
     table.push([key._id.key, key.value.types.toString(), key.totalOccurrences.toString(), key.percentContaining.toString()]);
   });
 

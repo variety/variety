@@ -1,7 +1,7 @@
 package com.github.variety.test;
 
 import com.github.variety.Variety;
-import com.github.variety.VarietyAnalysis;
+import com.github.variety.validator.ResultsValidator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,10 +28,10 @@ public class LimitResultsAnalysisTest {
 
     @Test
     public void verifyLimitedResults() throws Exception {
-        final VarietyAnalysis analysis = variety.withLimit(1).runAnalysis();
-        analysis.verifyResult("_id", 5, 100, "ObjectId");
-        analysis.verifyResult("name", 5, 100, "String");
+        final ResultsValidator analysis = variety.withLimit(1).runDatabaseAnalysis();
+        analysis.validate("_id", 5, 100, "ObjectId");
+        analysis.validate("name", 5, 100, "String");
 
-        analysis.verifyResult("someBinData", 1, 20, "BinData-old");
+        analysis.validate("someBinData", 1, 20, "BinData-old");
     }
 }

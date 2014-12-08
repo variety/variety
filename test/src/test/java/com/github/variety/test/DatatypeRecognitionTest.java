@@ -1,7 +1,7 @@
 package com.github.variety.test;
 
 import com.github.variety.Variety;
-import com.github.variety.VarietyAnalysis;
+import com.github.variety.validator.ResultsValidator;
 import com.mongodb.BasicDBObject;
 import org.bson.types.Binary;
 import org.junit.After;
@@ -48,23 +48,23 @@ public class DatatypeRecognitionTest {
 
     @Test
     public void testDatatypeRecognition() throws Exception {
-        final VarietyAnalysis analysis = variety.runAnalysis();
+        final ResultsValidator analysis = variety.runDatabaseAnalysis();
 
-        Assert.assertEquals(14, analysis.getResultsCollection().count());
+        Assert.assertEquals(14, analysis.getResultsCount());
 
-        analysis.verifyResult("_id", 1, 100, "ObjectId");
-        analysis.verifyResult("key_string", 1, 100, "String");
-        analysis.verifyResult("key_boolean", 1, 100, "Boolean");
-        analysis.verifyResult("key_number", 1, 100, "Number");
-        analysis.verifyResult("key_date", 1, 100, "Date");
-        analysis.verifyResult("key_binData-generic", 1, 100, "BinData-generic");
-        analysis.verifyResult("key_binData-function", 1, 100, "BinData-function");
-        analysis.verifyResult("key_binData-old", 1, 100, "BinData-old");
-        analysis.verifyResult("key_binData-UUID", 1, 100, "BinData-UUID");
-        analysis.verifyResult("key_binData-MD5", 1, 100, "BinData-MD5");
-        analysis.verifyResult("key_binData-user", 1, 100, "BinData-user");
-        analysis.verifyResult("key_array", 1, 100, "Array");
-        analysis.verifyResult("key_object", 1, 100, "Object");
-        analysis.verifyResult("key_null", 1, 100, "null"); // TODO: why has 'null' first letter lowercase, unlike all other types?
+        analysis.validate("_id", 1, 100, "ObjectId");
+        analysis.validate("key_string", 1, 100, "String");
+        analysis.validate("key_boolean", 1, 100, "Boolean");
+        analysis.validate("key_number", 1, 100, "Number");
+        analysis.validate("key_date", 1, 100, "Date");
+        analysis.validate("key_binData-generic", 1, 100, "BinData-generic");
+        analysis.validate("key_binData-function", 1, 100, "BinData-function");
+        analysis.validate("key_binData-old", 1, 100, "BinData-old");
+        analysis.validate("key_binData-UUID", 1, 100, "BinData-UUID");
+        analysis.validate("key_binData-MD5", 1, 100, "BinData-MD5");
+        analysis.validate("key_binData-user", 1, 100, "BinData-user");
+        analysis.validate("key_array", 1, 100, "Array");
+        analysis.validate("key_object", 1, 100, "Object");
+        analysis.validate("key_null", 1, 100, "null"); // TODO: why has 'null' first letter lowercase, unlike all other types?
     }
 }

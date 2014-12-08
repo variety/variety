@@ -1,7 +1,7 @@
 package com.github.variety.test;
 
 import com.github.variety.Variety;
-import com.github.variety.VarietyAnalysis;
+import com.github.variety.validator.ResultsValidator;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -33,7 +33,7 @@ public class QuietOptionTest {
      */
     @Test
     public void testQuietLogs() throws Exception {
-        final VarietyAnalysis varietyAnalysis = variety.withQuiet(true).runAnalysis();
+        final ResultsValidator varietyAnalysis = variety.withQuiet(true).runDatabaseAnalysis();
         Assert.assertEquals(SampleData.EXPECTED_DATA_ASCII_TABLE, varietyAnalysis.getStdOut());
     }
 }
