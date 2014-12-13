@@ -18,31 +18,8 @@ var log = function(message) {
 log('Variety: A MongoDB Schema Analyzer');
 log('Version 1.4.1, released 14 Oct 2014');
 
-var dbs = [];
-var emptyDbs = [];
-
 if (typeof db_name === 'string') {
   db = db.getMongo().getDB( db_name );
-}
-
-
-db.adminCommand('listDatabases').databases.forEach(function(d){
-  if(db.getSisterDB(d.name).getCollectionNames().length > 0) {
-    dbs.push(d.name);
-  }
-  if(db.getSisterDB(d.name).getCollectionNames().length === 0) {
-    emptyDbs.push(d.name);
-  }
-});
-
-if (emptyDbs.indexOf(db.getName()) !== -1) {
-  throw 'The database specified ('+ db +') is empty.\n'+ 
-        'Possible database options are: ' + dbs.join(', ') + '.';
-}
-
-if (dbs.indexOf(db.getName()) === -1) {
-  throw 'The database specified ('+ db +') does not exist.\n'+ 
-        'Possible database options are: ' + dbs.join(', ') + '.';
 }
 
 var collNames = db.getCollectionNames().join(', ');
