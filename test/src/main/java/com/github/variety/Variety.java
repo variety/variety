@@ -6,17 +6,12 @@ import com.github.variety.validator.ResultsValidator;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.MongoClient;
+import com.mongodb.ServerAddress;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.StringJoiner;
 
 /**
@@ -42,6 +37,8 @@ public class Variety {
     private final String inputCollection;
     private final MongoClient mongoClient;
 
+    private final Credentials credentials;
+
     private Integer limit;
     private Integer maxDepth;
     private String query;
@@ -52,14 +49,24 @@ public class Variety {
 
     /**
      * Create variety wrapper with defined connection do analysed database and collection
-     * @param database name of database, that will be analysed
+     * @param database   name of database, that will be analysed
      * @param collection name of collection, that will be analysed
      * @throws UnknownHostException Thrown when fails connection do default host and port of MongoDB
      */
     public Variety(final String database, final String collection) throws UnknownHostException {
-        this.inputDatabase = database;
-        this.inputCollection = collection;
-        this.mongoClient = new MongoClient();
+        this(database, collection, null);
+    }
+
+    public Variety(final String inputDatabase, final String inputCollection, final Credentials credentials) throws UnknownHostException {
+        this.inputDatabase = inputDatabase;
+        this.inputCollection = inputCollection;
+        this.credentials = credentials;
+
+        if (credentials == null) {
+            this.mongoClient = new MongoClient();
+        } else {
+            this.mongoClient = new MongoClient(new ServerAddress("localhost"), Arrays.asList(credentials.getMongoCredential()));
+        }
     }
 
     /**
@@ -138,28 +145,11 @@ public class Variety {
      * Executes mongo shell with configured variety options and variety.js script in path.
      * @return Stdout of variety.js
      */
-    private String runAnalysis() throws IOException, InterruptedException {
-        final List<String> commands = new ArrayList<>();
-        commands.add("mongo");
-        commands.add(this.inputDatabase);
-        if(quiet) {
-            commands.add("--quiet");
-        }
-        commands.add("--eval");
-        commands.add(buildParams());
-        commands.add(getVarietyPath());
-
-        final String[] cmdarray = commands.toArray(new String[commands.size()]);
-        final Process child = Runtime.getRuntime().exec(cmdarray);
-
-        final int returnCode = child.waitFor();
-        final String stdOut = readStream(child.getInputStream());
-
-        if(returnCode != 0) {
-            throw new RuntimeException("Failed to execute variety.js with arguments: " + Arrays.toString(cmdarray) + ".\n" + stdOut);
-        }
-        System.out.println(stdOut);
-        return stdOut;
+    public String runAnalysis() throws IOException, InterruptedException {
+        final MongoShell mongoShell = new MongoShell(inputDatabase, credentials, buildParams(), getVarietyPath(), quiet);
+        final String result = mongoShell.execute();
+        System.out.println(result);
+        return result;
     }
 
     public ResultsValidator runJsonAnalysis() throws IOException, InterruptedException {
@@ -214,13 +204,5 @@ public class Variety {
         return Paths.get(this.getClass().getResource("/").getFile()).getParent().getParent().getParent().resolve("variety.js").toString();
     }
 
-    /**
-     * Converts input stream to String containing lines separated by \n
-     */
-    private String readStream(final InputStream stream)  {
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
-        final StringJoiner builder = new StringJoiner("\n");
-        reader.lines().forEach(builder::add);
-        return builder.toString();
-    }
+
 }
