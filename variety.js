@@ -25,24 +25,26 @@ if (typeof db_name === 'string') {
   db = db.getMongo().getDB( db_name );
 }
 
+var knownDatabases = db.adminCommand('listDatabases').databases;
+if(typeof knownDatabases !== 'undefined') { // not authorized user receives error response (json) without databases key
+  knownDatabases.forEach(function(d){
+    if(db.getSisterDB(d.name).getCollectionNames().length > 0) {
+      dbs.push(d.name);
+    }
+    if(db.getSisterDB(d.name).getCollectionNames().length === 0) {
+      emptyDbs.push(d.name);
+    }
+  });
 
-db.adminCommand('listDatabases').databases.forEach(function(d){
-  if(db.getSisterDB(d.name).getCollectionNames().length > 0) {
-    dbs.push(d.name);
+  if (emptyDbs.indexOf(db.getName()) !== -1) {
+    throw 'The database specified ('+ db +') is empty.\n'+
+          'Possible database options are: ' + dbs.join(', ') + '.';
   }
-  if(db.getSisterDB(d.name).getCollectionNames().length === 0) {
-    emptyDbs.push(d.name);
+
+  if (dbs.indexOf(db.getName()) === -1) {
+    throw 'The database specified ('+ db +') does not exist.\n'+
+          'Possible database options are: ' + dbs.join(', ') + '.';
   }
-});
-
-if (emptyDbs.indexOf(db.getName()) !== -1) {
-  throw 'The database specified ('+ db +') is empty.\n'+ 
-        'Possible database options are: ' + dbs.join(', ') + '.';
-}
-
-if (dbs.indexOf(db.getName()) === -1) {
-  throw 'The database specified ('+ db +') does not exist.\n'+ 
-        'Possible database options are: ' + dbs.join(', ') + '.';
 }
 
 var collNames = db.getCollectionNames().join(', ');
