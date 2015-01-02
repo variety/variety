@@ -189,7 +189,7 @@ for(var key in interimResults){
 	varietyResults.push(newEntry);
 }
 
-var numDocuments = db[collection].count();
+var numDocuments = db[collection].count(query);
 
 // We throw away keys which end in an array index, since they are not useful
 // for our analysis. (We still keep the key of their parent array, though.) -JC
@@ -207,7 +207,7 @@ var map = function(item) {
   }
   // we don't need to set it if limit isn't being used. (it's set above.)
   if(limit < numDocuments) {
-    var existsQuery = {};
+    var existsQuery = query;
     existsQuery[keyName] = {$exists: true};
     item.totalOccurrences = db[collection].count(existsQuery);
   }
