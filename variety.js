@@ -152,6 +152,7 @@ function serializeDoc(doc, maxDepth){
 
 var interimResults = {}; //hold results here until converted to final format
 // main cursor
+var numDocuments = 0;
 db[collection].find(query).sort(sort).limit(limit).forEach(function(obj) {
 	//printjson(obj)
 	flattened = serializeDoc(obj, maxDepth);
@@ -174,8 +175,8 @@ db[collection].find(query).sort(sort).limit(limit).forEach(function(obj) {
 			interimResults[key]['totalOccurrences']++;
 		}
 	}
+    numDocuments++;
 });
-
 
 var varietyResults = [];
 //now convert the interimResults into the proper format
@@ -185,11 +186,9 @@ for(var key in interimResults){
 	newEntry['_id'] = {'key':key};
 	newEntry['value'] = {'types':Object.keys(entry['types'])};
 	newEntry['totalOccurrences'] = entry['totalOccurrences'];
-	newEntry['percentContaining'] = entry['totalOccurrences']*100/limit;
+        newEntry['percentContaining'] = entry['totalOccurrences']*100/limit;
 	varietyResults.push(newEntry);
 }
-
-var numDocuments = db[collection].count(query);
 
 // We throw away keys which end in an array index, since they are not useful
 // for our analysis. (We still keep the key of their parent array, though.) -JC
@@ -207,9 +206,7 @@ var map = function(item) {
   }
   // we don't need to set it if limit isn't being used. (it's set above.)
   if(limit < numDocuments) {
-    var existsQuery = query;
-    existsQuery[keyName] = {$exists: true};
-    item.totalOccurrences = db[collection].count(existsQuery);
+      item.totalOccurrences = db[collection].count(query);
   }
   item.percentContaining = (item.totalOccurrences / numDocuments) * 100.0;
   return item;
