@@ -9,6 +9,8 @@ Please see https://github.com/variety/variety for details.
 
 Released by Maypop Inc, © 2012-2015, under the MIT License. */
 
+'use strict';
+
 var log = function(message) {
   if(!__quiet) { // mongo shell param, coming from https://github.com/mongodb/mongo/blob/5fc306543cd3ba2637e5cb0662cc375f36868b28/src/mongo/shell/dbshell.cpp#L624
       print(message);
@@ -154,7 +156,7 @@ var interimResults = {}; //hold results here until converted to final format
 var numDocuments = 0;
 db[collection].find(query).sort(sort).limit(limit).forEach(function(obj) {
   //printjson(obj)
-  flattened = serializeDoc(obj, maxDepth);
+  var flattened = serializeDoc(obj, maxDepth);
   //printjson(flattened)
   for (var key in flattened){
     var value = flattened[key];
