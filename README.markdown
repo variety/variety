@@ -28,13 +28,17 @@ So, let's see what we've got here:
 
     $ mongo test --eval "var collection = 'users'" variety.js
 	
-    { "_id" : { "key" : "_id" }, "value" : { "types" : [ "ObjectId" ] }, "totalOccurrences" : 5, "percentContaining" : 100 }
-    { "_id" : { "key" : "name" }, "value" : { "types" : [ "String" ] }, "totalOccurrences" : 5, "percentContaining" : 100 }
-    { "_id" : { "key" : "bio" }, "value" : { "types" : [ "String" ] }, "totalOccurrences" : 3, "percentContaining" : 60 }
-    { "_id" : { "key" : "birthday" }, "value" : { "types" : [ "Date" ] }, "totalOccurrences" : 2, "percentContaining" : 40 }
-    { "_id" : { "key" : "pets" }, "value" : { "types" : [ "String", "Array" ] }, "totalOccurrences" : 2, "percentContaining" : 40 }
-    { "_id" : { "key" : "someBinData" }, "value" : { "type" : "BinData" }, "totalOccurrences" : 1, "percentContaining" : 20 }
-    { "_id" : { "key" : "someWeirdLegacyKey" }, "value" : { "type" : "String" }, "totalOccurrences" : 1, "percentContaining" : 20 }
+    +------------------------------------------------------------+
+    | key                | types        | occurrences | percents |
+    | ------------------ | ------------ | ----------- | -------- |
+    | _id                | ObjectId     | 5           | 100      |
+    | name               | String       | 5           | 100      |
+    | bio                | String       | 3           | 60       |
+    | birthday           | String       | 2           | 40       |
+    | pets               | String,Array | 2           | 40       |
+    | someBinData        | BinData-old  | 1           | 20       |
+    | someWeirdLegacyKey | String       | 1           | 20       |
+    +------------------------------------------------------------+
 
 _("test" is the database containing the collection we are analyzing.)_
 
@@ -62,13 +66,15 @@ One can apply a "limit" constraint, which analyzes only the newest documents in 
 	
 Let's examine the results closely:
 
-    { "_id" : { "key" : "_id" }, "value" : { "type" : "ObjectId" }, "totalOccurrences" : 5, "percentContaining" : 100 }
-    { "_id" : { "key" : "name" }, "value" : { "type" : "String" }, "totalOccurrences" : 5, "percentContaining" : 100 }
-    { "_id" : { "key" : "someBinData" }, "value" : { "type" : "BinData" }, "totalOccurrences" : 1, "percentContaining" : 20 }
+    +----------------------------------------------------+
+    | key         | types       | occurrences | percents |
+    | ----------- | ----------- | ----------- | -------- |
+    | _id         | ObjectId    | 1           | 100      |
+    | name        | String      | 1           | 100      |
+    | someBinData | BinData-old | 1           | 100      |
+    +----------------------------------------------------+
 
 We are only examining the last document here ("limit = 1"). It belongs to Geneviève, and only contains the _id, name and bio fields. So it makes sense these are the only three keys.
-
-But how can totalOccurrences still reach 4? "limit" specifies how many documents to search for keys. Then, the tool calculates totalOccurrences and percentContaining from _all_ the collection's documents, even those outside the "limit". This tradeoff is meant to give the most bang for our buck, when using "limit" and learning about a collection.
 
 ### Analyze Documents to a Maximum Depth
 
@@ -82,20 +88,30 @@ The default will traverse all the way to the bottom of that structure:
 
     $ mongo test --eval "var collection = 'users'" variety.js
   
-    ...
-    { "_id" : { "key" : "someNestedObject" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
-    { "_id" : { "key" : "someNestedObject.a" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
-    { "_id" : { "key" : "someNestedObject.a.b" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
-    { "_id" : { "key" : "someNestedObject.a.b.c" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
-    { "_id" : { "key" : "someNestedObject.a.b.c.d" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
-    { "_id" : { "key" : "someNestedObject.a.b.c.d.e" }, "value" : { "types" : [ "Number" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }   
+    +----------------------------------------------------------------+
+    | key                        | types    | occurrences | percents |
+    | -------------------------- | -------- | ----------- | -------- |
+    | _id                        | ObjectId | 1           | 100      |
+    | name                       | String   | 1           | 100      |
+    | someNestedObject           | Object   | 1           | 100      |
+    | someNestedObject.a         | Object   | 1           | 100      |
+    | someNestedObject.a.b       | Object   | 1           | 100      |
+    | someNestedObject.a.b.c     | Object   | 1           | 100      |
+    | someNestedObject.a.b.c.d   | Object   | 1           | 100      |
+    | someNestedObject.a.b.c.d.e | Number   | 1           | 100      |
+    +----------------------------------------------------------------+
  
     $ mongo test --eval "var collection = 'users', maxDepth = 3" variety.js
 
-    ...
-    { "_id" : { "key" : "someNestedObject" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
-    { "_id" : { "key" : "someNestedObject.a" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
-    { "_id" : { "key" : "someNestedObject.a.b" }, "value" : { "types" : [ "Object" ] }, "totalOccurrences" : 1, "percentContaining" : 16.66666666666666 }
+    +----------------------------------------------------------+
+    | key                  | types    | occurrences | percents |
+    | -------------------- | -------- | ----------- | -------- |
+    | _id                  | ObjectId | 1           | 100      |
+    | name                 | String   | 1           | 100      |
+    | someNestedObject     | Object   | 1           | 100      |
+    | someNestedObject.a   | Object   | 1           | 100      |
+    | someNestedObject.a.b | Object   | 1           | 100      |
+    +----------------------------------------------------------+
 
 As you can see, variety only traversed three levels deep.
 
@@ -114,6 +130,30 @@ Perhaps you want to analyze a subset of documents sorted in an order other than 
 One can apply a "sort" constraint, which analyzes documents in the specified order like so:
 
     $ mongo test --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
+
+### Output formats ###
+
+Variety supports two different output formats:
+
+- ASCII: nice formatted tables (as in this readme)
+- JSON: valid JSON results for subsequent processing in other tools (see also [quiet option](https://github.com/variety/variety#quiet-option))
+
+Default format is ```ascii```. You can select the type of format with property ```outputFormat``` provided to variety. Valid values are ```ascii``` and ```json```.
+
+    $ mongo test --quiet --eval "var collection = 'users', outputFormat=json" variety.js
+
+### Quiet option ###
+Both MongoDB and Variety outputs some additional information to standard output. If you want to remove this info, you can use ```--quiet``` option provided to ```mongo``` executable.
+Variety can also read that option and mute unnecessary output. This is useful in connection with ```outputFormat=json```. You receive then only JSON without any other characters around it.
+
+    $ mongo test --quiet --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
+
+### Persist results ###
+By default, Variety prints results only to standard output and does not store them in MongoDB itself. If you want to persist them automatically in database for later usage, you can set the parameter ```persistResults```.
+Variety then stores result documents in database ```varietyResults``` and collection name derived from source collection name.
+If your source collection name is ```users```, variety will store results in collection ```usersKeys``` under ```varietyResults``` database.
+
+    $ mongo test --quiet --eval "var collection = 'users', persistResults=true" variety.js
 
 ##### "But my dad told me MongoDB is a schemaless database!" #####
 
