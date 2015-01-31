@@ -24,13 +24,15 @@ public class QueryLimitedAnalysisTest {
 
     @Test
     public void testQueryLimitedAnalysis() throws Exception {
-        final ResultsValidator analysis = variety.withQuery("{someBinData:{$exists: true}}").runDatabaseAnalysis();
-        Assert.assertEquals(3, analysis.getResultsCount());
+        final ResultsValidator analysis = variety.withQuery("{birthday:{$exists: true}}").runDatabaseAnalysis();
+        Assert.assertEquals(5, analysis.getResultsCount());
 
-        // we analyzed only the keys of objects defined by query. But total counts and percents are computed from the complete collection
-        analysis.validate("_id", 5, 100, "ObjectId");
-        analysis.validate("name", 5, 100, "String");
-        analysis.validate("someBinData", 1, 20, "BinData-old");
+        analysis.validate("_id", 2, 100, "ObjectId");
+        analysis.validate("birthday", 2, 100, "String");
+        analysis.validate("name", 2, 100, "String");
+        analysis.validate("bio", 1, 50, "String");
+        analysis.validate("pets", 1, 50, "String");
+
 
     }
 }

@@ -45,15 +45,16 @@ public class SortedAnalysisTest {
         // when sorting default SampleData by name desc, first entry becomes Tom. He is only with key 'someWeirdLegacyKey'
         // Together with applying limit 1, Tom is the only result in analysis. That gives us chance to assume keys and verify
         // that ordering is correct.
+        // {name: "Tom", bio: "A nice guy.", pets: ["monkey", "fish"], someWeirdLegacyKey: "I like Ike!"}
         final ResultsValidator analysis = variety.withSort("{name:-1}").withLimit(1).runDatabaseAnalysis();
 
         Assert.assertEquals(5, analysis.getResultsCount());
 
-        analysis.validate("_id", 5, 100, "ObjectId");
-        analysis.validate("name", 5, 100, "String");
-        analysis.validate("bio", 3, 60, "String");
-        analysis.validate("pets", 2, 40, "Array");
-        analysis.validate("someWeirdLegacyKey", 1, 20, "String");
+        analysis.validate("_id", 1, 100, "ObjectId");
+        analysis.validate("name", 1, 100, "String");
+        analysis.validate("bio", 1, 100, "String");
+        analysis.validate("pets", 1, 100, "Array");
+        analysis.validate("someWeirdLegacyKey", 1, 100, "String");
 
     }
 }
