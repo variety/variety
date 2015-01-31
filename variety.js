@@ -77,7 +77,7 @@ log('Using outputFormat of ' + outputFormat);
 if (typeof persistResults === 'undefined') { var persistResults = false; }
 log('Using persistResults of ' + persistResults);
 
-varietyTypeOf = function(thing) {
+var varietyTypeOf = function(thing) {
   if (typeof thing === 'undefined') { throw 'varietyTypeOf() requires an argument'; }
 
   if (typeof thing !== 'object') {  
@@ -107,8 +107,7 @@ varietyTypeOf = function(thing) {
       binDataTypes[0x05] = 'MD5';
       binDataTypes[0x80] = 'user';
       return 'BinData-' + binDataTypes[thing.subtype()];
-    }
-    else {
+    } else {
       return 'Object';
     }
   }
@@ -116,77 +115,77 @@ varietyTypeOf = function(thing) {
 
 //flattens object keys to 1D. i.e. {'key1':1,{'key2':{'key3':2}}} becomes {'key1':1,'key2.key3':2}
 //we assume no '.' characters in the keys, which is an OK assumption for MongoDB
-function serializeDoc(doc, maxDepth){
-	var result = {};
-	
-	//determining if an object is a Hash vs Array vs something else is hard
-	//returns true, if object in argument may have nested objects and makes sense to analyse its content
-	function isHash(v) {
-  	var isArray = Array.isArray(v);
-  	var isObject = typeof v === 'object';
-  	var specialObject = v instanceof Date || 
-                      v instanceof ObjectId ||
-                      v instanceof BinData;
-  	return !specialObject && (isArray || isObject);
-	}
-	
-	function serialize(document, parentKey, maxDepth){
-		for(var key in document){
-			//skip over inherited properties such as string, length, etch
-			if(!(document.hasOwnProperty(key))) {
-				continue;
-			}
-			var value = document[key];
-			//objects are skipped here and recursed into later
-			//if(typeof value != 'object') 
-			result[parentKey+key] = value;
-			//it's an object, recurse...only if we haven't reached max depth
-			if(isHash(value) && (maxDepth > 1)) {
-				serialize(value, parentKey+key+'.',maxDepth-1);
-			}
-		}
-	}
-	serialize(doc, '', maxDepth);
-	return result;
-}
+var serializeDoc = function(doc, maxDepth) {
+  var result = {};
+  
+  //determining if an object is a Hash vs Array vs something else is hard
+  //returns true, if object in argument may have nested objects and makes sense to analyse its content
+  function isHash(v) {
+    var isArray = Array.isArray(v);
+    var isObject = typeof v === 'object';
+    var specialObject = v instanceof Date || 
+                        v instanceof ObjectId ||
+                        v instanceof BinData;
+    return !specialObject && (isArray || isObject);
+  }
+  
+  function serialize(document, parentKey, maxDepth){
+    for(var key in document){
+      //skip over inherited properties such as string, length, etch
+      if(!(document.hasOwnProperty(key))) {
+        continue;
+      }
+      var value = document[key];
+      //objects are skipped here and recursed into later
+      //if(typeof value != 'object') 
+      result[parentKey+key] = value;
+      //it's an object, recurse...only if we haven't reached max depth
+      if(isHash(value) && (maxDepth > 1)) {
+        serialize(value, parentKey+key+'.',maxDepth-1);
+      }
+    }
+  }
+  serialize(doc, '', maxDepth);
+  return result;
+};
 
 var interimResults = {}; //hold results here until converted to final format
 // main cursor
 var numDocuments = 0;
 db[collection].find(query).sort(sort).limit(limit).forEach(function(obj) {
-	//printjson(obj)
-	flattened = serializeDoc(obj, maxDepth);
-	//printjson(flattened)
-	for (var key in flattened){
-		var value = flattened[key];
+  //printjson(obj)
+  flattened = serializeDoc(obj, maxDepth);
+  //printjson(flattened)
+  for (var key in flattened){
+    var value = flattened[key];
 
-		//translate unnamed object key from {_parent_name_}.{_index_} to {_parent_name_}.XX
-		key = key.replace(/\.\d+/g,'.XX');
+    //translate unnamed object key from {_parent_name_}.{_index_} to {_parent_name_}.XX
+    key = key.replace(/\.\d+/g,'.XX');
 
-		var valueType = varietyTypeOf(value);
-		if(!(key in interimResults)){ //if it's a new key we haven't seen yet
-			interimResults[key] = {'types':[valueType],'totalOccurrences':1};
-		}
-		else{ //we've seen this key before
-		  if(interimResults[key]['types'].indexOf(valueType) == -1) {
-		    interimResults[key]['types'].push(valueType);
-		  }
-			interimResults[key]['totalOccurrences']++;
-		}
-	}
+    var valueType = varietyTypeOf(value);
+    if(!(key in interimResults)){ //if it's a new key we haven't seen yet
+      interimResults[key] = {'types':[valueType],'totalOccurrences':1};
+    }
+    else{ //we've seen this key before
+      if(interimResults[key]['types'].indexOf(valueType) == -1) {
+        interimResults[key]['types'].push(valueType);
+      }
+      interimResults[key]['totalOccurrences']++;
+    }
+  }
     numDocuments++;
 });
 
 var varietyResults = [];
 //now convert the interimResults into the proper format
 for(var key in interimResults){
-	var entry = interimResults[key];
-	var newEntry = {};
-	newEntry['_id'] = {'key':key};
-	newEntry['value'] = {'types':entry['types']};
-	newEntry['totalOccurrences'] = entry['totalOccurrences'];
-        newEntry['percentContaining'] = entry['totalOccurrences']*100/limit;
-	varietyResults.push(newEntry);
+  var entry = interimResults[key];
+  var newEntry = {};
+  newEntry['_id'] = {'key':key};
+  newEntry['value'] = {'types':entry['types']};
+  newEntry['totalOccurrences'] = entry['totalOccurrences'];
+  newEntry['percentContaining'] = entry['totalOccurrences']*100/limit;
+  varietyResults.push(newEntry);
 }
 
 // We throw away keys which end in an array index, since they are not useful
