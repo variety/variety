@@ -123,7 +123,7 @@ One can apply a "query" contraint, which takes a standard Mongo query object, to
 
     $ mongo test --eval "var collection = 'users', query = {'caredAbout':true}" variety.js
 
-### Analyze Documents Sorted in a particular order ###
+### Analyze Documents Sorted In a Particular Order ###
 
 Perhaps you want to analyze a subset of documents sorted in an order other than creation order, say, for example, sorted by when documents were updated.
 
@@ -131,7 +131,7 @@ One can apply a "sort" constraint, which analyzes documents in the specified ord
 
     $ mongo test --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
 
-### Output Formats ###
+### Render Output As JSON For Easy Ingestion and Parsing ###
 
 Variety supports two different output formats:
 
@@ -142,13 +142,13 @@ Default format is ```ascii```. You can select the type of format with property `
 
     $ mongo test --quiet --eval "var collection = 'users', outputFormat='json'" variety.js
 
-### Quiet Option ###
+#### Quiet Option ####
 Both MongoDB and Variety output some additional information to standard output. If you want to remove this info, you can use ```--quiet``` option provided to ```mongo``` executable.
 Variety can also read that option and mute unnecessary output. This is useful in connection with ```outputFormat=json```. You would then receive only JSON, without any other characters around it.
 
     $ mongo test --quiet --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
 
-### Persist Results ###
+### Save Results in MongoDB For Future Use ###
 By default, Variety prints results only to standard output and does not store them in MongoDB itself. If you want to persist them automatically in database for later usage, you can set the parameter ```persistResults```.
 Variety then stores result documents in database ```varietyResults``` and the collection name is derived from the source collection's name.
 If the source collection's name is ```users```, Variety will store results in collection ```usersKeys``` under ```varietyResults``` database.
