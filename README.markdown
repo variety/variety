@@ -113,9 +113,9 @@ The default will traverse all the way to the bottom of that structure:
     | someNestedObject.a.b | Object   | 1           | 100      |
     +----------------------------------------------------------+
 
-As you can see, variety only traversed three levels deep.
+As you can see, Variety only traversed three levels deep.
 
-### Analyze a subset of Documents ###
+### Analyze a Subset of Documents ###
 
 Perhaps you have a large collection, or you only care about some subset of the documents.
 
@@ -131,27 +131,27 @@ One can apply a "sort" constraint, which analyzes documents in the specified ord
 
     $ mongo test --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
 
-### Output formats ###
+### Output Formats ###
 
 Variety supports two different output formats:
 
-- ASCII: nice formatted tables (as in this readme)
-- JSON: valid JSON results for subsequent processing in other tools (see also [quiet option](https://github.com/variety/variety#quiet-option))
+- ASCII: nicely formatted tables (as in this README)
+- JSON: valid JSON results for subsequent processing in other tools (see also [quiet option](#quiet-option))
 
-Default format is ```ascii```. You can select the type of format with property ```outputFormat``` provided to variety. Valid values are ```ascii``` and ```json```.
+Default format is ```ascii```. You can select the type of format with property ```outputFormat``` provided to Variety. Valid values are ```ascii``` and ```json```.
 
-    $ mongo test --quiet --eval "var collection = 'users', outputFormat=json" variety.js
+    $ mongo test --quiet --eval "var collection = 'users', outputFormat='json'" variety.js
 
-### Quiet option ###
-Both MongoDB and Variety outputs some additional information to standard output. If you want to remove this info, you can use ```--quiet``` option provided to ```mongo``` executable.
-Variety can also read that option and mute unnecessary output. This is useful in connection with ```outputFormat=json```. You receive then only JSON without any other characters around it.
+### Quiet Option ###
+Both MongoDB and Variety output some additional information to standard output. If you want to remove this info, you can use ```--quiet``` option provided to ```mongo``` executable.
+Variety can also read that option and mute unnecessary output. This is useful in connection with ```outputFormat=json```. You would then receive only JSON, without any other characters around it.
 
     $ mongo test --quiet --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
 
-### Persist results ###
+### Persist Results ###
 By default, Variety prints results only to standard output and does not store them in MongoDB itself. If you want to persist them automatically in database for later usage, you can set the parameter ```persistResults```.
-Variety then stores result documents in database ```varietyResults``` and collection name derived from source collection name.
-If your source collection name is ```users```, variety will store results in collection ```usersKeys``` under ```varietyResults``` database.
+Variety then stores result documents in database ```varietyResults``` and the collection name is derived from the source collection's name.
+If the source collection's name is ```users```, Variety will store results in collection ```usersKeys``` under ```varietyResults``` database.
 
     $ mongo test --quiet --eval "var collection = 'users', persistResults=true" variety.js
 
