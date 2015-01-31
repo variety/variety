@@ -165,13 +165,12 @@ db[collection].find(query).sort(sort).limit(limit).forEach(function(obj) {
 
 		var valueType = varietyTypeOf(value);
 		if(!(key in interimResults)){ //if it's a new key we haven't seen yet
-			//for the moment, store 'types' as a dictionary.  An easy way to prevent duplicates
-			var newEntry = {'types':{},'totalOccurrences':1};
-			newEntry['types'][valueType] = true;
-			interimResults[key] = newEntry;
+			interimResults[key] = {'types':[valueType],'totalOccurrences':1};
 		}
 		else{ //we've seen this key before
-			interimResults[key]['types'][valueType] = true;
+		  if(interimResults[key]['types'].indexOf(valueType) == -1) {
+		    interimResults[key]['types'].push(valueType);
+		  }
 			interimResults[key]['totalOccurrences']++;
 		}
 	}
@@ -184,7 +183,7 @@ for(var key in interimResults){
 	var entry = interimResults[key];
 	var newEntry = {};
 	newEntry['_id'] = {'key':key};
-	newEntry['value'] = {'types':Object.keys(entry['types'])};
+	newEntry['value'] = {'types':entry['types']};
 	newEntry['totalOccurrences'] = entry['totalOccurrences'];
         newEntry['percentContaining'] = entry['totalOccurrences']*100/limit;
 	varietyResults.push(newEntry);
