@@ -1,13 +1,13 @@
 /* Variety: A MongoDB Schema Analyzer
 
-This tool helps you get a sense of your application's schema, as well as any 
-outliers to that schema. Particularly useful when you inherit a codebase with 
-data dump and want to quickly learn how the data's structured. Also useful for 
+This tool helps you get a sense of your application's schema, as well as any
+outliers to that schema. Particularly useful when you inherit a codebase with
+data dump and want to quickly learn how the data's structured. Also useful for
 finding rare keys.
 
 Please see https://github.com/variety/variety for details.
 
-Released by Maypop Inc, © 2012-2014, under the MIT License. */
+Released by Maypop Inc, © 2012-2015, under the MIT License. */
 
 var log = function(message) {
   if(!__quiet) { // mongo shell param, coming from https://github.com/mongodb/mongo/blob/5fc306543cd3ba2637e5cb0662cc375f36868b28/src/mongo/shell/dbshell.cpp#L624
@@ -52,10 +52,10 @@ if (typeof collection === 'undefined') {
   throw 'You have to supply a \'collection\' variable, à la --eval \'var collection = "animals"\'.\n'+
         'Possible collection options for database specified: ' + collNames + '.\n'+
         'Please see https://github.com/variety/variety for details.';
-} 
+}
 
 if (db[collection].count() === 0) {
-  throw 'The collection specified (' + collection + ') in the database specified ('+ db +') does not exist or is empty.\n'+ 
+  throw 'The collection specified (' + collection + ') in the database specified ('+ db +') does not exist or is empty.\n'+
         'Possible collection options for database specified: ' + collNames + '.';
 }
 
@@ -80,13 +80,13 @@ log('Using persistResults of ' + persistResults);
 var varietyTypeOf = function(thing) {
   if (typeof thing === 'undefined') { throw 'varietyTypeOf() requires an argument'; }
 
-  if (typeof thing !== 'object') {  
+  if (typeof thing !== 'object') {
     // the messiness below capitalizes the first letter, so the output matches
     // the other return values below. -JC
     return (typeof thing)[0].toUpperCase() + (typeof thing).slice(1);
   }
   else {
-    if (thing && thing.constructor === Array) { 
+    if (thing && thing.constructor === Array) {
       return 'Array';
     }
     else if (thing === null) {
@@ -117,18 +117,18 @@ var varietyTypeOf = function(thing) {
 //we assume no '.' characters in the keys, which is an OK assumption for MongoDB
 var serializeDoc = function(doc, maxDepth) {
   var result = {};
-  
+
   //determining if an object is a Hash vs Array vs something else is hard
   //returns true, if object in argument may have nested objects and makes sense to analyse its content
   function isHash(v) {
     var isArray = Array.isArray(v);
     var isObject = typeof v === 'object';
-    var specialObject = v instanceof Date || 
+    var specialObject = v instanceof Date ||
                         v instanceof ObjectId ||
                         v instanceof BinData;
     return !specialObject && (isArray || isObject);
   }
-  
+
   function serialize(document, parentKey, maxDepth){
     for(var key in document){
       //skip over inherited properties such as string, length, etch
@@ -137,7 +137,7 @@ var serializeDoc = function(doc, maxDepth) {
       }
       var value = document[key];
       //objects are skipped here and recursed into later
-      //if(typeof value != 'object') 
+      //if(typeof value != 'object')
       result[parentKey+key] = value;
       //it's an object, recurse...only if we haven't reached max depth
       if(isHash(value) && (maxDepth > 1)) {

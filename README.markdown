@@ -27,7 +27,7 @@ We'll make a collection:
 So, let's see what we've got here:
 
     $ mongo test --eval "var collection = 'users'" variety.js
-	
+
     +------------------------------------------------------------+
     | key                | types        | occurrences | percents |
     | ------------------ | ------------ | ----------- | -------- |
@@ -63,7 +63,7 @@ Perhaps you want to ignore a collection's oldest documents, and only see what th
 One can apply a "limit" constraint, which analyzes only the newest documents in a collection ([unless sorting](https://github.com/variety/variety#analyze-documents-sorted-in-a-particular-order)), like so:
 
 	$ mongo test --eval "var collection = 'users', limit = 1" variety.js
-	
+
 Let's examine the results closely:
 
     +----------------------------------------------------+
@@ -80,14 +80,14 @@ We are only examining the last document here ("limit = 1"). It belongs to Genevi
 
 Perhaps you have a potentially very deep nested object structure, and you don't want to see more than a few levels deep in the analysis.
 
-One can apply a "maxDepth" constraint, which limits the depth variety will recursively search to find new objects.
+One can apply a "maxDepth" constraint, which limits the depth Variety will recursively search to find new objects.
 
     db.users.insert({name:"Walter", someNestedObject:{a:{b:{c:{d:{e:1}}}}}});
 
 The default will traverse all the way to the bottom of that structure:
 
     $ mongo test --eval "var collection = 'users'" variety.js
-  
+
     +----------------------------------------------------------------+
     | key                        | types    | occurrences | percents |
     | -------------------------- | -------- | ----------- | -------- |
@@ -100,7 +100,7 @@ The default will traverse all the way to the bottom of that structure:
     | someNestedObject.a.b.c.d   | Object   | 1           | 100      |
     | someNestedObject.a.b.c.d.e | Number   | 1           | 100      |
     +----------------------------------------------------------------+
- 
+
     $ mongo test --eval "var collection = 'users', maxDepth = 3" variety.js
 
     +----------------------------------------------------------+
@@ -192,4 +192,4 @@ Much thanks also, to Kyle Banker ([@Hwaet] (https://twitter.com/#!/hwaet)) for w
 I have every reason to believe this tool will **not** corrupt your data or harm your computer. But if I were you, I would not use it in a production environment.
 
 
-Released by Maypop Inc, © 2012-2014, under the [MIT License] (http://www.opensource.org/licenses/MIT).
+Released by Maypop Inc, © 2012-2015, under the [MIT License] (http://www.opensource.org/licenses/MIT).
