@@ -9,6 +9,8 @@ Please see https://github.com/variety/variety for details.
 
 Released by Maypop Inc, © 2012-2015, under the MIT License. */
 
+(function () { 'use strict'; // wraps everything for which we can use strict mode -JC
+
 var log = function(message) {
   if(!__quiet) { // mongo shell param, coming from https://github.com/mongodb/mongo/blob/5fc306543cd3ba2637e5cb0662cc375f36868b28/src/mongo/shell/dbshell.cpp#L624
       print(message);
@@ -59,23 +61,47 @@ if (db[collection].count() === 0) {
         'Possible collection options for database specified: ' + collNames + '.';
 }
 
-if (typeof query === 'undefined') { var query = {}; }
-log('Using query of ' + tojson(query));
+var $query = {};
+if(typeof query !== 'undefined') {
+  $query = query;
+  query = '_undefined';
+}
+log('Using query of ' + tojson($query));
 
-if (typeof limit === 'undefined') { var limit = db[collection].find(query).count(); }
-log('Using limit of ' + limit);
+var $limit = db[collection].find($query).count();
+if(typeof limit !== 'undefined') {
+  $limit = limit;
+  limit = '_undefined';
+}
+log('Using limit of ' + $limit);
 
-if (typeof maxDepth === 'undefined') { var maxDepth = 99; }
-log('Using maxDepth of ' + maxDepth);
+var $maxDepth = 99;
+if(typeof maxDepth !== 'undefined') {
+  $maxDepth = maxDepth;
+  maxDepth = '_undefined';
+}
+log('Using maxDepth of ' + $maxDepth);
 
-if (typeof sort === 'undefined') { var sort = {_id: -1}; }
-log('Using sort of ' + tojson(sort));
+var $sort = {_id: -1};
+if(typeof sort !== 'undefined') {
+  $sort = sort;
+  sort = '_undefined';
+}
+log('Using sort of ' + tojson($sort));
 
-if (typeof outputFormat === 'undefined') { var outputFormat = 'ascii'; }
-log('Using outputFormat of ' + outputFormat);
+var $outputFormat = 'ascii';
+if(typeof outputFormat !== 'undefined') {
+  $outputFormat = outputFormat;
+  outputFormat = '_undefined';
+}
+log('Using outputFormat of ' + $outputFormat);
 
-if (typeof persistResults === 'undefined') { var persistResults = false; }
-log('Using persistResults of ' + persistResults);
+var $persistResults = false;
+if(typeof persistResults !== 'undefined') {
+  $persistResults = persistResults;
+  persistResults = '_undefined';
+}
+log('Using persistResults of ' + $persistResults);
 
 var varietyTypeOf = function(thing) {
   if (typeof thing === 'undefined') { throw 'varietyTypeOf() requires an argument'; }
@@ -152,9 +178,9 @@ var serializeDoc = function(doc, maxDepth) {
 var interimResults = {}; //hold results here until converted to final format
 // main cursor
 var numDocuments = 0;
-db[collection].find(query).sort(sort).limit(limit).forEach(function(obj) {
+db[collection].find($query).sort($sort).limit($limit).forEach(function(obj) {
   //printjson(obj)
-  flattened = serializeDoc(obj, maxDepth);
+  var flattened = serializeDoc(obj, $maxDepth);
   //printjson(flattened)
   for (var key in flattened){
     var value = flattened[key];
@@ -184,7 +210,7 @@ for(var key in interimResults){
   newEntry['_id'] = {'key':key};
   newEntry['value'] = {'types':entry['types']};
   newEntry['totalOccurrences'] = entry['totalOccurrences'];
-  newEntry['percentContaining'] = entry['totalOccurrences']*100/limit;
+  newEntry['percentContaining'] = entry['totalOccurrences']*100/$limit;
   varietyResults.push(newEntry);
 }
 
@@ -203,8 +229,8 @@ var map = function(item) {
     keyName = keyName.replace(/.XX/g,'');
   }
   // we don't need to set it if limit isn't being used. (it's set above.)
-  if(limit < numDocuments) {
-      item.totalOccurrences = db[collection].count(query);
+  if($limit < numDocuments) {
+      item.totalOccurrences = db[collection].count($query);
   }
   item.percentContaining = (item.totalOccurrences / numDocuments) * 100.0;
   return item;
@@ -219,7 +245,7 @@ var comparator = function(a, b) {
 log('removing leaf arrays in results collection, and getting percentages');
 varietyResults = varietyResults.filter(filter).map(map).sort(comparator);
 
-if(persistResults) {
+if($persistResults) {
   var resultsDB = db.getMongo().getDB('varietyResults');
   var resultsCollectionName = collection + 'Keys';
 
@@ -229,7 +255,7 @@ if(persistResults) {
   resultsDB[resultsCollectionName].insert(varietyResults);
 }
 
-if(outputFormat === 'json') {
+if($outputFormat === 'json') {
   printjson(varietyResults); // valid formatted json output, compressed variant is printjsononeline()
 } else {  // output nice ascii table with results
   var table = [['key', 'types', 'occurrences', 'percents'], ['', '', '', '']]; // header + delimiter rows
@@ -251,3 +277,5 @@ if(outputFormat === 'json') {
   var border = '+' + pad(lineLength, '', '-') + '+';
   print(border + '\n' + output + border);
 }
+
+}()); // end strict mode
