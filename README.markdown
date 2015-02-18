@@ -76,6 +76,15 @@ Let's examine the results closely:
 
 We are only examining the last document here ("limit = 1"). It belongs to Geneviève, and only contains the _id, name and bio fields. So it makes sense these are the only three keys.
 
+### Analyze random sample 
+
+Perhaps your collection is so messed up, but you can't afford to scan it whole? You can analyze a random sample:
+
+mongo --eval "var db_name = 'yourMessiCollection'; var collection = 'rfa_traffic.min'; var sampleSize = 0.05" variety.js
+
+You can give a sample size in percent (from 0 to 1), 0.05 means random sample 5% of the collection.
+
+
 ### Analyze Documents to a Maximum Depth
 
 Perhaps you have a potentially very deep nested object structure, and you don't want to see more than a few levels deep in the analysis.

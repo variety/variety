@@ -62,8 +62,16 @@ if (db[collection].count() === 0) {
 if (typeof query === 'undefined') { var query = {}; }
 log('Using query of ' + tojson(query));
 
-if (typeof limit === 'undefined') { var limit = db[collection].find(query).count(); }
-log('Using limit of ' + limit);
+if (typeof sampleSize == 'undefined') {
+
+   if (typeof limit === 'undefined') { var limit = db[collection].find(query).count(); }
+   log('Using limit of ' + limit);
+} else {
+   var totalRecords = db[collection].find(query).count();
+   var nRepeats = Math.floor(sampleSize*totalRecords);
+   log('Using sampleSize of ' + sampleSize + ' ( will inspect ' + nRepeats + ' out of ' + totalRecords + ' records) ');
+}
+
 
 if (typeof maxDepth === 'undefined') { var maxDepth = 99; }
 log('Using maxDepth of ' + maxDepth);
@@ -149,9 +157,42 @@ var serializeDoc = function(doc, maxDepth) {
   return result;
 };
 
+
 var interimResults = {}; //hold results here until converted to final format
 // main cursor
 var numDocuments = 0;
+
+if (typeof nRepeats !== 'undefined') {
+    for (var i = 0; i < nRepeats; i++) {
+      var r = Math.floor(Math.random() * totalRecords);
+      db[collection].find(query).limit(1).skip(r).forEach(function(obj) {
+        //printjson(obj)
+        flattened = serializeDoc(obj, maxDepth);
+        //printjson(flattened)
+        for (var key in flattened){
+          var value = flattened[key];
+
+          //translate unnamed object key from {_parent_name_}.{_index_} to {_parent_name_}.XX
+          key = key.replace(/\.\d+/g,'.XX');
+
+          var valueType = varietyTypeOf(value);
+          if(!(key in interimResults)){ //if it's a new key we haven't seen yet
+            interimResults[key] = {'types':[valueType],'totalOccurrences':1};
+          }
+          else{ //we've seen this key before
+            if(interimResults[key]['types'].indexOf(valueType) == -1) {
+              interimResults[key]['types'].push(valueType);
+            }
+            interimResults[key]['totalOccurrences']++;
+          }
+        }
+          numDocuments++;
+      });
+    }
+
+} else {
+
+
 db[collection].find(query).sort(sort).limit(limit).forEach(function(obj) {
   //printjson(obj)
   flattened = serializeDoc(obj, maxDepth);
@@ -175,6 +216,7 @@ db[collection].find(query).sort(sort).limit(limit).forEach(function(obj) {
   }
     numDocuments++;
 });
+}
 
 var varietyResults = [];
 //now convert the interimResults into the proper format
