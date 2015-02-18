@@ -75,8 +75,8 @@ var $totalRecords = 0;
 
 if (typeof sampleSize == 'undefined') {
    var $limit = db[collection].find($query).count();
-   if (typeof limit === 'undefined') { var limit = db[collection].find(query).count(); }
-   log('Using limit of ' + limit);
+   $limit = db[collection].find($query).count(); 
+   log('Using limit of ' + $limit);
 } else {
    $totalRecords = db[collection].find($query).count();
    $nRepeats = Math.floor(sampleSize*$totalRecords);
