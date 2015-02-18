@@ -270,8 +270,12 @@ var map = function(item) {
     // just need to pull out .XX in this case
     keyName = keyName.replace(/.XX/g,'');
   }
+  
+  if ($nRepeats > 0){
+      item.totalOccurrences = interimResults[keyName]['totalOccurrences'];
+  }
   // we don't need to set it if limit isn't being used. (it's set above.)
-  if($limit < numDocuments) {
+  else if($limit < numDocuments) {
       item.totalOccurrences = db[collection].count($query);
   }
   item.percentContaining = (item.totalOccurrences / numDocuments) * 100.0;
