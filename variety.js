@@ -175,31 +175,40 @@ var serializeDoc = function(doc, maxDepth) {
   return result;
 };
 
-var interimResults = {}; //hold results here until converted to final format
-// main cursor
-var numDocuments = 0;
-db[collection].find($query).sort($sort).limit($limit).forEach(function(obj) {
-  //printjson(obj)
-  var flattened = serializeDoc(obj, $maxDepth);
-  //printjson(flattened)
-  for (var key in flattened){
-    var value = flattened[key];
+var mergeArrays = function(a, b) {
+  if(typeof a === 'undefined') {a = [];}
+  return a.concat(b) // merge two arrays into one, including duplications
+        .filter(function(item, pos, self){return self.indexOf(item) == pos;}) // remove duplications
+        .sort(); // sort alphabetically
+};
+
+// convert document to key-value map, where value is always an array with types as plain strings
+var analyseDocument = function(document) {
+  var result = {};
+  for (var key in document) {
+    var value = document[key];
 
     //translate unnamed object key from {_parent_name_}.{_index_} to {_parent_name_}.XX
     key = key.replace(/\.\d+/g,'.XX');
+    result[key] = mergeArrays(result[key], varietyTypeOf(value));
+  }
+  return result;
+};
 
-    var valueType = varietyTypeOf(value);
-    if(!(key in interimResults)){ //if it's a new key we haven't seen yet
-      interimResults[key] = {'types':[valueType],'totalOccurrences':1};
-    }
-    else{ //we've seen this key before
-      if(interimResults[key]['types'].indexOf(valueType) == -1) {
-        interimResults[key]['types'].push(valueType);
-      }
-      interimResults[key]['totalOccurrences']++;
+var interimResults = {}; //hold results here until converted to final format
+var numDocuments = 0;
+// main cursor
+db[collection].find($query).sort($sort).limit($limit).forEach(function(obj) {
+  var docResult = analyseDocument(serializeDoc(obj, $maxDepth));
+  for (var key in docResult) {
+    if(key in interimResults) {
+      var existing = interimResults[key];
+      interimResults[key] = {'types':mergeArrays(docResult[key], existing.types),'totalOccurrences':existing.totalOccurrences + 1};
+    } else {
+      interimResults[key] = {'types':docResult[key],'totalOccurrences':1};
     }
   }
-    numDocuments++;
+  numDocuments++;
 });
 
 var varietyResults = [];
@@ -221,13 +230,6 @@ var filter = function(item) {
 };
 
 var map = function(item) {
-  var keyName = item._id.key;
-  if(keyName.match(/\.XX/)) {
-    // exists query checks for embedded values for an array
-    // ie. match {arr:[{x:1}]} with {'arr.x':{$exists:true}}
-    // just need to pull out .XX in this case
-    keyName = keyName.replace(/.XX/g,'');
-  }
   // we don't need to set it if limit isn't being used. (it's set above.)
   if($limit < numDocuments) {
       item.totalOccurrences = db[collection].count($query);
