@@ -195,47 +195,10 @@ var analyseDocument = function(document) {
   return result;
 };
 
-var interimResults = {}; //hold results here until converted to final format
-var numDocuments = 0;
-// main cursor
-db[collection].find($query).sort($sort).limit($limit).forEach(function(obj) {
-  var docResult = analyseDocument(serializeDoc(obj, $maxDepth));
-  for (var key in docResult) {
-    if(key in interimResults) {
-      var existing = interimResults[key];
-      interimResults[key] = {'types':mergeArrays(docResult[key], existing.types),'totalOccurrences':existing.totalOccurrences + 1};
-    } else {
-      interimResults[key] = {'types':docResult[key],'totalOccurrences':1};
-    }
-  }
-  numDocuments++;
-});
-
-var varietyResults = [];
-//now convert the interimResults into the proper format
-for(var key in interimResults){
-  var entry = interimResults[key];
-  var newEntry = {};
-  newEntry['_id'] = {'key':key};
-  newEntry['value'] = {'types':entry['types']};
-  newEntry['totalOccurrences'] = entry['totalOccurrences'];
-  newEntry['percentContaining'] = entry['totalOccurrences']*100/$limit;
-  varietyResults.push(newEntry);
-}
-
 // We throw away keys which end in an array index, since they are not useful
 // for our analysis. (We still keep the key of their parent array, though.) -JC
 var filter = function(item) {
   return !item._id.key.match(/\.XX$/);
-};
-
-var map = function(item) {
-  // we don't need to set it if limit isn't being used. (it's set above.)
-  if($limit < numDocuments) {
-      item.totalOccurrences = db[collection].count($query);
-  }
-  item.percentContaining = (item.totalOccurrences / numDocuments) * 100.0;
-  return item;
 };
 
 // sort desc by totalOccurrences or by key asc if occurrences equal
@@ -244,8 +207,38 @@ var comparator = function(a, b) {
   return countsDiff !== 0 ? countsDiff : a._id.key.localeCompare(b._id.key);
 };
 
-log('removing leaf arrays in results collection, and getting percentages');
-varietyResults = varietyResults.filter(filter).map(map).sort(comparator);
+var reduceDocuments = function(accumulator, docResult, index, array) {
+  var duplicityCheck = function(item){return item.key === key;};
+  for (var key in docResult) {
+    var known = accumulator.filter(duplicityCheck);
+    if(known.length > 0) {
+      var existing = known[0];
+      existing.types = mergeArrays(docResult[key], existing.types);
+      existing.totalOccurrences = existing.totalOccurrences + 1;
+    } else {
+      accumulator.push({'key':key, 'types':docResult[key], 'totalOccurrences':1});
+    }
+  }
+  return accumulator;
+};
+
+var computePercentages = function(entry){
+  return {
+    '_id':{'key':entry.key},
+    'value': {'types':entry.types},
+    'totalOccurrences': entry.totalOccurrences,
+    'percentContaining': entry.totalOccurrences*100/$limit
+  };
+};
+
+// the main processing pipe
+var varietyResults = db[collection].find($query).sort($sort).limit($limit) // read data from the mongodb
+  .map(function(obj) {return serializeDoc(obj, $maxDepth);}) // flatten structure, create compound keys
+  .map(analyseDocument) // analyse keys and types of document, filtering duplicities
+  .reduce(reduceDocuments, []) // merge all keys and types
+  .map(computePercentages) // add percentages, reformat results to expected structure
+  .filter(filter) // throw away keys which end in an array index
+  .sort(comparator); // sort by occurrences and alphabet
 
 if($persistResults) {
   var resultsDB = db.getMongo().getDB('varietyResults');
