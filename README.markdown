@@ -119,7 +119,7 @@ As you can see, Variety only traversed three levels deep.
 
 Perhaps you have a large collection, or you only care about some subset of the documents.
 
-One can apply a "query" contraint, which takes a standard Mongo query object, to filter the set of documents required before analysis.
+One can apply a "query" constraint, which takes a standard Mongo query object, to filter the set of documents required before analysis.
 
     $ mongo test --eval "var collection = 'users', query = {'caredAbout':true}" variety.js
 
