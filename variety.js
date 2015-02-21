@@ -68,12 +68,21 @@ if(typeof query !== 'undefined') {
 }
 log('Using query of ' + tojson($query));
 
-var $limit = db[collection].find($query).count();
-if(typeof limit !== 'undefined') {
-  $limit = limit;
-  limit = '_undefined';
+
+var $nRepeats = 0;
+var $limit = 0;
+var $totalRecords = 0;
+
+if (typeof sampleSize == 'undefined') {
+   var $limit = db[collection].find($query).count();
+   $limit = db[collection].find($query).count(); 
+   log('Using limit of ' + $limit);
+} else {
+   $totalRecords = db[collection].find($query).count();
+   $nRepeats = Math.floor(sampleSize*$totalRecords);
+   log('Using sampleSize of ' + sampleSize + ' ( will inspect ' + $nRepeats + ' out of ' + $totalRecords + ' records) ');
 }
-log('Using limit of ' + $limit);
+
 
 var $maxDepth = 99;
 if(typeof maxDepth !== 'undefined') {
@@ -178,6 +187,35 @@ var serializeDoc = function(doc, maxDepth) {
 var interimResults = {}; //hold results here until converted to final format
 // main cursor
 var numDocuments = 0;
+
+if ($nRepeats > 0) {
+    var r = Math.floor(Math.random() * $totalRecords);
+    for (var i = 0; i < $nRepeats; i++) {
+        db[collection].find($query).limit(1).skip(r).forEach(function(obj) {
+          //printjson(obj)
+          var flattened = serializeDoc(obj, $maxDepth);
+          //printjson(flattened)
+          for (var key in flattened){
+            var value = flattened[key];
+
+            //translate unnamed object key from {_parent_name_}.{_index_} to {_parent_name_}.XX
+            key = key.replace(/\.\d+/g,'.XX');
+
+            var valueType = varietyTypeOf(value);
+            if(!(key in interimResults)){ //if it's a new key we haven't seen yet
+              interimResults[key] = {'types':[valueType],'totalOccurrences':1};
+            }
+            else{ //we've seen this key before
+              if(interimResults[key]['types'].indexOf(valueType) == -1) {
+                interimResults[key]['types'].push(valueType);
+              }
+              interimResults[key]['totalOccurrences']++;
+            }
+          }
+            numDocuments++;
+        });
+    }
+} else {
 db[collection].find($query).sort($sort).limit($limit).forEach(function(obj) {
   //printjson(obj)
   var flattened = serializeDoc(obj, $maxDepth);
@@ -201,6 +239,8 @@ db[collection].find($query).sort($sort).limit($limit).forEach(function(obj) {
   }
     numDocuments++;
 });
+}
+
 
 var varietyResults = [];
 //now convert the interimResults into the proper format
@@ -228,11 +268,16 @@ var map = function(item) {
     // just need to pull out .XX in this case
     keyName = keyName.replace(/.XX/g,'');
   }
-  // we don't need to set it if limit isn't being used. (it's set above.)
-  if($limit < numDocuments) {
-      item.totalOccurrences = db[collection].count($query);
+  
+  if ($nRepeats > 0){
+     print(item._id.key, item.totalOccurrences, $nRepeats);
+     item.percentContaining = item.totalOccurrences/$nRepeats*100;
   }
-  item.percentContaining = (item.totalOccurrences / numDocuments) * 100.0;
+  // we don't need to set it if limit isn't being used. (it's set above.)
+  else if($limit < numDocuments) {
+      tem.totalOccurrences = db[collection].count($query);
+      item.percentContaining = (item.totalOccurrences / numDocuments) * 100.0;
+  }
   return item;
 };
 
