@@ -175,24 +175,63 @@ var serializeDoc = function(doc, maxDepth) {
   return result;
 };
 
-var mergeArrays = function(a, b) {
-  if(typeof a === 'undefined') {a = [];}
-  return a.concat(b) // merge two arrays into one, including duplications
-        .filter(function(item, pos, self){return self.indexOf(item) == pos;}) // remove duplications
-        .sort(); // sort alphabetically
-};
-
 // convert document to key-value map, where value is always an array with types as plain strings
 var analyseDocument = function(document) {
   var result = {};
   for (var key in document) {
     var value = document[key];
-
     //translate unnamed object key from {_parent_name_}.{_index_} to {_parent_name_}.XX
     key = key.replace(/\.\d+/g,'.XX');
-    result[key] = mergeArrays(result[key], varietyTypeOf(value));
+    if(typeof result[key] === 'undefined') {
+      result[key] = {};
+    }
+    var type = varietyTypeOf(value);
+    result[key][type] = true;
   }
   return result;
+};
+
+var mergeDocument = function(docResult, interimResults) {
+  for (var key in docResult) {
+    if(key in interimResults) {
+      var existing = interimResults[key];
+      for(var type in docResult[key]) {
+        existing.types[type] = true;
+      }
+      existing.totalOccurrences = existing.totalOccurrences + 1;
+    } else {
+      interimResults[key] = {'types':docResult[key],'totalOccurrences':1};
+    }
+  }
+};
+
+var convertResults = function(interimResults) {
+  var getKeys = function(obj) {
+    var keys = [];
+    for(var key in obj) {
+      keys.push(key);
+    }
+    return keys.sort();
+  };
+  var varietyResults = [];
+  //now convert the interimResults into the proper format
+  for(var key in interimResults) {
+    var entry = interimResults[key];
+    varietyResults.push({
+        '_id': {'key':key},
+        'value': {'types':getKeys(entry.types)},
+        'totalOccurrences': entry['totalOccurrences'],
+        'percentContaining': entry['totalOccurrences'] * 100 / $limit
+    });
+  }
+  return varietyResults;
+};
+
+// Merge the keys and types of current object into accumulator object
+var reduceDocuments = function(accumulator, object) {
+  var docResult = analyseDocument(serializeDoc(object, $maxDepth));
+  mergeDocument(docResult, accumulator);
+  return accumulator;
 };
 
 // We throw away keys which end in an array index, since they are not useful
@@ -207,38 +246,24 @@ var comparator = function(a, b) {
   return countsDiff !== 0 ? countsDiff : a._id.key.localeCompare(b._id.key);
 };
 
-var reduceDocuments = function(accumulator, docResult, index, array) {
-  var duplicityCheck = function(item){return item.key === key;};
-  for (var key in docResult) {
-    var known = accumulator.filter(duplicityCheck);
-    if(known.length > 0) {
-      var existing = known[0];
-      existing.types = mergeArrays(docResult[key], existing.types);
-      existing.totalOccurrences = existing.totalOccurrences + 1;
-    } else {
-      accumulator.push({'key':key, 'types':docResult[key], 'totalOccurrences':1});
-    }
-  }
-  return accumulator;
+// extend standard MongoDB cursor of reduce method - call forEach and combine the results
+DBQuery.prototype.reduce = function(callback, initialValue) {
+  var result = initialValue;
+  this.forEach(function(obj){
+    result = callback(result, obj);
+  });
+  return result;
 };
 
-var computePercentages = function(entry){
-  return {
-    '_id':{'key':entry.key},
-    'value': {'types':entry.types},
-    'totalOccurrences': entry.totalOccurrences,
-    'percentContaining': entry.totalOccurrences*100/$limit
-  };
-};
+var interimResults = db[collection]
+  .find($query)
+  .sort($sort)
+  .limit($limit)
+  .reduce(reduceDocuments, {});
 
-// the main processing pipe
-var varietyResults = db[collection].find($query).sort($sort).limit($limit) // read data from the mongodb
-  .map(function(obj) {return serializeDoc(obj, $maxDepth);}) // flatten structure, create compound keys
-  .map(analyseDocument) // analyse keys and types of document, filtering duplicities
-  .reduce(reduceDocuments, []) // merge all keys and types
-  .map(computePercentages) // add percentages, reformat results to expected structure
-  .filter(filter) // throw away keys which end in an array index
-  .sort(comparator); // sort by occurrences and alphabet
+var varietyResults = convertResults(interimResults)
+  .filter(filter)
+  .sort(comparator);
 
 if($persistResults) {
   var resultsDB = db.getMongo().getDB('varietyResults');
