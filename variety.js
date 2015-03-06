@@ -103,7 +103,7 @@ if(typeof persistResults !== 'undefined') {
 }
 log('Using persistResults of ' + $persistResults);
 
-log('Using collection: ' + collection);
+log('Using collection of ' + collection);
 
 var varietyTypeOf = function(thing) {
   if (typeof thing === 'undefined') { throw 'varietyTypeOf() requires an argument'; }
