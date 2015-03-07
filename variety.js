@@ -207,7 +207,7 @@ var mergeDocument = function(docResult, interimResults) {
   }
 };
 
-var convertResults = function(interimResults) {
+var convertResults = function(interimResults, documentsCount) {
   var getKeys = function(obj) {
     var keys = [];
     for(var key in obj) {
@@ -223,7 +223,7 @@ var convertResults = function(interimResults) {
         '_id': {'key':key},
         'value': {'types':getKeys(entry.types)},
         'totalOccurrences': entry['totalOccurrences'],
-        'percentContaining': entry['totalOccurrences'] * 100 / $limit
+        'percentContaining': entry['totalOccurrences'] * 100 / documentsCount
     });
   }
   return varietyResults;
@@ -257,13 +257,9 @@ DBQuery.prototype.reduce = function(callback, initialValue) {
   return result;
 };
 
-var interimResults = db[collection]
-  .find($query)
-  .sort($sort)
-  .limit($limit)
-  .reduce(reduceDocuments, {});
-
-var varietyResults = convertResults(interimResults)
+var cursor = db[collection].find($query).sort($sort).limit($limit);
+var interimResults = cursor.reduce(reduceDocuments, {});
+var varietyResults = convertResults(interimResults, cursor.size())
   .filter(filter)
   .sort(comparator);
 
