@@ -18,7 +18,7 @@ var log = function(message) {
 };
 
 log('Variety: A MongoDB Schema Analyzer');
-log('Version 1.4.1, released 14 Oct 2014');
+log('Version 1.4.1, released 14 Oct 2014\n');
 
 var dbs = [];
 var emptyDbs = [];
@@ -61,12 +61,20 @@ if (collection instanceof Array) { //If the collection is an array do nothing
         'Please see https://github.com/variety/variety for details.';
 }
 
+
 var val;
+var curName = [];
+var curName = db.getCollectionNames()
 for (val in collArr) { //Begin the loop of supplied collection names
   collection = collArr[val];
-  
+  if (curName.indexOf(collection) < 0) {
+    log('The collection ' + collection + ' was not found in the database SKIPPING\n');
+    continue;
+  }
+
+
 if (db[collection].count() === 0) {
-  throw 'The collection specified (' + collection + ') in the database specified ('+ db +') does not exist or is empty.\n'+
+  throw 'The collection specified (' + collection + ') in the database specified ('+ db +') is empty.\n'+
         'Possible collection options for database specified: ' + collNames + '.';
 }
 
@@ -309,5 +317,5 @@ if($outputFormat === 'json') {
 }
 
 }//End the collection name loop
-outputFormat = '_undefined'; //undefine format for next run
+
 }()); // end strict mode
