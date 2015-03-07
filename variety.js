@@ -101,7 +101,6 @@ log('Using sort of ' + tojson($sort));
 var $outputFormat = 'ascii';
 if(typeof outputFormat !== 'undefined') {
   $outputFormat = outputFormat;
-  outputFormat = '_undefined';
 }
 log('Using outputFormat of ' + $outputFormat);
 
@@ -310,4 +309,5 @@ if($outputFormat === 'json') {
 }
 
 }//End the collection name loop
+outputFormat = '_undefined'; //undefine format for next run
 }()); // end strict mode
