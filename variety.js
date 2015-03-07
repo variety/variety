@@ -49,16 +49,21 @@ if(typeof knownDatabases !== 'undefined') { // not authorized user receives erro
           'Possible database options are: ' + dbs.join(', ') + '.';
   }
 }
-
 var collNames = db.getCollectionNames().join(', ');
-if (collection instanceof Array) { //If the collection is an array do nothing
-  collArr.push.apply(collArr, collection);
-} else if (typeof collection === 'string') { //If its a string turn it into an array for simplicity later
-  collArr.push(collection);
-} else if (typeof collection === 'undefined') {
-  throw 'You have to supply a \'collection\' variable, à la --eval \'var collection = "animals"\'.\n'+
-        'Possible collection options for database specified: ' + collNames + '.\n'+
-        'Please see https://github.com/variety/variety for details.';
+if ((typeof mode !== 'undefined') && (mode === 'recursive')) {//Check if we are in recursive mode
+  collArr = collNames.split(", ");
+}
+if (typeof collection !== 'undefined') {
+  if (collection instanceof Array) { //If the collection is an array do nothing
+    collArr.push.apply(collArr, collection);
+  } else if (typeof collection === 'string') { //If its a string turn it into an array for simplicity later
+    collArr.push(collection);
+  }
+}
+if ((typeof collection === 'undefined') && (typeof mode === 'undefined')) {
+    throw 'You have to supply a \'collection\' variable, à la --eval \'var collection = "animals"\'.\n'+
+          'Possible collection options for database specified: ' + collNames + '.\n'+
+          'Please see https://github.com/variety/variety for details.';
 }
 
 
@@ -66,16 +71,19 @@ var val;
 var curName = [];
 var curName = db.getCollectionNames()
 for (val in collArr) { //Begin the loop of supplied collection names
-  collection = collArr[val];
+  var collection = collArr[val];
   if (curName.indexOf(collection) < 0) {
-    log('The collection ' + collection + ' was not found in the database SKIPPING\n');
+    log('The collection ' + collection + ' did not match any of the possible collection names ' + collNames + ' SKIPPING this collection\n');
+    continue;
+  }
+  if (collection === 'system.indexes') { //Skip system.indexes collection.
     continue;
   }
 
 
 if (db[collection].count() === 0) {
-  throw 'The collection specified (' + collection + ') in the database specified ('+ db +') is empty.\n'+
-        'Possible collection options for database specified: ' + collNames + '.';
+  log('The collection specified (' + collection + ') in the database specified ('+ db +') is empty SKIPPING.\n');
+continue;
 }
 
 var $query = {};
