@@ -23,10 +23,6 @@ log('Version 1.4.1, released 14 Oct 2014');
 var dbs = [];
 var emptyDbs = [];
 
-if (typeof db_name === 'string') {
-  db = db.getMongo().getDB( db_name );
-}
-
 var knownDatabases = db.adminCommand('listDatabases').databases;
 if(typeof knownDatabases !== 'undefined') { // not authorized user receives error response (json) without databases key
   knownDatabases.forEach(function(d){
@@ -111,7 +107,8 @@ var varietyTypeOf = function(thing) {
   if (typeof thing !== 'object') {
     // the messiness below capitalizes the first letter, so the output matches
     // the other return values below. -JC
-    return (typeof thing)[0].toUpperCase() + (typeof thing).slice(1);
+    var typeofThing = typeof thing; // edgecase of JSHint's "singleGroups"
+    return typeofThing[0].toUpperCase() + typeofThing.slice(1);
   }
   else {
     if (thing && thing.constructor === Array) {
@@ -160,7 +157,7 @@ var serializeDoc = function(doc, maxDepth) {
   function serialize(document, parentKey, maxDepth){
     for(var key in document){
       //skip over inherited properties such as string, length, etch
-      if(!(document.hasOwnProperty(key))) {
+      if(!document.hasOwnProperty(key)) {
         continue;
       }
       var value = document[key];
@@ -168,7 +165,7 @@ var serializeDoc = function(doc, maxDepth) {
       //if(typeof value != 'object')
       result[parentKey+key] = value;
       //it's an object, recurse...only if we haven't reached max depth
-      if(isHash(value) && (maxDepth > 1)) {
+      if(isHash(value) && maxDepth > 1) {
         serialize(value, parentKey+key+'.',maxDepth-1);
       }
     }
@@ -222,8 +219,8 @@ var convertResults = function(interimResults, documentsCount) {
     varietyResults.push({
         '_id': {'key':key},
         'value': {'types':getKeys(entry.types)},
-        'totalOccurrences': entry['totalOccurrences'],
-        'percentContaining': entry['totalOccurrences'] * 100 / documentsCount
+        'totalOccurrences': entry.totalOccurrences,
+        'percentContaining': entry.totalOccurrences * 100 / documentsCount
     });
   }
   return varietyResults;
@@ -285,11 +282,11 @@ if($outputFormat === 'json') {
    return Math.max.apply(null, arr.map(function(row){return row[index].toString().length;}));
   };
 
-  var pad = function(width, string, symbol) { return (width <= string.length) ? string : pad(width, string + symbol, symbol); };
+  var pad = function(width, string, symbol) { return width <= string.length ? string : pad(width, string + symbol, symbol); };
 
   var output = '';
   table.forEach(function(row, ri){
-    output += ('| ' + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell, ri == 1 ? '-' : ' ');}).join(' | ') + ' |\n');
+    output += '| ' + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell, ri === 1 ? '-' : ' ');}).join(' | ') + ' |\n';
   });
   var lineLength = output.split('\n')[0].length - 2; // length of first (header) line minus two chars for edges
   var border = '+' + pad(lineLength, '', '-') + '+';
