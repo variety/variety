@@ -51,7 +51,6 @@ if(typeof knownDatabases !== 'undefined') { // not authorized user receives erro
 }
 
 var collNames = db.getCollectionNames().join(', ');
-log(typeof collection);
 if (collection instanceof Array) { //If the collection is an array do nothing
   collArr.push.apply(collArr, collection);
 } else if (typeof collection === 'string') { //If its a string turn it into an array for simplicity later
