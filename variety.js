@@ -23,7 +23,8 @@ if (typeof collection === 'undefined') {
 
 
 log('Variety: A MongoDB Schema Analyzer');
-log('Version 1.4.1, released 14 Oct 2014\n');
+log('Version 1.4.1, released 14 Oct 2014');
+log('\n');
 
 var dbs = [];
 var emptyDbs = [];
