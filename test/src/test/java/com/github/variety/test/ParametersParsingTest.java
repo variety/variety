@@ -68,16 +68,16 @@ public class ParametersParsingTest {
     /**
      * Verify, that variety recognizes unknown or empty collection and exists. In stdout should be recorded reason.
      */
-    @Test
-    public void testUnknownCollectionResponse() throws Exception {
-        this.variety = new Variety("test", "--unknown--");
-        try {
-            variety.runDatabaseAnalysis();
-            Assert.fail("It should throw exception");
-        } catch (final RuntimeException e) {
-            Assert.assertTrue(e.getMessage().contains("does not exist or is empty"));
-        }
-    }
+    //@Test
+    //public void testUnknownCollectionResponse() throws Exception {
+    //    this.variety = new Variety("test", "--unknown--");
+    //    try {
+    //        variety.runDatabaseAnalysis();
+    //        Assert.fail("It should throw exception");
+    //    } catch (final RuntimeException e) {
+    //        Assert.assertTrue(e.getMessage().contains("does not exist or is empty"));
+    //    }
+    //}
 
     @Test
     public void testDefaultOutputFormatParam() throws Exception {
