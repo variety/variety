@@ -8,14 +8,19 @@ finding rare keys.
 Please see https://github.com/variety/variety for details.
 
 Released by Maypop Inc, © 2012-2015, under the MIT License. */
-
-(function () { 'use strict'; // wraps everything for which we can use strict mode -JC
-
 var log = function(message) {
   if(!__quiet) { // mongo shell param, coming from https://github.com/mongodb/mongo/blob/5fc306543cd3ba2637e5cb0662cc375f36868b28/src/mongo/shell/dbshell.cpp#L624
       print(message);
-    }
+  }
 };
+if (typeof collection === 'undefined') {
+  var collection;
+} else {
+  collection;
+}
+(function () { 'use strict'; // wraps everything for which we can use strict mode -JC
+
+
 
 log('Variety: A MongoDB Schema Analyzer');
 log('Version 1.4.1, released 14 Oct 2014\n');
@@ -23,7 +28,6 @@ log('Version 1.4.1, released 14 Oct 2014\n');
 var dbs = [];
 var emptyDbs = [];
 var collArr = [];
-
 if (typeof db_name === 'string') {
   db = db.getMongo().getDB( db_name );
 }
@@ -41,12 +45,12 @@ if(typeof knownDatabases !== 'undefined') { // not authorized user receives erro
 
   if (emptyDbs.indexOf(db.getName()) !== -1) {
     throw 'The database specified ('+ db +') is empty.\n'+
-          'Possible database options are: ' + dbs.join(', ') + '.';
+	  'Possible database options are: ' + dbs.join(', ') + '.';
   }
 
   if (dbs.indexOf(db.getName()) === -1) {
     throw 'The database specified ('+ db +') does not exist.\n'+
-          'Possible database options are: ' + dbs.join(', ') + '.';
+	  'Possible database options are: ' + dbs.join(', ') + '.';
   }
 }
 var collNames = db.getCollectionNames().join(', ');
@@ -62,27 +66,30 @@ if (typeof collection !== 'undefined') {
 }
 if ((typeof collection === 'undefined') && (typeof mode === 'undefined')) {
     throw 'You have to supply a \'collection\' variable, à la --eval \'var collection = "animals"\'.\n'+
-          'Possible collection options for database specified: ' + collNames + '.\n'+
-          'Please see https://github.com/variety/variety for details.';
+	  'Possible collection options for database specified: ' + collNames + '.\n'+
+	  'Please see https://github.com/variety/variety for details.';
 }
 
 
 var val;
 var curName = db.getCollectionNames();
 for (val in collArr) { //Begin the loop of supplied collection names
-  var collection = collArr[val];
+  collection = collArr[val];
+  parse();
+}
+function parse() {
   if (curName.indexOf(collection) < 0) {
     log('The collection ' + collection + ' did not match any of the possible collection names ' + collNames + ' SKIPPING this collection\n');
-    continue;
+    return;
   }
   if (collection === 'system.indexes') { //Skip system.indexes collection.
-    continue;
+    return;
   }
 
 
 if (db[collection].count() === 0) {
   log('The collection specified (' + collection + ') in the database specified ('+ db +') is empty SKIPPING.\n');
-continue;
+return;
 }
 
 var $query = {};
@@ -175,8 +182,8 @@ var serializeDoc = function(doc, maxDepth) {
     var isArray = Array.isArray(v);
     var isObject = typeof v === 'object';
     var specialObject = v instanceof Date ||
-                        v instanceof ObjectId ||
-                        v instanceof BinData;
+			v instanceof ObjectId ||
+			v instanceof BinData;
     return !specialObject && (isArray || isObject);
   }
 
@@ -184,7 +191,7 @@ var serializeDoc = function(doc, maxDepth) {
     for(var key in document){
       //skip over inherited properties such as string, length, etch
       if(!(document.hasOwnProperty(key))) {
-        continue;
+	continue;
       }
       var value = document[key];
       //objects are skipped here and recursed into later
@@ -192,7 +199,7 @@ var serializeDoc = function(doc, maxDepth) {
       result[parentKey+key] = value;
       //it's an object, recurse...only if we haven't reached max depth
       if(isHash(value) && (maxDepth > 1)) {
-        serialize(value, parentKey+key+'.',maxDepth-1);
+	serialize(value, parentKey+key+'.',maxDepth-1);
       }
     }
   }
@@ -221,7 +228,7 @@ var mergeDocument = function(docResult, interimResults) {
     if(key in interimResults) {
       var existing = interimResults[key];
       for(var type in docResult[key]) {
-        existing.types[type] = true;
+	existing.types[type] = true;
       }
       existing.totalOccurrences = existing.totalOccurrences + 1;
     } else {
@@ -243,10 +250,10 @@ var convertResults = function(interimResults) {
   for(var key in interimResults) {
     var entry = interimResults[key];
     varietyResults.push({
-        '_id': {'key':key},
-        'value': {'types':getKeys(entry.types)},
-        'totalOccurrences': entry['totalOccurrences'],
-        'percentContaining': entry['totalOccurrences'] * 100 / $limit
+	'_id': {'key':key},
+	'value': {'types':getKeys(entry.types)},
+	'totalOccurrences': entry['totalOccurrences'],
+	'percentContaining': entry['totalOccurrences'] * 100 / $limit
     });
   }
   return varietyResults;
@@ -309,7 +316,7 @@ if($outputFormat === 'json') {
   });
 
   var colMaxWidth = function(arr, index) {
-   return Math.max.apply(null, arr.map(function(row){return row[index].toString().length;}));
+  return Math.max.apply(null, arr.map(function(row){return row[index].toString().length;}));
   };
 
   var pad = function(width, string, symbol) { return (width <= string.length) ? string : pad(width, string + symbol, symbol); };
