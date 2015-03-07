@@ -35,4 +35,20 @@ public class LimitResultsAnalysisTest {
         analysis.validate("name", 1, 100, "String");
         analysis.validate("someBinData", 1, 100, "BinData-old");
     }
+
+    @Test
+    public void verifyLimitOverMaxResults() throws Exception {
+
+        // limit is set to higher number, that the actual number of documents in collection
+        // analysis should compute percentages based on the real number of documents, not on the
+        // number provided in the limit var.
+        final ResultsValidator analysis = variety.withLimit(10).runDatabaseAnalysis();
+
+        analysis.validate("_id", 5, 100, "ObjectId");
+        analysis.validate("name", 5, 100, "String");
+        analysis.validate("bio", 3, 60, "String");
+        analysis.validate("pets", 2, 40, "String", "Array");
+        analysis.validate("someBinData", 1, 20, "BinData-old");
+        analysis.validate("someWeirdLegacyKey", 1, 20, "String");
+    }
 }

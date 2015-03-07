@@ -28,10 +28,13 @@ log('\n');
 
 var dbs = [];
 var emptyDbs = [];
+<<<<<<< HEAD
 var collArr = [];
 if (typeof db_name === 'string') {
   db = db.getMongo().getDB( db_name );
 }
+=======
+>>>>>>> c465b9c71a354c7b22379e1fc9707ab9c1e609b9
 
 var knownDatabases = db.adminCommand('listDatabases').databases;
 if(typeof knownDatabases !== 'undefined') { // not authorized user receives error response (json) without databases key
@@ -142,7 +145,8 @@ var varietyTypeOf = function(thing) {
   if (typeof thing !== 'object') {
     // the messiness below capitalizes the first letter, so the output matches
     // the other return values below. -JC
-    return (typeof thing)[0].toUpperCase() + (typeof thing).slice(1);
+    var typeofThing = typeof thing; // edgecase of JSHint's "singleGroups"
+    return typeofThing[0].toUpperCase() + typeofThing.slice(1);
   }
   else {
     if (thing && thing.constructor === Array) {
@@ -191,16 +195,26 @@ var serializeDoc = function(doc, maxDepth) {
   function serialize(document, parentKey, maxDepth){
     for(var key in document){
       //skip over inherited properties such as string, length, etch
+<<<<<<< HEAD
       if(!(document.hasOwnProperty(key))) {
 	continue;
+=======
+      if(!document.hasOwnProperty(key)) {
+        continue;
+>>>>>>> c465b9c71a354c7b22379e1fc9707ab9c1e609b9
       }
       var value = document[key];
       //objects are skipped here and recursed into later
       //if(typeof value != 'object')
       result[parentKey+key] = value;
       //it's an object, recurse...only if we haven't reached max depth
+<<<<<<< HEAD
       if(isHash(value) && (maxDepth > 1)) {
 	serialize(value, parentKey+key+'.',maxDepth-1);
+=======
+      if(isHash(value) && maxDepth > 1) {
+        serialize(value, parentKey+key+'.',maxDepth-1);
+>>>>>>> c465b9c71a354c7b22379e1fc9707ab9c1e609b9
       }
     }
   }
@@ -238,7 +252,7 @@ var mergeDocument = function(docResult, interimResults) {
   }
 };
 
-var convertResults = function(interimResults) {
+var convertResults = function(interimResults, documentsCount) {
   var getKeys = function(obj) {
     var keys = [];
     for(var key in obj) {
@@ -251,10 +265,17 @@ var convertResults = function(interimResults) {
   for(var key in interimResults) {
     var entry = interimResults[key];
     varietyResults.push({
+<<<<<<< HEAD
 	'_id': {'key':key},
 	'value': {'types':getKeys(entry.types)},
 	'totalOccurrences': entry['totalOccurrences'],
 	'percentContaining': entry['totalOccurrences'] * 100 / $limit
+=======
+        '_id': {'key':key},
+        'value': {'types':getKeys(entry.types)},
+        'totalOccurrences': entry.totalOccurrences,
+        'percentContaining': entry.totalOccurrences * 100 / documentsCount
+>>>>>>> c465b9c71a354c7b22379e1fc9707ab9c1e609b9
     });
   }
   return varietyResults;
@@ -288,13 +309,9 @@ DBQuery.prototype.reduce = function(callback, initialValue) {
   return result;
 };
 
-var interimResults = db[collection]
-  .find($query)
-  .sort($sort)
-  .limit($limit)
-  .reduce(reduceDocuments, {});
-
-var varietyResults = convertResults(interimResults)
+var cursor = db[collection].find($query).sort($sort).limit($limit);
+var interimResults = cursor.reduce(reduceDocuments, {});
+var varietyResults = convertResults(interimResults, cursor.size())
   .filter(filter)
   .sort(comparator);
 
@@ -320,11 +337,11 @@ if($outputFormat === 'json') {
   return Math.max.apply(null, arr.map(function(row){return row[index].toString().length;}));
   };
 
-  var pad = function(width, string, symbol) { return (width <= string.length) ? string : pad(width, string + symbol, symbol); };
+  var pad = function(width, string, symbol) { return width <= string.length ? string : pad(width, string + symbol, symbol); };
 
   var output = '';
   table.forEach(function(row, ri){
-    output += ('| ' + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell, ri == 1 ? '-' : ' ');}).join(' | ') + ' |\n');
+    output += '| ' + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell, ri === 1 ? '-' : ' ');}).join(' | ') + ' |\n';
   });
   var lineLength = output.split('\n')[0].length - 2; // length of first (header) line minus two chars for edges
   var border = '+' + pad(lineLength, '', '-') + '+';

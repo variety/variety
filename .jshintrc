@@ -1,4 +1,29 @@
 {
-  "camelcase": false,
-  "sub": true
+  "bitwise": true,
+  "curly": true,
+  "eqeqeq": true,
+  "freeze": true,
+  "globals": {
+    "__quiet": false,
+    "collection": false,
+    "print": false,
+    "db": false,
+    "tojson": false,
+    "ObjectId": false,
+    "BinData": false,
+    "DBQuery": false,
+    "printjson": false,
+
+    "query": true,
+    "limit": true,
+    "maxDepth": true,
+    "sort": true,
+    "outputFormat": true,
+    "persistResults": true
+  },
+  "latedef": true,
+  "singleGroups": true,
+  "strict": true,
+  "undef": true,
+  "unused": true
 }
