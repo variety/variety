@@ -81,16 +81,16 @@ for (val in collArr) { //Begin the loop of supplied collection names
 function parse() {
   if (curName.indexOf(collection) < 0) {
     log('The collection ' + collection + ' did not match any of the possible collection names ' + collNames + ' SKIPPING this collection\n');
-    return;
+    throw 'blahhh';
   }
   if (collection === 'system.indexes') { //Skip system.indexes collection.
-    return;
+    throw 'blahhh';
   }
 
 
 if (db[collection].count() === 0) {
   log('The collection specified (' + collection + ') in the database specified ('+ db +') is empty SKIPPING.\n');
-return;
+  throw 'blahhh';
 }
 
 var $query = {};
