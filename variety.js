@@ -28,13 +28,10 @@ log('\n');
 
 var dbs = [];
 var emptyDbs = [];
-<<<<<<< HEAD
 var collArr = [];
 if (typeof db_name === 'string') {
   db = db.getMongo().getDB( db_name );
 }
-=======
->>>>>>> c465b9c71a354c7b22379e1fc9707ab9c1e609b9
 
 var knownDatabases = db.adminCommand('listDatabases').databases;
 if(typeof knownDatabases !== 'undefined') { // not authorized user receives error response (json) without databases key
@@ -195,26 +192,16 @@ var serializeDoc = function(doc, maxDepth) {
   function serialize(document, parentKey, maxDepth){
     for(var key in document){
       //skip over inherited properties such as string, length, etch
-<<<<<<< HEAD
-      if(!(document.hasOwnProperty(key))) {
-	continue;
-=======
       if(!document.hasOwnProperty(key)) {
         continue;
->>>>>>> c465b9c71a354c7b22379e1fc9707ab9c1e609b9
       }
       var value = document[key];
       //objects are skipped here and recursed into later
       //if(typeof value != 'object')
       result[parentKey+key] = value;
       //it's an object, recurse...only if we haven't reached max depth
-<<<<<<< HEAD
-      if(isHash(value) && (maxDepth > 1)) {
-	serialize(value, parentKey+key+'.',maxDepth-1);
-=======
       if(isHash(value) && maxDepth > 1) {
         serialize(value, parentKey+key+'.',maxDepth-1);
->>>>>>> c465b9c71a354c7b22379e1fc9707ab9c1e609b9
       }
     }
   }
@@ -265,17 +252,10 @@ var convertResults = function(interimResults, documentsCount) {
   for(var key in interimResults) {
     var entry = interimResults[key];
     varietyResults.push({
-<<<<<<< HEAD
-	'_id': {'key':key},
-	'value': {'types':getKeys(entry.types)},
-	'totalOccurrences': entry['totalOccurrences'],
-	'percentContaining': entry['totalOccurrences'] * 100 / $limit
-=======
         '_id': {'key':key},
         'value': {'types':getKeys(entry.types)},
         'totalOccurrences': entry.totalOccurrences,
         'percentContaining': entry.totalOccurrences * 100 / documentsCount
->>>>>>> c465b9c71a354c7b22379e1fc9707ab9c1e609b9
     });
   }
   return varietyResults;
