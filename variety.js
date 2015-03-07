@@ -22,6 +22,7 @@ log('Version 1.4.1, released 14 Oct 2014');
 
 var dbs = [];
 var emptyDbs = [];
+var collArr = [];
 
 if (typeof db_name === 'string') {
   db = db.getMongo().getDB( db_name );
@@ -50,12 +51,21 @@ if(typeof knownDatabases !== 'undefined') { // not authorized user receives erro
 }
 
 var collNames = db.getCollectionNames().join(', ');
-if (typeof collection === 'undefined') {
+log(typeof collection);
+if (collection instanceof Array) { //If the collection is an array do nothing
+  collArr.push.apply(collArr, collection);
+} else if (typeof collection === 'string') { //If its a string turn it into an array for simplicity later
+  collArr.push(collection);
+} else if (typeof collection === 'undefined') {
   throw 'You have to supply a \'collection\' variable, à la --eval \'var collection = "animals"\'.\n'+
         'Possible collection options for database specified: ' + collNames + '.\n'+
         'Please see https://github.com/variety/variety for details.';
 }
 
+var val;
+for (val in collArr) { //Begin the loop of supplied collection names
+  collection = collArr[val];
+  
 if (db[collection].count() === 0) {
   throw 'The collection specified (' + collection + ') in the database specified ('+ db +') does not exist or is empty.\n'+
         'Possible collection options for database specified: ' + collNames + '.';
@@ -300,4 +310,5 @@ if($outputFormat === 'json') {
   print(border + '\n' + output + border);
 }
 
+}//End the collection name loop
 }()); // end strict mode
