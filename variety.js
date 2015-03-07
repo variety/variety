@@ -68,8 +68,7 @@ if ((typeof collection === 'undefined') && (typeof mode === 'undefined')) {
 
 
 var val;
-var curName = [];
-var curName = db.getCollectionNames()
+var curName = db.getCollectionNames();
 for (val in collArr) { //Begin the loop of supplied collection names
   var collection = collArr[val];
   if (curName.indexOf(collection) < 0) {
