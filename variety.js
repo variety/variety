@@ -16,7 +16,7 @@ var log = function(message) {
 if (typeof collection === 'undefined') {
   var collection;
 } else {
-  collection;
+  collection = collection;
 }
 (function () { 'use strict'; // wraps everything for which we can use strict mode -JC
 
