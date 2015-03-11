@@ -25,6 +25,7 @@ var emptyDbs = [];
 var collArr = [];
 var knownDatabases = db.adminCommand('listDatabases').databases;
 var curName = db.getCollectionNames();
+var val;
 if(typeof knownDatabases !== 'undefined') { // not authorized user receives error response (json) without databases key
   knownDatabases.forEach(function(d){
     if(db.getSisterDB(d.name).getCollectionNames().length > 0) {
@@ -310,7 +311,6 @@ if($outputFormat === 'json') {
 
 } //End funtion run
 
-var val;
 for (val in collArr) { //Begin the loop of supplied collection names
  collection = collArr[val];
  run();
