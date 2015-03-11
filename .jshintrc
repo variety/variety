@@ -7,7 +7,7 @@
     "__quiet": false,
     "collection": true,
     "print": false,
-    "db": true,
+    "db": false,
     "tojson": false,
     "ObjectId": false,
     "BinData": false,

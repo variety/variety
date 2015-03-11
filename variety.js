@@ -18,17 +18,13 @@ var log = function(message) {
 };
 
 log('Variety: A MongoDB Schema Analyzer');
-log('Version 1.4.1, released 14 Oct 2014\n');
+log('Version 1.4.1, released 14 Oct 2014');
 
 var dbs = [];
 var emptyDbs = [];
 var collArr = [];
-
-if (typeof db_name === 'string') {
-  db = db.getMongo().getDB( db_name );
-}
-
 var knownDatabases = db.adminCommand('listDatabases').databases;
+var curName = db.getCollectionNames();
 if(typeof knownDatabases !== 'undefined') { // not authorized user receives error response (json) without databases key
   knownDatabases.forEach(function(d){
     if(db.getSisterDB(d.name).getCollectionNames().length > 0) {
@@ -52,31 +48,29 @@ if(typeof knownDatabases !== 'undefined') { // not authorized user receives erro
 
 var collNames = db.getCollectionNames().join(', ');
 if (collection instanceof Array) { //If the collection is an array do nothing
-  collArr.push.apply(collArr, collection);
+ collArr.push.apply(collArr, collection);
 } else if (typeof collection === 'string') { //If its a string turn it into an array for simplicity later
-  collArr.push(collection);
+ collArr.push(collection);
 } else if (typeof collection === 'undefined') {
   throw 'You have to supply a \'collection\' variable, à la --eval \'var collection = "animals"\'.\n'+
         'Possible collection options for database specified: ' + collNames + '.\n'+
         'Please see https://github.com/variety/variety for details.';
 }
 
-
-var val;
-var curName = [];
-var curName = db.getCollectionNames()
-for (val in collArr) { //Begin the loop of supplied collection names
-  collection = collArr[val];
+function run() { //Begin main run
   if (curName.indexOf(collection) < 0) {
-    log('The collection ' + collection + ' was not found in the database SKIPPING\n');
-    continue;
+    log('The collection ' + collection + ' did not match any of the possible collection names ' + collNames + ' SKIPPING this collection\n');
+    return;
+  }
+  if (collection === 'system.indexes') { //Skip system.indexes collection.
+    return;
   }
 
 
-if (db[collection].count() === 0) {
-  throw 'The collection specified (' + collection + ') in the database specified ('+ db +') is empty.\n'+
-        'Possible collection options for database specified: ' + collNames + '.';
-}
+  if (db[collection].count() === 0) {
+    log('The collection specified (' + collection + ') in the database specified ('+ db +') is empty SKIPPING.\n');
+    return;
+  }
 
 var $query = {};
 if(typeof query !== 'undefined') {
@@ -109,6 +103,7 @@ log('Using sort of ' + tojson($sort));
 var $outputFormat = 'ascii';
 if(typeof outputFormat !== 'undefined') {
   $outputFormat = outputFormat;
+  outputFormat = '_undefined';
 }
 log('Using outputFormat of ' + $outputFormat);
 
@@ -127,7 +122,8 @@ var varietyTypeOf = function(thing) {
   if (typeof thing !== 'object') {
     // the messiness below capitalizes the first letter, so the output matches
     // the other return values below. -JC
-    return (typeof thing)[0].toUpperCase() + (typeof thing).slice(1);
+    var typeofThing = typeof thing; // edgecase of JSHint's "singleGroups"
+    return typeofThing[0].toUpperCase() + typeofThing.slice(1);
   }
   else {
     if (thing && thing.constructor === Array) {
@@ -176,7 +172,7 @@ var serializeDoc = function(doc, maxDepth) {
   function serialize(document, parentKey, maxDepth){
     for(var key in document){
       //skip over inherited properties such as string, length, etch
-      if(!(document.hasOwnProperty(key))) {
+      if(!document.hasOwnProperty(key)) {
         continue;
       }
       var value = document[key];
@@ -184,7 +180,7 @@ var serializeDoc = function(doc, maxDepth) {
       //if(typeof value != 'object')
       result[parentKey+key] = value;
       //it's an object, recurse...only if we haven't reached max depth
-      if(isHash(value) && (maxDepth > 1)) {
+      if(isHash(value) && maxDepth > 1) {
         serialize(value, parentKey+key+'.',maxDepth-1);
       }
     }
@@ -223,7 +219,7 @@ var mergeDocument = function(docResult, interimResults) {
   }
 };
 
-var convertResults = function(interimResults) {
+var convertResults = function(interimResults, documentsCount) {
   var getKeys = function(obj) {
     var keys = [];
     for(var key in obj) {
@@ -238,8 +234,8 @@ var convertResults = function(interimResults) {
     varietyResults.push({
         '_id': {'key':key},
         'value': {'types':getKeys(entry.types)},
-        'totalOccurrences': entry['totalOccurrences'],
-        'percentContaining': entry['totalOccurrences'] * 100 / $limit
+        'totalOccurrences': entry.totalOccurrences,
+        'percentContaining': entry.totalOccurrences * 100 / documentsCount
     });
   }
   return varietyResults;
@@ -273,13 +269,9 @@ DBQuery.prototype.reduce = function(callback, initialValue) {
   return result;
 };
 
-var interimResults = db[collection]
-  .find($query)
-  .sort($sort)
-  .limit($limit)
-  .reduce(reduceDocuments, {});
-
-var varietyResults = convertResults(interimResults)
+var cursor = db[collection].find($query).sort($sort).limit($limit);
+var interimResults = cursor.reduce(reduceDocuments, {});
+var varietyResults = convertResults(interimResults, cursor.size())
   .filter(filter)
   .sort(comparator);
 
@@ -305,17 +297,23 @@ if($outputFormat === 'json') {
    return Math.max.apply(null, arr.map(function(row){return row[index].toString().length;}));
   };
 
-  var pad = function(width, string, symbol) { return (width <= string.length) ? string : pad(width, string + symbol, symbol); };
+  var pad = function(width, string, symbol) { return width <= string.length ? string : pad(width, string + symbol, symbol); };
 
   var output = '';
   table.forEach(function(row, ri){
-    output += ('| ' + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell, ri == 1 ? '-' : ' ');}).join(' | ') + ' |\n');
+    output += '| ' + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell, ri === 1 ? '-' : ' ');}).join(' | ') + ' |\n';
   });
   var lineLength = output.split('\n')[0].length - 2; // length of first (header) line minus two chars for edges
   var border = '+' + pad(lineLength, '', '-') + '+';
   print(border + '\n' + output + border);
 }
 
-}//End the collection name loop
+} //End funtion run
+
+var val;
+for (val in collArr) { //Begin the loop of supplied collection names
+ collection = collArr[val];
+ run();
+} //End collection loop
 
 }()); // end strict mode
