@@ -9,32 +9,73 @@ Please see https://github.com/variety/variety for details.
 
 Released by Maypop Inc, © 2012-2015, under the MIT License. */
 
-collection = [];
 (function () { 'use strict'; // wraps everything for which we can use strict mode -JC
 
 var log = function(message) {
   if(!__quiet) { // mongo shell param, coming from https://github.com/mongodb/mongo/blob/5fc306543cd3ba2637e5cb0662cc375f36868b28/src/mongo/shell/dbshell.cpp#L624
       print(message);
-  }
-if (typeof collection !== 'undefined') {
-  collection = collection;
-}
-
+    }
 };
 
-function parse() {
-  if (curName.indexOf(collection) < 0) {
-    log('The collection ' + collection + ' did not match any of the possible collection names ' + collNames + ' SKIPPING this collection\n');
-    return;
+log('Variety: A MongoDB Schema Analyzer');
+log('Version 1.4.1, released 14 Oct 2014\n');
+
+var dbs = [];
+var emptyDbs = [];
+var collArr = [];
+
+if (typeof db_name === 'string') {
+  db = db.getMongo().getDB( db_name );
+}
+
+var knownDatabases = db.adminCommand('listDatabases').databases;
+if(typeof knownDatabases !== 'undefined') { // not authorized user receives error response (json) without databases key
+  knownDatabases.forEach(function(d){
+    if(db.getSisterDB(d.name).getCollectionNames().length > 0) {
+      dbs.push(d.name);
+    }
+    if(db.getSisterDB(d.name).getCollectionNames().length === 0) {
+      emptyDbs.push(d.name);
+    }
+  });
+
+  if (emptyDbs.indexOf(db.getName()) !== -1) {
+    throw 'The database specified ('+ db +') is empty.\n'+
+          'Possible database options are: ' + dbs.join(', ') + '.';
   }
-  if (collection === 'system.indexes') { //Skip system.indexes collection.
-    return;
+
+  if (dbs.indexOf(db.getName()) === -1) {
+    throw 'The database specified ('+ db +') does not exist.\n'+
+          'Possible database options are: ' + dbs.join(', ') + '.';
+  }
+}
+
+var collNames = db.getCollectionNames().join(', ');
+if (collection instanceof Array) { //If the collection is an array do nothing
+  collArr.push.apply(collArr, collection);
+} else if (typeof collection === 'string') { //If its a string turn it into an array for simplicity later
+  collArr.push(collection);
+} else if (typeof collection === 'undefined') {
+  throw 'You have to supply a \'collection\' variable, à la --eval \'var collection = "animals"\'.\n'+
+        'Possible collection options for database specified: ' + collNames + '.\n'+
+        'Please see https://github.com/variety/variety for details.';
+}
+
+
+var val;
+var curName = [];
+var curName = db.getCollectionNames()
+for (val in collArr) { //Begin the loop of supplied collection names
+  collection = collArr[val];
+  if (curName.indexOf(collection) < 0) {
+    log('The collection ' + collection + ' was not found in the database SKIPPING\n');
+    continue;
   }
 
 
 if (db[collection].count() === 0) {
-  log('The collection specified (' + collection + ') in the database specified ('+ db +') is empty SKIPPING.\n');
-  return;
+  throw 'The collection specified (' + collection + ') in the database specified ('+ db +') is empty.\n'+
+        'Possible collection options for database specified: ' + collNames + '.';
 }
 
 var $query = {};
@@ -86,8 +127,7 @@ var varietyTypeOf = function(thing) {
   if (typeof thing !== 'object') {
     // the messiness below capitalizes the first letter, so the output matches
     // the other return values below. -JC
-    var typeofThing = typeof thing; // edgecase of JSHint's "singleGroups"
-    return typeofThing[0].toUpperCase() + typeofThing.slice(1);
+    return (typeof thing)[0].toUpperCase() + (typeof thing).slice(1);
   }
   else {
     if (thing && thing.constructor === Array) {
@@ -128,15 +168,15 @@ var serializeDoc = function(doc, maxDepth) {
     var isArray = Array.isArray(v);
     var isObject = typeof v === 'object';
     var specialObject = v instanceof Date ||
-			v instanceof ObjectId ||
-			v instanceof BinData;
+                        v instanceof ObjectId ||
+                        v instanceof BinData;
     return !specialObject && (isArray || isObject);
   }
 
   function serialize(document, parentKey, maxDepth){
     for(var key in document){
       //skip over inherited properties such as string, length, etch
-      if(!document.hasOwnProperty(key)) {
+      if(!(document.hasOwnProperty(key))) {
         continue;
       }
       var value = document[key];
@@ -144,7 +184,7 @@ var serializeDoc = function(doc, maxDepth) {
       //if(typeof value != 'object')
       result[parentKey+key] = value;
       //it's an object, recurse...only if we haven't reached max depth
-      if(isHash(value) && maxDepth > 1) {
+      if(isHash(value) && (maxDepth > 1)) {
         serialize(value, parentKey+key+'.',maxDepth-1);
       }
     }
@@ -174,7 +214,7 @@ var mergeDocument = function(docResult, interimResults) {
     if(key in interimResults) {
       var existing = interimResults[key];
       for(var type in docResult[key]) {
-	existing.types[type] = true;
+        existing.types[type] = true;
       }
       existing.totalOccurrences = existing.totalOccurrences + 1;
     } else {
@@ -183,7 +223,7 @@ var mergeDocument = function(docResult, interimResults) {
   }
 };
 
-var convertResults = function(interimResults, documentsCount) {
+var convertResults = function(interimResults) {
   var getKeys = function(obj) {
     var keys = [];
     for(var key in obj) {
@@ -198,8 +238,8 @@ var convertResults = function(interimResults, documentsCount) {
     varietyResults.push({
         '_id': {'key':key},
         'value': {'types':getKeys(entry.types)},
-        'totalOccurrences': entry.totalOccurrences,
-        'percentContaining': entry.totalOccurrences * 100 / documentsCount
+        'totalOccurrences': entry['totalOccurrences'],
+        'percentContaining': entry['totalOccurrences'] * 100 / $limit
     });
   }
   return varietyResults;
@@ -233,9 +273,13 @@ DBQuery.prototype.reduce = function(callback, initialValue) {
   return result;
 };
 
-var cursor = db[collection].find($query).sort($sort).limit($limit);
-var interimResults = cursor.reduce(reduceDocuments, {});
-var varietyResults = convertResults(interimResults, cursor.size())
+var interimResults = db[collection]
+  .find($query)
+  .sort($sort)
+  .limit($limit)
+  .reduce(reduceDocuments, {});
+
+var varietyResults = convertResults(interimResults)
   .filter(filter)
   .sort(comparator);
 
@@ -258,14 +302,14 @@ if($outputFormat === 'json') {
   });
 
   var colMaxWidth = function(arr, index) {
-  return Math.max.apply(null, arr.map(function(row){return row[index].toString().length;}));
+   return Math.max.apply(null, arr.map(function(row){return row[index].toString().length;}));
   };
 
-  var pad = function(width, string, symbol) { return width <= string.length ? string : pad(width, string + symbol, symbol); };
+  var pad = function(width, string, symbol) { return (width <= string.length) ? string : pad(width, string + symbol, symbol); };
 
   var output = '';
   table.forEach(function(row, ri){
-    output += '| ' + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell, ri === 1 ? '-' : ' ');}).join(' | ') + ' |\n';
+    output += ('| ' + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell, ri == 1 ? '-' : ' ');}).join(' | ') + ' |\n');
   });
   var lineLength = output.split('\n')[0].length - 2; // length of first (header) line minus two chars for edges
   var border = '+' + pad(lineLength, '', '-') + '+';
@@ -273,68 +317,5 @@ if($outputFormat === 'json') {
 }
 
 }//End the collection name loop
-
-
-log('Variety: A MongoDB Schema Analyzer');
-log('Version 1.4.1, released 14 Oct 2014');
-log('\n');
-
-var dbs = [];
-var emptyDbs = [];
-var collArr = [];
-if (typeof db_name === 'string') {
-  db = db.getMongo().getDB( db_name );
-}
-
-var knownDatabases = db.adminCommand('listDatabases').databases;
-if(typeof knownDatabases !== 'undefined') { // not authorized user receives error response (json) without databases key
-  knownDatabases.forEach(function(d){
-    if(db.getSisterDB(d.name).getCollectionNames().length > 0) {
-      dbs.push(d.name);
-    }
-    if(db.getSisterDB(d.name).getCollectionNames().length === 0) {
-      emptyDbs.push(d.name);
-    }
-  });
-
-  if (emptyDbs.indexOf(db.getName()) !== -1) {
-    throw 'The database specified ('+ db +') is empty.\n'+
-	  'Possible database options are: ' + dbs.join(', ') + '.';
-  }
-
-  if (dbs.indexOf(db.getName()) === -1) {
-    throw 'The database specified ('+ db +') does not exist.\n'+
-	  'Possible database options are: ' + dbs.join(', ') + '.';
-  }
-}
-var collNames = db.getCollectionNames().join(', ');
-if (typeof mode !== 'undefined') {
-  if (mode === 'recursive') {//Check if we are in recursive mode
-    collArr = collNames.split(", ");
-  }
-}
-if (typeof collection !== 'undefined') {
-  if (collection instanceof Array) { //If the collection is an array do nothing
-    collArr.push.apply(collArr, collection);
-  } else if (typeof collection === 'string') { //If its a string turn it into an array for simplicity later
-    collArr.push(collection);
-  }
-}
-if (typeof collection === 'undefined'){
-  if (typeof mode === 'undefined') {
-    throw 'You have to supply a \'collection\' variable, à la --eval \'var collection = "animals"\'.\n'+
-	  'Possible collection options for database specified: ' + collNames + '.\n'+
-	  'Please see https://github.com/variety/variety for details.';
-  }
-}
-
-
-var val;
-var curName = db.getCollectionNames();
-for (val in collArr) { //Begin the loop of supplied collection names
-  collection = collArr[val];
-  parse();
-}
-
 
 }()); // end strict mode
