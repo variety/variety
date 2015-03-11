@@ -8,76 +8,20 @@ finding rare keys.
 Please see https://github.com/variety/variety for details.
 
 Released by Maypop Inc, © 2012-2015, under the MIT License. */
+
+
+(function () { 'use strict'; // wraps everything for which we can use strict mode -JC
+
 var log = function(message) {
   if(!__quiet) { // mongo shell param, coming from https://github.com/mongodb/mongo/blob/5fc306543cd3ba2637e5cb0662cc375f36868b28/src/mongo/shell/dbshell.cpp#L624
       print(message);
   }
-};
-if (typeof collection === 'undefined') {
-  var collection;
-} else {
+if (!typeof collection === 'undefined') {
   collection = collection;
 }
-(function () { 'use strict'; // wraps everything for which we can use strict mode -JC
 
+};
 
-
-log('Variety: A MongoDB Schema Analyzer');
-log('Version 1.4.1, released 14 Oct 2014');
-log('\n');
-
-var dbs = [];
-var emptyDbs = [];
-var collArr = [];
-if (typeof db_name === 'string') {
-  db = db.getMongo().getDB( db_name );
-}
-
-var knownDatabases = db.adminCommand('listDatabases').databases;
-if(typeof knownDatabases !== 'undefined') { // not authorized user receives error response (json) without databases key
-  knownDatabases.forEach(function(d){
-    if(db.getSisterDB(d.name).getCollectionNames().length > 0) {
-      dbs.push(d.name);
-    }
-    if(db.getSisterDB(d.name).getCollectionNames().length === 0) {
-      emptyDbs.push(d.name);
-    }
-  });
-
-  if (emptyDbs.indexOf(db.getName()) !== -1) {
-    throw 'The database specified ('+ db +') is empty.\n'+
-	  'Possible database options are: ' + dbs.join(', ') + '.';
-  }
-
-  if (dbs.indexOf(db.getName()) === -1) {
-    throw 'The database specified ('+ db +') does not exist.\n'+
-	  'Possible database options are: ' + dbs.join(', ') + '.';
-  }
-}
-var collNames = db.getCollectionNames().join(', ');
-if ((typeof mode !== 'undefined') && (mode === 'recursive')) {//Check if we are in recursive mode
-  collArr = collNames.split(", ");
-}
-if (typeof collection !== 'undefined') {
-  if (collection instanceof Array) { //If the collection is an array do nothing
-    collArr.push.apply(collArr, collection);
-  } else if (typeof collection === 'string') { //If its a string turn it into an array for simplicity later
-    collArr.push(collection);
-  }
-}
-if ((typeof collection === 'undefined') && (typeof mode === 'undefined')) {
-    throw 'You have to supply a \'collection\' variable, à la --eval \'var collection = "animals"\'.\n'+
-	  'Possible collection options for database specified: ' + collNames + '.\n'+
-	  'Please see https://github.com/variety/variety for details.';
-}
-
-
-var val;
-var curName = db.getCollectionNames();
-for (val in collArr) { //Begin the loop of supplied collection names
-  collection = collArr[val];
-  parse();
-}
 function parse() {
   if (curName.indexOf(collection) < 0) {
     log('The collection ' + collection + ' did not match any of the possible collection names ' + collNames + ' SKIPPING this collection\n');
@@ -329,5 +273,64 @@ if($outputFormat === 'json') {
 }
 
 }//End the collection name loop
+
+
+log('Variety: A MongoDB Schema Analyzer');
+log('Version 1.4.1, released 14 Oct 2014');
+log('\n');
+
+var dbs = [];
+var emptyDbs = [];
+var collArr = [];
+if (typeof db_name === 'string') {
+  db = db.getMongo().getDB( db_name );
+}
+
+var knownDatabases = db.adminCommand('listDatabases').databases;
+if(typeof knownDatabases !== 'undefined') { // not authorized user receives error response (json) without databases key
+  knownDatabases.forEach(function(d){
+    if(db.getSisterDB(d.name).getCollectionNames().length > 0) {
+      dbs.push(d.name);
+    }
+    if(db.getSisterDB(d.name).getCollectionNames().length === 0) {
+      emptyDbs.push(d.name);
+    }
+  });
+
+  if (emptyDbs.indexOf(db.getName()) !== -1) {
+    throw 'The database specified ('+ db +') is empty.\n'+
+	  'Possible database options are: ' + dbs.join(', ') + '.';
+  }
+
+  if (dbs.indexOf(db.getName()) === -1) {
+    throw 'The database specified ('+ db +') does not exist.\n'+
+	  'Possible database options are: ' + dbs.join(', ') + '.';
+  }
+}
+var collNames = db.getCollectionNames().join(', ');
+if ((typeof mode !== 'undefined') && (mode === 'recursive')) {//Check if we are in recursive mode
+  collArr = collNames.split(", ");
+}
+if (typeof collection !== 'undefined') {
+  if (collection instanceof Array) { //If the collection is an array do nothing
+    collArr.push.apply(collArr, collection);
+  } else if (typeof collection === 'string') { //If its a string turn it into an array for simplicity later
+    collArr.push(collection);
+  }
+}
+if ((typeof collection === 'undefined') && (typeof mode === 'undefined')) {
+    throw 'You have to supply a \'collection\' variable, à la --eval \'var collection = "animals"\'.\n'+
+	  'Possible collection options for database specified: ' + collNames + '.\n'+
+	  'Please see https://github.com/variety/variety for details.';
+}
+
+
+var val;
+var curName = db.getCollectionNames();
+for (val in collArr) { //Begin the loop of supplied collection names
+  collection = collArr[val];
+  parse();
+}
+
 
 }()); // end strict mode
