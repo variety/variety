@@ -22,8 +22,10 @@ log('Version 1.4.1, released 14 Oct 2014');
 
 var dbs = [];
 var emptyDbs = [];
-
+var collArr = [];
 var knownDatabases = db.adminCommand('listDatabases').databases;
+var curName = db.getCollectionNames();
+var val;
 if(typeof knownDatabases !== 'undefined') { // not authorized user receives error response (json) without databases key
   knownDatabases.forEach(function(d){
     if(db.getSisterDB(d.name).getCollectionNames().length > 0) {
@@ -46,16 +48,30 @@ if(typeof knownDatabases !== 'undefined') { // not authorized user receives erro
 }
 
 var collNames = db.getCollectionNames().join(', ');
-if (typeof collection === 'undefined') {
+if (collection instanceof Array) { //If the collection is an array do nothing
+ collArr.push.apply(collArr, collection);
+} else if (typeof collection === 'string') { //If its a string turn it into an array for simplicity later
+ collArr.push(collection);
+} else if (typeof collection === 'undefined') {
   throw 'You have to supply a \'collection\' variable, à la --eval \'var collection = "animals"\'.\n'+
         'Possible collection options for database specified: ' + collNames + '.\n'+
         'Please see https://github.com/variety/variety for details.';
 }
 
-if (db[collection].count() === 0) {
-  throw 'The collection specified (' + collection + ') in the database specified ('+ db +') does not exist or is empty.\n'+
-        'Possible collection options for database specified: ' + collNames + '.';
-}
+function run() { //Begin main run
+  if (curName.indexOf(collection) < 0) {
+    log('The collection ' + collection + ' did not match any of the possible collection names ' + collNames + ' SKIPPING this collection\n');
+    return;
+  }
+  if (collection === 'system.indexes') { //Skip system.indexes collection.
+    return;
+  }
+
+
+  if (db[collection].count() === 0) {
+    log('The collection specified (' + collection + ') in the database specified ('+ db +') is empty SKIPPING.\n');
+    return;
+  }
 
 var $query = {};
 if(typeof query !== 'undefined') {
@@ -292,5 +308,12 @@ if($outputFormat === 'json') {
   var border = '+' + pad(lineLength, '', '-') + '+';
   print(border + '\n' + output + border);
 }
+
+} //End funtion run
+
+for (val in collArr) { //Begin the loop of supplied collection names
+ collection = collArr[val];
+ run();
+} //End collection loop
 
 }()); // end strict mode
