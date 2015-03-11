@@ -9,7 +9,7 @@ Please see https://github.com/variety/variety for details.
 
 Released by Maypop Inc, © 2012-2015, under the MIT License. */
 
-
+collection = [];
 (function () { 'use strict'; // wraps everything for which we can use strict mode -JC
 
 var log = function(message) {
