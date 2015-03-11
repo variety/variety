@@ -71,19 +71,19 @@ public class LimitedAccessTest {
     }
 
 
-    @Test
-    public void testNotFoundDatabaseForAdmin() throws Exception {
-        final Variety adminVariety = new Variety("foo", "users", Credentials.ADMIN);
-        try {
-            adminVariety.runAnalysis();
-            Assert.fail("Should throw exception");
-        } catch (final Exception e) {
-            System.out.println(e);
+//    @Test
+//    public void testNotFoundDatabaseForAdmin() throws Exception {
+//        final Variety adminVariety = new Variety("foo", "users", Credentials.ADMIN);
+//        try {
+//            adminVariety.runAnalysis();
+//            Assert.fail("Should throw exception");
+//        } catch (final Exception e) {
+//            System.out.println(e);
             //final String messageVersion24 = "The collection specified (users) in the database specified (foo) does not exist or is empty";
-            final String messageVersion26 = "The database specified (foo) does not exist";
-            Assert.assertTrue(e.getMessage().contains(messageVersion26));
-        }
-    }
+//            final String messageVersion26 = "The database specified (foo) does not exist";
+//            Assert.assertTrue(e.getMessage().contains(messageVersion24) || e.getMessage().contains(messageVersion26));
+//        }
+//    }
 
 //    @Test
 //    public void testNotFoundCollectionForAdmin() throws Exception {
