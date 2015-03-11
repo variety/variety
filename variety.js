@@ -16,7 +16,7 @@ var log = function(message) {
   if(!__quiet) { // mongo shell param, coming from https://github.com/mongodb/mongo/blob/5fc306543cd3ba2637e5cb0662cc375f36868b28/src/mongo/shell/dbshell.cpp#L624
       print(message);
   }
-if (!typeof collection === 'undefined') {
+if (typeof collection !== 'undefined') {
   collection = collection;
 }
 
@@ -308,8 +308,10 @@ if(typeof knownDatabases !== 'undefined') { // not authorized user receives erro
   }
 }
 var collNames = db.getCollectionNames().join(', ');
-if ((typeof mode !== 'undefined') && (mode === 'recursive')) {//Check if we are in recursive mode
-  collArr = collNames.split(", ");
+if (typeof mode !== 'undefined') {
+  if (mode === 'recursive') {//Check if we are in recursive mode
+    collArr = collNames.split(", ");
+  }
 }
 if (typeof collection !== 'undefined') {
   if (collection instanceof Array) { //If the collection is an array do nothing
@@ -318,10 +320,12 @@ if (typeof collection !== 'undefined') {
     collArr.push(collection);
   }
 }
-if ((typeof collection === 'undefined') && (typeof mode === 'undefined')) {
+if (typeof collection === 'undefined'){
+  if (typeof mode === 'undefined') {
     throw 'You have to supply a \'collection\' variable, à la --eval \'var collection = "animals"\'.\n'+
 	  'Possible collection options for database specified: ' + collNames + '.\n'+
 	  'Please see https://github.com/variety/variety for details.';
+  }
 }
 
 
