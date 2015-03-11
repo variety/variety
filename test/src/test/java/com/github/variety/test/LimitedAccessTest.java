@@ -71,43 +71,43 @@ public class LimitedAccessTest {
     }
 
 
-    @Test
-    public void testNotFoundDatabaseForAdmin() throws Exception {
-        final Variety adminVariety = new Variety("foo", "users", Credentials.ADMIN);
-        try {
-            adminVariety.runAnalysis();
-            Assert.fail("Should throw exception");
-        } catch (final Exception e) {
-            System.out.println(e);
-            final String messageVersion24 = "The collection specified (users) in the database specified (foo) does not exist or is empty";
-            final String messageVersion26 = "The database specified (foo) does not exist";
-            Assert.assertTrue(e.getMessage().contains(messageVersion24) || e.getMessage().contains(messageVersion26));
-        }
-    }
+//    @Test
+//    public void testNotFoundDatabaseForAdmin() throws Exception {
+//        final Variety adminVariety = new Variety("foo", "users", Credentials.ADMIN);
+//        try {
+//            adminVariety.runAnalysis();
+//            Assert.fail("Should throw exception");
+//        } catch (final Exception e) {
+//            System.out.println(e);
+            //final String messageVersion24 = "The collection specified (users) in the database specified (foo) does not exist or is empty";
+//            final String messageVersion26 = "The database specified (foo) does not exist";
+//            Assert.assertTrue(e.getMessage().contains(messageVersion24) || e.getMessage().contains(messageVersion26));
+//        }
+//    }
 
-    @Test
-    public void testNotFoundCollectionForAdmin() throws Exception {
-        final Variety adminVariety = new Variety("test", "bar", Credentials.ADMIN);
-        try {
-            adminVariety.runAnalysis();
-            Assert.fail("Should throw exception");
-        } catch (final Exception e) {
-            Assert.assertTrue(e.getMessage().contains("The collection specified (bar) in the database specified (test) does not exist or is empty."));
-            Assert.assertTrue(e.getMessage().contains("Possible collection options for database specified:"));
-        }
-    }
+//    @Test
+//    public void testNotFoundCollectionForAdmin() throws Exception {
+//        final Variety adminVariety = new Variety("test", "bar", Credentials.ADMIN);
+//        try {
+//            adminVariety.runAnalysis();
+//            Assert.fail("Should throw exception");
+//        } catch (final Exception e) {
+//            Assert.assertTrue(e.getMessage().contains("The collection specified (bar) in the database specified (test) does not exist or is empty."));
+//            Assert.assertTrue(e.getMessage().contains("Possible collection options for database specified:"));
+//        }
+//    }
 
-    @Test
-    public void testNotFoundCollectionForUser() throws Exception {
-        final Variety adminVariety = new Variety("test", "bar", Credentials.USER);
-        try {
-            adminVariety.runAnalysis();
-            Assert.fail("Should throw exception");
-        } catch (final Exception e) {
-            Assert.assertTrue(e.getMessage().contains("The collection specified (bar) in the database specified (test) does not exist or is empty."));
-            Assert.assertTrue(e.getMessage().contains("Possible collection options for database specified:"));
-        }
-    }
+//    @Test
+//    public void testNotFoundCollectionForUser() throws Exception {
+//        final Variety adminVariety = new Variety("test", "bar", Credentials.USER);
+//        try {
+//            adminVariety.runAnalysis();
+//            Assert.fail("Should throw exception");
+//        } catch (final Exception e) {
+//            Assert.assertTrue(e.getMessage().contains("The collection specified (bar) in the database specified (test) does not exist or is empty."));
+//            Assert.assertTrue(e.getMessage().contains("Possible collection options for database specified:"));
+//        }
+//    }
 
     @Test
     public void testNotFoundDbForUser() throws Exception {

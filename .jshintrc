@@ -5,7 +5,7 @@
   "freeze": true,
   "globals": {
     "__quiet": false,
-    "collection": false,
+    "collection": true,
     "print": false,
     "db": false,
     "tojson": false,
