@@ -16,17 +16,17 @@ class SampleData {
      * against this table, to check correct formatting.
      */
     public static final String EXPECTED_DATA_ASCII_TABLE =
-            "+------------------------------------------------------------+\n" +
-            "| key                | types        | occurrences | percents |\n" +
-            "| ------------------ | ------------ | ----------- | -------- |\n" +
-            "| _id                | ObjectId     | 5           | 100      |\n" +
-            "| name               | String       | 5           | 100      |\n" +
-            "| bio                | String       | 3           | 60       |\n" +
-            "| birthday           | String       | 2           | 40       |\n" +
-            "| pets               | Array,String | 2           | 40       |\n" +
-            "| someBinData        | BinData-old  | 1           | 20       |\n" +
-            "| someWeirdLegacyKey | String       | 1           | 20       |\n" +
-            "+------------------------------------------------------------+";
+        "+------------------------------------------------------------+\n" +
+        "| key                | types        | occurrences | percents |\n" +
+        "| ------------------ | ------------ | ----------- | -------- |\n" +
+        "| _id                | ObjectId     |           5 |    100.0 |\n" +
+        "| name               | String       |           5 |    100.0 |\n" +
+        "| bio                | String       |           3 |     60.0 |\n" +
+        "| birthday           | String       |           2 |     40.0 |\n" +
+        "| pets               | Array,String |           2 |     40.0 |\n" +
+        "| someBinData        | BinData-old  |           1 |     20.0 |\n" +
+        "| someWeirdLegacyKey | String       |           1 |     20.0 |\n" +
+        "+------------------------------------------------------------+";
 
     /**
      * Java representation of sample collection provided in variety README:<p>

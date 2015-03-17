@@ -274,15 +274,25 @@ if($outputFormat === 'json') {
   printjson(varietyResults); // valid formatted json output, compressed variant is printjsononeline()
 } else {  // output nice ascii table with results
   var table = [['key', 'types', 'occurrences', 'percents'], ['', '', '', '']]; // header + delimiter rows
+
+  var significantDigits = function(value) {
+    return value.toExponential()
+      .replace(/e[\+\-0-9]*$/, '')  // remove exponential notation
+      .replace( /^0\.?0*|\./, '')    // remove decimal point and leading zeros
+      .length;
+  };
+
+  var maxDigits = Math.max.apply(null, varietyResults.map(function(value){return significantDigits(value.percentContaining);}));
+
   varietyResults.forEach(function(key) {
-    table.push([key._id.key, key.value.types.toString(), key.totalOccurrences.toString(), key.percentContaining.toString()]);
+    table.push([key._id.key, key.value.types.toString(), key.totalOccurrences.toString(), key.percentContaining.toFixed(maxDigits).toString()]);
   });
 
   var colMaxWidth = function(arr, index) {
    return Math.max.apply(null, arr.map(function(row){return row[index].toString().length;}));
   };
 
-  var pad = function(width, string, symbol) { return width <= string.length ? string : pad(width, string + symbol, symbol); };
+  var pad = function(width, string, symbol) { return width <= string.length ? string : pad(width, isNaN(string) ? string + symbol : symbol + string, symbol); };
 
   var output = '';
   table.forEach(function(row, ri){
