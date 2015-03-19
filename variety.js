@@ -275,12 +275,11 @@ if($outputFormat === 'json') {
 } else {  // output nice ascii table with results
   var table = [['key', 'types', 'occurrences', 'percents'], ['', '', '', '']]; // header + delimiter rows
 
-  var significantDigits = function(value) {
-    return value.toExponential()
-      .replace(/e[\+\-0-9]*$/, '')  // remove exponential notation
-      .replace( /^0\.?0*|\./, '')    // remove decimal point and leading zeros
-      .length;
-  };
+   // return the number of decimal places or 1, if the number is int (1.23=>2, 100=>1, 0.1415=>4)
+   var significantDigits = function(value) {
+      var res = value.toString().match(/^[0-9]+\.([0-9]+)$/);
+      return res !== null ? res[1].length : 1;
+    };
 
   var maxDigits = Math.max.apply(null, varietyResults.map(function(value){return significantDigits(value.percentContaining);}));
 
