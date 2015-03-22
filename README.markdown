@@ -31,13 +31,13 @@ So, let's see what we've got here:
     +------------------------------------------------------------+
     | key                | types        | occurrences | percents |
     | ------------------ | ------------ | ----------- | -------- |
-    | _id                | ObjectId     | 5           | 100      |
-    | name               | String       | 5           | 100      |
-    | bio                | String       | 3           | 60       |
-    | birthday           | String       | 2           | 40       |
-    | pets               | String,Array | 2           | 40       |
-    | someBinData        | BinData-old  | 1           | 20       |
-    | someWeirdLegacyKey | String       | 1           | 20       |
+    | _id                | ObjectId     |           5 |    100.0 |
+    | name               | String       |           5 |    100.0 |
+    | bio                | String       |           3 |     60.0 |
+    | birthday           | String       |           2 |     40.0 |
+    | pets               | Array,String |           2 |     40.0 |
+    | someBinData        | BinData-old  |           1 |     20.0 |
+    | someWeirdLegacyKey | String       |           1 |     20.0 |
     +------------------------------------------------------------+
 
 _("test" is the database containing the collection we are analyzing.)_
@@ -69,9 +69,9 @@ Let's examine the results closely:
     +----------------------------------------------------+
     | key         | types       | occurrences | percents |
     | ----------- | ----------- | ----------- | -------- |
-    | _id         | ObjectId    | 1           | 100      |
-    | name        | String      | 1           | 100      |
-    | someBinData | BinData-old | 1           | 100      |
+    | _id         | ObjectId    |           1 |    100.0 |
+    | name        | String      |           1 |    100.0 |
+    | someBinData | BinData-old |           1 |    100.0 |
     +----------------------------------------------------+
 
 We are only examining the last document here ("limit = 1"). It belongs to Geneviève, and only contains the _id, name and bio fields. So it makes sense these are the only three keys.
@@ -91,14 +91,14 @@ The default will traverse all the way to the bottom of that structure:
     +----------------------------------------------------------------+
     | key                        | types    | occurrences | percents |
     | -------------------------- | -------- | ----------- | -------- |
-    | _id                        | ObjectId | 1           | 100      |
-    | name                       | String   | 1           | 100      |
-    | someNestedObject           | Object   | 1           | 100      |
-    | someNestedObject.a         | Object   | 1           | 100      |
-    | someNestedObject.a.b       | Object   | 1           | 100      |
-    | someNestedObject.a.b.c     | Object   | 1           | 100      |
-    | someNestedObject.a.b.c.d   | Object   | 1           | 100      |
-    | someNestedObject.a.b.c.d.e | Number   | 1           | 100      |
+    | _id                        | ObjectId |           1 |    100.0 |
+    | name                       | String   |           1 |    100.0 |
+    | someNestedObject           | Object   |           1 |    100.0 |
+    | someNestedObject.a         | Object   |           1 |    100.0 |
+    | someNestedObject.a.b       | Object   |           1 |    100.0 |
+    | someNestedObject.a.b.c     | Object   |           1 |    100.0 |
+    | someNestedObject.a.b.c.d   | Object   |           1 |    100.0 |
+    | someNestedObject.a.b.c.d.e | Number   |           1 |    100.0 |
     +----------------------------------------------------------------+
 
     $ mongo test --eval "var collection = 'users', maxDepth = 3" variety.js
@@ -106,11 +106,11 @@ The default will traverse all the way to the bottom of that structure:
     +----------------------------------------------------------+
     | key                  | types    | occurrences | percents |
     | -------------------- | -------- | ----------- | -------- |
-    | _id                  | ObjectId | 1           | 100      |
-    | name                 | String   | 1           | 100      |
-    | someNestedObject     | Object   | 1           | 100      |
-    | someNestedObject.a   | Object   | 1           | 100      |
-    | someNestedObject.a.b | Object   | 1           | 100      |
+    | _id                  | ObjectId |           1 |    100.0 |
+    | name                 | String   |           1 |    100.0 |
+    | someNestedObject     | Object   |           1 |    100.0 |
+    | someNestedObject.a   | Object   |           1 |    100.0 |
+    | someNestedObject.a.b | Object   |           1 |    100.0 |
     +----------------------------------------------------------+
 
 As you can see, Variety only traversed three levels deep.

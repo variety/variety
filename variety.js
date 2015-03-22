@@ -274,15 +274,24 @@ if($outputFormat === 'json') {
   printjson(varietyResults); // valid formatted json output, compressed variant is printjsononeline()
 } else {  // output nice ascii table with results
   var table = [['key', 'types', 'occurrences', 'percents'], ['', '', '', '']]; // header + delimiter rows
+
+   // return the number of decimal places or 1, if the number is int (1.23=>2, 100=>1, 0.1415=>4)
+   var significantDigits = function(value) {
+      var res = value.toString().match(/^[0-9]+\.([0-9]+)$/);
+      return res !== null ? res[1].length : 1;
+    };
+
+  var maxDigits = Math.max.apply(null, varietyResults.map(function(value){return significantDigits(value.percentContaining);}));
+
   varietyResults.forEach(function(key) {
-    table.push([key._id.key, key.value.types.toString(), key.totalOccurrences.toString(), key.percentContaining.toString()]);
+    table.push([key._id.key, key.value.types.toString(), key.totalOccurrences.toString(), key.percentContaining.toFixed(maxDigits).toString()]);
   });
 
   var colMaxWidth = function(arr, index) {
    return Math.max.apply(null, arr.map(function(row){return row[index].toString().length;}));
   };
 
-  var pad = function(width, string, symbol) { return width <= string.length ? string : pad(width, string + symbol, symbol); };
+  var pad = function(width, string, symbol) { return width <= string.length ? string : pad(width, isNaN(string) ? string + symbol : symbol + string, symbol); };
 
   var output = '';
   table.forEach(function(row, ri){
