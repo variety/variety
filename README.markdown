@@ -46,7 +46,7 @@ Hmm. Looks like everybody has a "name" and "_id". Most, but not all have a "bio"
 
 Interestingly, it looks like "pets" can be either an array or a string. Will this cause any problems in the application, I wonder?
 
-Seems like the first document created has a weird legacy key- those damn fools who built the prototype didn't clean up after themselves. If there were a thousand such early documents, I might cross-reference the codebase to confirm they are no longer used, and then delete them all. That way they'll not confuse any future developers.
+Seems like the first document created has a weird legacy key—those damn fools who built the prototype didn't clean up after themselves. If there were a thousand such early documents, I might cross-reference the codebase to confirm they are no longer used, and then delete them all. That way they'll not confuse any future developers.
 
 Results are stored for future use in a varietyResults database.
 
@@ -192,4 +192,4 @@ Much thanks also, to Kyle Banker ([@Hwaet] (https://twitter.com/#!/hwaet)) for w
 I have every reason to believe this tool will **not** corrupt your data or harm your computer. But if I were you, I would not use it in a production environment.
 
 
-Released by Maypop Inc, © 2012-2015, under the [MIT License] (http://www.opensource.org/licenses/MIT).
+Released by Maypop Inc, © 2012–2015, under the [MIT License] (http://www.opensource.org/licenses/MIT).
