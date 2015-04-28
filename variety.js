@@ -317,8 +317,8 @@ if($outputFormat === 'json') {
      * Cut down the columns by returning space, or what should be returned
      * @type {string}
      */
-    output += row.map(function(cell, i) {return (i >= $numColumns ? '' : (i === 0 && ri === 1 ? '\\' + cell : cell) +
-                                                                 (i >= ($numColumns - 1) ? ' ' : ' & '));}).join(' ');
+    output += row.map(function(cell, i) {return i >= $numColumns ? '' : i === 0 && ri === 1 ? '\\' + cell : cell +
+                                                                 i >= $numColumns - 1 ? ' ' : ' & ';}).join(' ');
     output +=' \\\\ \\hline \n';
   });
 
