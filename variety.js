@@ -92,6 +92,14 @@ if(typeof outputFormat !== 'undefined') {
 }
 log('Using outputFormat of ' + $outputFormat);
 
+
+var $numColumns = 4;
+if(typeof numColumns !== 'undefined') {
+    $numColumns = numColumns;
+    numColumns = '_undefined';
+}
+log('Using numColumns of ' + $numColumns);
+
 var $persistResults = false;
 if(typeof persistResults !== 'undefined') {
   $persistResults = persistResults;
@@ -275,29 +283,40 @@ if($outputFormat === 'json') {
 
 }else if($outputFormat === 'latex') {  // output nice latex table with results
   var table = [['key', 'types', 'occurrences', 'percents']]; // header row
-
   // return the number of decimal places or 1, if the number is int (1.23=>2, 100=>1, 0.1415=>4)
-  var significantDigits = function(value) {
+  var significantDigits = function (value) {
     var res = value.toString().match(/^[0-9]+\.([0-9]+)$/);
     return res !== null ? res[1].length : 1;
   };
 
-  var maxDigits = Math.max.apply(null, varietyResults.map(function(value){return significantDigits(value.percentContaining);}));
+  var maxDigits = Math.max.apply(null, varietyResults.map(function (value) {
+    return significantDigits(value.percentContaining);
+  }));
 
-  varietyResults.forEach(function(key) {
+  varietyResults.forEach(function (key) {
     table.push([key._id.key, key.value.types.toString(), key.totalOccurrences.toString(), key.percentContaining.toFixed(maxDigits).toString()]);
   });
 
   // setup up the document
   var output = '\\documentclass[11pt,twoside,a4paper]{article}\n\n\\begin{document}\n' +
-               '    \\begin{center}\n' +
-               '         \\begin{tabular}{| c | c | c | c |}' +
-               '           \\hline\n';
+      '    \\begin{center}\n' +
+      '         \\begin{tabular}{|';
+
+  //Add justifications programmatically
+  for (var i = 0; i < $numColumns; i++) {
+     output+= ' c |';
+  }
+  output += '}\n           \\hline\n';
 
   table.forEach(function(row,ri){
+    //Padding
     output += '            ';
-    // _id needs escaping for latex, in the final column no need for trailing &
-    output += row.map(function(cell, i) {return (i === 0 & ri === 1 ? '\\' + cell : cell) + (i === 3 ? ' ' : ' & ');}).join(' ');
+    /** _id needs escaping for latex, in the final column no need for trailing &
+     * Cut down the columns by returning space, or what should be returned
+     * @type {string}
+     */
+    output += row.map(function(cell, i) {return (i >= $numColumns ? '' : (i === 0 & ri === 1 ? '\\' + cell : cell)
+                                                                + (i >= ($numColumns - 1) ? ' ' : ' & '));}).join(' ');
     output +=' \\\\ \\hline \n';
   });
 
