@@ -272,7 +272,42 @@ if($persistResults) {
 
 if($outputFormat === 'json') {
   printjson(varietyResults); // valid formatted json output, compressed variant is printjsononeline()
-} else {  // output nice ascii table with results
+
+}else if($outputFormat === 'latex') {  // output nice latex table with results
+  var table = [['key', 'types', 'occurrences', 'percents']]; // header row
+
+  // return the number of decimal places or 1, if the number is int (1.23=>2, 100=>1, 0.1415=>4)
+  var significantDigits = function(value) {
+    var res = value.toString().match(/^[0-9]+\.([0-9]+)$/);
+    return res !== null ? res[1].length : 1;
+  };
+
+  var maxDigits = Math.max.apply(null, varietyResults.map(function(value){return significantDigits(value.percentContaining);}));
+
+  varietyResults.forEach(function(key) {
+    table.push([key._id.key, key.value.types.toString(), key.totalOccurrences.toString(), key.percentContaining.toFixed(maxDigits).toString()]);
+  });
+
+  // setup up the document
+  var output = '\\documentclass[11pt,twoside,a4paper]{article}\n\n\\begin{document}\n' +
+               '    \\begin{center}\n' +
+               '         \\begin{tabular}{| c | c | c | c |}' +
+               '           \\hline\n';
+
+  table.forEach(function(row,ri){
+    output += '            ';
+    // _id needs escaping for latex, in the final column no need for trailing &
+    output += row.map(function(cell, i) {return (i === 0 & ri === 1 ? '\\' + cell : cell) + (i === 3 ? ' ' : ' & ');}).join(' ');
+    output +=' \\\\ \\hline \n';
+  });
+
+  output += '        \\end{tabular}\n' +
+            '    \\end{center}\n'+
+            '\\end{document}';
+
+  print(output);
+
+}else{  // output nice ascii table with results
   var table = [['key', 'types', 'occurrences', 'percents'], ['', '', '', '']]; // header + delimiter rows
 
    // return the number of decimal places or 1, if the number is int (1.23=>2, 100=>1, 0.1415=>4)
