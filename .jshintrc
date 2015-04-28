@@ -19,6 +19,7 @@
     "maxDepth": true,
     "sort": true,
     "outputFormat": true,
+    "numColumns" : true,
     "persistResults": true
   },
   "latedef": true,
