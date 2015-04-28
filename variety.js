@@ -1,3 +1,4 @@
+/*jshint bitwise: false*/
 /* Variety: A MongoDB Schema Analyzer
 
 This tool helps you get a sense of your application's schema, as well as any
@@ -91,6 +92,14 @@ if(typeof outputFormat !== 'undefined') {
   outputFormat = '_undefined';
 }
 log('Using outputFormat of ' + $outputFormat);
+
+
+var $numColumns = 4;
+if(typeof numColumns !== 'undefined') {
+    $numColumns = numColumns;
+    numColumns = '_undefined';
+}
+log('Using numColumns of ' + $numColumns);
 
 var $persistResults = false;
 if(typeof persistResults !== 'undefined') {
@@ -270,18 +279,65 @@ if($persistResults) {
   resultsDB[resultsCollectionName].insert(varietyResults);
 }
 
+  var table, maxDigits, output, significantDigits;
 if($outputFormat === 'json') {
   printjson(varietyResults); // valid formatted json output, compressed variant is printjsononeline()
-} else {  // output nice ascii table with results
-  var table = [['key', 'types', 'occurrences', 'percents'], ['', '', '', '']]; // header + delimiter rows
+
+}else if($outputFormat === 'latex') {  // output nice latex table with results
+  table = [['key', 'types', 'occurrences', 'percents']]; // header row
+  // return the number of decimal places or 1, if the number is int (1.23=>2, 100=>1, 0.1415=>4)
+  significantDigits = function (value) {
+    var res = value.toString().match(/^[0-9]+\.([0-9]+)$/);
+    return res !== null ? res[1].length : 1;
+  };
+
+  maxDigits = Math.max.apply(null, varietyResults.map(function (value) {
+    return significantDigits(value.percentContaining);
+  }));
+
+  varietyResults.forEach(function (key) {
+    table.push([key._id.key, key.value.types.toString(), key.totalOccurrences.toString(), key.percentContaining.toFixed(maxDigits).toString()]);
+  });
+
+  // setup up the document
+  output = '\\documentclass[11pt,twoside,a4paper]{article}\n\n\\begin{document}\n' +
+      '    \\begin{center}\n' +
+      '         \\begin{tabular}{|';
+
+  //Add justifications programmatically
+  for (var i = 0; i < $numColumns; i++) {
+     output+= ' c |';
+  }
+  output += '}\n           \\hline\n';
+
+  table.forEach(function(row,ri){
+    //Padding
+    output += '            ';
+    /** _id needs escaping for latex, in the final column no need for trailing &
+     * Cut down the columns by returning space, or what should be returned
+     * @type {string}
+     */
+    output += row.map(function(cell, i) {return i >= $numColumns ? '' : (i === 0 && ri === 1 ? '\\' + cell : cell) +
+                                                                 (i >= $numColumns - 1 ? ' ' : ' & ');}).join(' ');
+    output +=' \\\\ \\hline \n';
+  });
+
+  output += '        \\end{tabular}\n' +
+            '    \\end{center}\n'+
+            '\\end{document}';
+
+  print(output);
+
+}else{  // output nice ascii table with results
+   table = [['key', 'types', 'occurrences', 'percents'], ['', '', '', '']]; // header + delimiter rows
 
    // return the number of decimal places or 1, if the number is int (1.23=>2, 100=>1, 0.1415=>4)
-   var significantDigits = function(value) {
+    significantDigits = function(value) {
       var res = value.toString().match(/^[0-9]+\.([0-9]+)$/);
       return res !== null ? res[1].length : 1;
     };
 
-  var maxDigits = Math.max.apply(null, varietyResults.map(function(value){return significantDigits(value.percentContaining);}));
+  maxDigits = Math.max.apply(null, varietyResults.map(function(value){return significantDigits(value.percentContaining);}));
 
   varietyResults.forEach(function(key) {
     table.push([key._id.key, key.value.types.toString(), key.totalOccurrences.toString(), key.percentContaining.toFixed(maxDigits).toString()]);
@@ -293,7 +349,7 @@ if($outputFormat === 'json') {
 
   var pad = function(width, string, symbol) { return width <= string.length ? string : pad(width, isNaN(string) ? string + symbol : symbol + string, symbol); };
 
-  var output = '';
+  output = '';
   table.forEach(function(row, ri){
     output += '| ' + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell, ri === 1 ? '-' : ' ');}).join(' | ') + ' |\n';
   });
