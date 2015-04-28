@@ -279,18 +279,19 @@ if($persistResults) {
   resultsDB[resultsCollectionName].insert(varietyResults);
 }
 
+  var table, maxDigits, output, significantDigits;
 if($outputFormat === 'json') {
   printjson(varietyResults); // valid formatted json output, compressed variant is printjsononeline()
 
 }else if($outputFormat === 'latex') {  // output nice latex table with results
-  var table = [['key', 'types', 'occurrences', 'percents']]; // header row
+  table = [['key', 'types', 'occurrences', 'percents']]; // header row
   // return the number of decimal places or 1, if the number is int (1.23=>2, 100=>1, 0.1415=>4)
-  var significantDigits = function (value) {
+  significantDigits = function (value) {
     var res = value.toString().match(/^[0-9]+\.([0-9]+)$/);
     return res !== null ? res[1].length : 1;
   };
 
-  var maxDigits = Math.max.apply(null, varietyResults.map(function (value) {
+  maxDigits = Math.max.apply(null, varietyResults.map(function (value) {
     return significantDigits(value.percentContaining);
   }));
 
@@ -299,7 +300,7 @@ if($outputFormat === 'json') {
   });
 
   // setup up the document
-  var output = '\\documentclass[11pt,twoside,a4paper]{article}\n\n\\begin{document}\n' +
+  output = '\\documentclass[11pt,twoside,a4paper]{article}\n\n\\begin{document}\n' +
       '    \\begin{center}\n' +
       '         \\begin{tabular}{|';
 
@@ -327,7 +328,7 @@ if($outputFormat === 'json') {
 
   print(output);
 
-} else {  // output nice ascii table with results
+}else{  // output nice ascii table with results
    table = [['key', 'types', 'occurrences', 'percents'], ['', '', '', '']]; // header + delimiter rows
 
    // return the number of decimal places or 1, if the number is int (1.23=>2, 100=>1, 0.1415=>4)
