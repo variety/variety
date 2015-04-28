@@ -1,3 +1,4 @@
+/*jshint bitwise: false*/
 /* Variety: A MongoDB Schema Analyzer
 
 This tool helps you get a sense of your application's schema, as well as any
@@ -315,8 +316,8 @@ if($outputFormat === 'json') {
      * Cut down the columns by returning space, or what should be returned
      * @type {string}
      */
-    output += row.map(function(cell, i) {return (i >= $numColumns ? '' : (i === 0 & ri === 1 ? '\\' + cell : cell)
-                                                                + (i >= ($numColumns - 1) ? ' ' : ' & '));}).join(' ');
+    output += row.map(function(cell, i) {return (i >= $numColumns ? '' : (i === 0 && ri === 1 ? '\\' + cell : cell) +
+                                                                 (i >= ($numColumns - 1) ? ' ' : ' & '));}).join(' ');
     output +=' \\\\ \\hline \n';
   });
 
@@ -326,16 +327,16 @@ if($outputFormat === 'json') {
 
   print(output);
 
-}else{  // output nice ascii table with results
-  var table = [['key', 'types', 'occurrences', 'percents'], ['', '', '', '']]; // header + delimiter rows
+} else {  // output nice ascii table with results
+   table = [['key', 'types', 'occurrences', 'percents'], ['', '', '', '']]; // header + delimiter rows
 
    // return the number of decimal places or 1, if the number is int (1.23=>2, 100=>1, 0.1415=>4)
-   var significantDigits = function(value) {
+    significantDigits = function(value) {
       var res = value.toString().match(/^[0-9]+\.([0-9]+)$/);
       return res !== null ? res[1].length : 1;
     };
 
-  var maxDigits = Math.max.apply(null, varietyResults.map(function(value){return significantDigits(value.percentContaining);}));
+  maxDigits = Math.max.apply(null, varietyResults.map(function(value){return significantDigits(value.percentContaining);}));
 
   varietyResults.forEach(function(key) {
     table.push([key._id.key, key.value.types.toString(), key.totalOccurrences.toString(), key.percentContaining.toFixed(maxDigits).toString()]);
@@ -347,7 +348,7 @@ if($outputFormat === 'json') {
 
   var pad = function(width, string, symbol) { return width <= string.length ? string : pad(width, isNaN(string) ? string + symbol : symbol + string, symbol); };
 
-  var output = '';
+  output = '';
   table.forEach(function(row, ri){
     output += '| ' + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell, ri === 1 ? '-' : ' ');}).join(' | ') + ' |\n';
   });
