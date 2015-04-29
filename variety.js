@@ -101,6 +101,39 @@ log('Using persistResults of ' + $persistResults);
 
 log('Using collection of ' + collection);
 
+var $plugins = [];
+if(typeof plugins !== 'undefined') {
+
+  var parsePath = function(val) { return val.slice(-3) !== '.js' ? val + '.js' : val;};
+
+  var parseConfig = function(val) {
+    var config = {};
+    val.split('&').reduce(function(acc, val) {
+      var parts = val.split('=');
+      acc[parts[0]] = parts[1];
+      return acc;
+    }, config);
+    return config;
+  };
+  $plugins = plugins.split(',')
+    .map(function(path){return path.trim();})
+    .map(function(definition){
+      var path = parsePath(definition.split('|')[0]);
+      var config = parseConfig(definition.split('|')[1] || '');
+
+      this.module = this.module || {};
+      load(path);
+      var plugin = this.module.exports;
+
+      plugin.path = path;
+      if(typeof plugin.init === 'function') {
+        plugin.init(config);
+      }
+      return plugin;
+    }, this);
+  log('Using plugins of ' + $plugins.map(function(plugin){return plugin.path;}));
+}
+
 var varietyTypeOf = function(thing) {
   if (typeof thing === 'undefined') { throw 'varietyTypeOf() requires an argument'; }
 
@@ -270,7 +303,13 @@ if($persistResults) {
   resultsDB[resultsCollectionName].insert(varietyResults);
 }
 
-if($outputFormat === 'json') {
+var formatResultPlugins = $plugins.filter(function(plugin){return typeof plugin.formatResults === 'function';});
+
+if (formatResultPlugins.length > 0) {
+  formatResultPlugins.forEach(function(plugin){
+    print(plugin.formatResults(varietyResults));
+  });
+} else if($outputFormat === 'json') {
   printjson(varietyResults); // valid formatted json output, compressed variant is printjsononeline()
 } else {  // output nice ascii table with results
   var table = [['key', 'types', 'occurrences', 'percents'], ['', '', '', '']]; // header + delimiter rows
@@ -302,4 +341,4 @@ if($outputFormat === 'json') {
   print(border + '\n' + output + border);
 }
 
-}()); // end strict mode
+}.bind(this)()); // end strict mode

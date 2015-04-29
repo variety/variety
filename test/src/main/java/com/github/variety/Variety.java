@@ -32,6 +32,8 @@ public class Variety {
     public static final String PARAM_LIMIT = "limit";
     public static final String PARAM_OUTPUT_FORMAT = "outputFormat";
     public static final String PARAM_PERSIST_RESULTS = "persistResults";
+    public static final String PARAM_PLUGINS = "plugins";
+
 
     private final String inputDatabase;
     private final String inputCollection;
@@ -46,6 +48,7 @@ public class Variety {
     private String outputFormat;
     private boolean quiet;
     private boolean persistResults;
+    private String[] plugins;
 
     /**
      * Create variety wrapper with defined connection do analysed database and collection
@@ -141,6 +144,11 @@ public class Variety {
         return this;
     }
 
+    public Variety withPlugins(String... plugins) {
+        this.plugins = plugins;
+        return this;
+    }
+
     /**
      * Executes mongo shell with configured variety options and variety.js script in path.
      * @return Stdout of variety.js
@@ -192,6 +200,11 @@ public class Variety {
         if(persistResults) {
             args.add(PARAM_PERSIST_RESULTS + " = " + persistResults);
         }
+
+        if(plugins != null && plugins.length > 0) {
+            args.add(PARAM_PLUGINS + " = \"" + String.join(",", plugins) +  "\"");
+        }
+
         return args.toString();
     }
 
