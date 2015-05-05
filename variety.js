@@ -281,7 +281,7 @@ if($outputFormat === 'json') {
       return res !== null ? res[1].length : 1;
     };
 
-  var maxDigits = Math.max.apply(null, varietyResults.map(function(value){return significantDigits(value.percentContaining);}));
+  var maxDigits = varietyResults.map(function(value){return significantDigits(value.percentContaining);}).reduce(function(acc,val){return acc>val?acc:val;});
 
   varietyResults.forEach(function(key) {
     table.push([key._id.key, key.value.types.toString(), key.totalOccurrences.toString(), key.percentContaining.toFixed(maxDigits).toString()]);
