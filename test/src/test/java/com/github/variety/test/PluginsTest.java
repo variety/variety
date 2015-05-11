@@ -49,7 +49,7 @@ public class PluginsTest {
     public void verifyPluginParamParsing() throws Exception {
         final String path = getPluginPath("/csvplugin.js");
         final ResultsValidator analysis = variety.withPlugins(path + "|delimiter=;").runDatabaseAnalysis();
-        Assert.assertTrue(analysis.getStdOut().contains("Using plugins of " + path));
+        Assert.assertTrue(analysis.getStdOut().contains("Using plugins of [ \"" + path + "\" ]"));
     }
 
     private String getPluginPath(final String name) {

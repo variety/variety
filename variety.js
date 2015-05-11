@@ -57,55 +57,27 @@ if (db[collection].count() === 0) {
         'Possible collection options for database specified: ' + collNames + '.';
 }
 
-var $query = {};
-if(typeof query !== 'undefined') {
-  $query = query;
-  query = '_undefined';
-}
-log('Using query of ' + tojson($query));
+var readConfig = function(configProvider) {
+  var config = {};
+  var read = function(name, defaultValue) {
+    var value = typeof configProvider[name] !== 'undefined' ? configProvider[name] : defaultValue;
+    config[name] = value;
+    log('Using '+name+' of ' + tojson(value));
+  };
+  read('collection', null);
+  read('query', {});
+  read('limit', db[config.collection].find(config.query).count());
+  read('maxDepth', 99);
+  read('sort', {_id: -1});
+  read('outputFormat', 'ascii');
+  read('persistResults', false);
+  return config;
+};
 
-var $limit = db[collection].find($query).count();
-if(typeof limit !== 'undefined') {
-  $limit = limit;
-  limit = '_undefined';
-}
-log('Using limit of ' + $limit);
+var config = readConfig(this);
 
-var $maxDepth = 99;
-if(typeof maxDepth !== 'undefined') {
-  $maxDepth = maxDepth;
-  maxDepth = '_undefined';
-}
-log('Using maxDepth of ' + $maxDepth);
-
-var $sort = {_id: -1};
-if(typeof sort !== 'undefined') {
-  $sort = sort;
-  sort = '_undefined';
-}
-log('Using sort of ' + tojson($sort));
-
-var $outputFormat = 'ascii';
-if(typeof outputFormat !== 'undefined') {
-  $outputFormat = outputFormat;
-  outputFormat = '_undefined';
-}
-log('Using outputFormat of ' + $outputFormat);
-
-var $persistResults = false;
-if(typeof persistResults !== 'undefined') {
-  $persistResults = persistResults;
-  persistResults = '_undefined';
-}
-log('Using persistResults of ' + $persistResults);
-
-log('Using collection of ' + collection);
-
-var $plugins = [];
-if(typeof plugins !== 'undefined') {
-
+var PluginsClass = function(context) {
   var parsePath = function(val) { return val.slice(-3) !== '.js' ? val + '.js' : val;};
-
   var parseConfig = function(val) {
     var config = {};
     val.split('&').reduce(function(acc, val) {
@@ -115,24 +87,39 @@ if(typeof plugins !== 'undefined') {
     }, config);
     return config;
   };
-  $plugins = plugins.split(',')
-    .map(function(path){return path.trim();})
-    .map(function(definition){
-      var path = parsePath(definition.split('|')[0]);
-      var config = parseConfig(definition.split('|')[1] || '');
 
-      this.module = this.module || {};
-      load(path);
-      var plugin = this.module.exports;
+  if(typeof context.plugins !== 'undefined') {
+    this.plugins = context.plugins.split(',')
+      .map(function(path){return path.trim();})
+      .map(function(definition){
+        var path = parsePath(definition.split('|')[0]);
+        var config = parseConfig(definition.split('|')[1] || '');
+        context.module = context.module || {};
+        load(path);
+        var plugin = context.module.exports;
+        plugin.path = path;
+        if(typeof plugin.init === 'function') {
+          plugin.init(config);
+        }
+        return plugin;
+      }, this);
+  } else {
+    this.plugins = [];
+  }
 
-      plugin.path = path;
-      if(typeof plugin.init === 'function') {
-        plugin.init(config);
-      }
-      return plugin;
-    }, this);
-  log('Using plugins of ' + $plugins.map(function(plugin){return plugin.path;}));
-}
+  this.execute = function(methodName) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    var applicablePlugins = this.plugins.filter(function(plugin){return typeof plugin[methodName] === 'function';});
+    return applicablePlugins.map(function(plugin) {
+      return plugin[methodName].apply(plugin, args);
+    });
+  };
+
+  log('Using plugins of ' + tojson(this.plugins.map(function(plugin){return plugin.path;})));
+};
+
+var $plugins = new PluginsClass(this);
+$plugins.execute('onConfig', config);
 
 var varietyTypeOf = function(thing) {
   if (typeof thing === 'undefined') { throw 'varietyTypeOf() requires an argument'; }
@@ -261,7 +248,7 @@ var convertResults = function(interimResults, documentsCount) {
 
 // Merge the keys and types of current object into accumulator object
 var reduceDocuments = function(accumulator, object) {
-  var docResult = analyseDocument(serializeDoc(object, $maxDepth));
+  var docResult = analyseDocument(serializeDoc(object, config.maxDepth));
   mergeDocument(docResult, accumulator);
   return accumulator;
 };
@@ -287,13 +274,13 @@ DBQuery.prototype.reduce = function(callback, initialValue) {
   return result;
 };
 
-var cursor = db[collection].find($query).sort($sort).limit($limit);
+var cursor = db[config.collection].find(config.query).sort(config.sort).limit(config.limit);
 var interimResults = cursor.reduce(reduceDocuments, {});
 var varietyResults = convertResults(interimResults, cursor.size())
   .filter(filter)
   .sort(comparator);
 
-if($persistResults) {
+if(config.persistResults) {
   var resultsDB = db.getMongo().getDB('varietyResults');
   var resultsCollectionName = collection + 'Keys';
 
@@ -303,42 +290,36 @@ if($persistResults) {
   resultsDB[resultsCollectionName].insert(varietyResults);
 }
 
-var formatResultPlugins = $plugins.filter(function(plugin){return typeof plugin.formatResults === 'function';});
-
-if (formatResultPlugins.length > 0) {
-  formatResultPlugins.forEach(function(plugin){
-    print(plugin.formatResults(varietyResults));
-  });
-} else if($outputFormat === 'json') {
-  printjson(varietyResults); // valid formatted json output, compressed variant is printjsononeline()
-} else {  // output nice ascii table with results
-  var table = [['key', 'types', 'occurrences', 'percents'], ['', '', '', '']]; // header + delimiter rows
-
-   // return the number of decimal places or 1, if the number is int (1.23=>2, 100=>1, 0.1415=>4)
-   var significantDigits = function(value) {
-      var res = value.toString().match(/^[0-9]+\.([0-9]+)$/);
-      return res !== null ? res[1].length : 1;
-    };
+var createAsciiTable = function(results) {
+  var headers = ['key', 'types', 'occurrences', 'percents'];
+  // return the number of decimal places or 1, if the number is int (1.23=>2, 100=>1, 0.1415=>4)
+  var significantDigits = function(value) {
+    var res = value.toString().match(/^[0-9]+\.([0-9]+)$/);
+    return res !== null ? res[1].length : 1;
+  };
 
   var maxDigits = varietyResults.map(function(value){return significantDigits(value.percentContaining);}).reduce(function(acc,val){return acc>val?acc:val;});
 
-  varietyResults.forEach(function(key) {
-    table.push([key._id.key, key.value.types.toString(), key.totalOccurrences.toString(), key.percentContaining.toFixed(maxDigits).toString()]);
+  var rows = results.map(function(row) {
+    return [row._id.key, row.value.types, row.totalOccurrences, row.percentContaining.toFixed(maxDigits)];
   });
-
-  var colMaxWidth = function(arr, index) {
-   return Math.max.apply(null, arr.map(function(row){return row[index].toString().length;}));
-  };
-
+  var table = [headers, headers.map(function(){return '';})].concat(rows);
+  var colMaxWidth = function(arr, index) {return Math.max.apply(null, arr.map(function(row){return row[index].toString().length;}));};
   var pad = function(width, string, symbol) { return width <= string.length ? string : pad(width, isNaN(string) ? string + symbol : symbol + string, symbol); };
-
-  var output = '';
-  table.forEach(function(row, ri){
-    output += '| ' + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell, ri === 1 ? '-' : ' ');}).join(' | ') + ' |\n';
+  table = table.map(function(row, ri){
+    return '| ' + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell.toString(), ri === 1 ? '-' : ' ');}).join(' | ') + ' |';
   });
-  var lineLength = output.split('\n')[0].length - 2; // length of first (header) line minus two chars for edges
-  var border = '+' + pad(lineLength, '', '-') + '+';
-  print(border + '\n' + output + border);
+  var border = '+' + pad(table[0].length - 2, '', '-') + '+';
+  return [border].concat(table).concat(border).join('\n');
+};
+
+var pluginsOutput = $plugins.execute('formatResults', varietyResults);
+if (pluginsOutput.length > 0) {
+  pluginsOutput.forEach(function(i){print(i);});
+} else if(config.outputFormat === 'json') {
+  printjson(varietyResults); // valid formatted json output, compressed variant is printjsononeline()
+} else {
+   print(createAsciiTable(varietyResults)); // output nice ascii table with results
 }
 
 }.bind(this)()); // end strict mode
