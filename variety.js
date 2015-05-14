@@ -18,7 +18,7 @@ var log = function(message) {
 };
 
 log('Variety: A MongoDB Schema Analyzer');
-log('Version 1.4.1, released 14 Oct 2014');
+log('Version 1.5.0, released 14 May 2015');
 
 var dbs = [];
 var emptyDbs = [];
