@@ -1,3 +1,5 @@
+(14 May 2015) Version 1.5.0: Introduced basic plugin infrastructure, 'onConfig' and 'formatResults' hooks
+
 (14 Oct 2014) Version 1.4.1: @todvora's fix for maxDepth (matches readme), and fixes for incorrect counts while using query/limit
 
 (13 Oct 2014) Version 1.4.0: @todvora's fix for nested objects

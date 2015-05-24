@@ -83,14 +83,14 @@ public class ParametersParsingTest {
     public void testDefaultOutputFormatParam() throws Exception {
         final ResultsValidator analysis = variety.runDatabaseAnalysis(); // format option not provided
         final Map<String, String> params = getParamsMap(analysis.getStdOut());
-        Assert.assertEquals("ascii", params.get(Variety.PARAM_OUTPUT_FORMAT));
+        Assert.assertEquals("\"ascii\"", params.get(Variety.PARAM_OUTPUT_FORMAT));
     }
 
     @Test
     public void testAsciiOutputFormatParam() throws Exception {
         final ResultsValidator analysis = variety.withFormat(Variety.FORMAT_ASCII).runDatabaseAnalysis();
         final Map<String, String> params = getParamsMap(analysis.getStdOut());
-        Assert.assertEquals("ascii", params.get(Variety.PARAM_OUTPUT_FORMAT));
+        Assert.assertEquals("\"ascii\"", params.get(Variety.PARAM_OUTPUT_FORMAT));
     }
 
     @Test

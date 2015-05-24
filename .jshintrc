@@ -13,13 +13,16 @@
     "BinData": false,
     "DBQuery": false,
     "printjson": false,
+    "load": false,
+    "module": false,
 
     "query": true,
     "limit": true,
     "maxDepth": true,
     "sort": true,
     "outputFormat": true,
-    "persistResults": true
+    "persistResults": true,
+    "plugins": true
   },
   "latedef": true,
   "singleGroups": true,
