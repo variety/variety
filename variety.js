@@ -71,6 +71,7 @@ var readConfig = function(configProvider) {
   read('sort', {_id: -1});
   read('outputFormat', 'ascii');
   read('persistResults', false);
+  read('round', false);
   return config;
 };
 
@@ -236,11 +237,15 @@ var convertResults = function(interimResults, documentsCount) {
   //now convert the interimResults into the proper format
   for(var key in interimResults) {
     var entry = interimResults[key];
+    var percents = entry.totalOccurrences * 100 / documentsCount;
+    if(config.round){
+        percents = Math.round(percents*2)/2;
+    }
     varietyResults.push({
         '_id': {'key':key},
         'value': {'types':getKeys(entry.types)},
         'totalOccurrences': entry.totalOccurrences,
-        'percentContaining': entry.totalOccurrences * 100 / documentsCount
+        'percentContaining': percents
     });
   }
   return varietyResults;
