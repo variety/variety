@@ -44,7 +44,7 @@ _("test" is the database containing the collection we are analyzing.)_
 
 Hmm. Looks like everybody has a "name" and "_id". Most, but not all have a "bio".
 
-Interestingly, it looks like "pets" can be either an array or a string, but there are more strings than arrays. Will this cause any problems in the application, I wonder?
+Interestingly, it looks like "pets" can be either an array or a string, but there are more arrays than strings. Will this cause any problems in the application, I wonder?
 
 Seems like the first document created has a weird legacy key—those damn fools who built the prototype didn't clean up after themselves. If there were a thousand such early documents, I might cross-reference the codebase to confirm they are no longer used, and then delete them all. That way they'll not confuse any future developers.
 
