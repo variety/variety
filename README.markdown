@@ -152,7 +152,7 @@ Variety can also read that option and mute unnecessary output. This is useful in
 Analyzing a large collection on a busy replica set primary could take a lot longer than if you read from a secondary. To do so, we have to tell MongoDB it's okay to perform secondary reads
 by setting the ```slaveOk``` property to ```true```:
 
-    $ mongo test --quiet --eval "var collection = 'users', slaveOk = true" variety.js
+    $ mongo secondary.replicaset.member:31337/somedb --eval "var collection = 'users', slaveOk = true" variety.js
 
 ### Save Results in MongoDB For Future Use ###
 By default, Variety prints results only to standard output and does not store them in MongoDB itself. If you want to persist them automatically in database for later usage, you can set the parameter ```persistResults```.
