@@ -22,7 +22,8 @@
     "sort": true,
     "outputFormat": true,
     "persistResults": true,
-    "plugins": true
+    "plugins": true,
+    "slaveOk" : true
   },
   "latedef": true,
   "singleGroups": true,
