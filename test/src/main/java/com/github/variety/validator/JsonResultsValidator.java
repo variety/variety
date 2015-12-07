@@ -25,8 +25,8 @@ public class JsonResultsValidator implements ResultsValidator {
             final String key = ((BasicDBObject)obj.get("_id")).getString("key");
             final long totalOccurrences = obj.getLong("totalOccurrences");
             final double percentContaining = obj.getDouble("percentContaining");
-            final BasicDBList typesList = (BasicDBList) ((BasicDBObject)obj.get("value")).get("types");
-            final HashSet<String> types = new HashSet<>(Arrays.asList(typesList.toArray(new String[typesList.size()])));
+            final BasicDBObject typesObj = (BasicDBObject) ((BasicDBObject)obj.get("value")).get("types");
+            final Set<String> types = typesObj.keySet();
             entries.add(new VarietyEntry(key, totalOccurrences, percentContaining, types));
         }
         return entries;

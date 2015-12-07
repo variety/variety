@@ -34,6 +34,6 @@ public class QuietOptionTest {
     @Test
     public void testQuietLogs() throws Exception {
         final ResultsValidator varietyAnalysis = variety.withQuiet(true).runDatabaseAnalysis();
-        Assert.assertEquals(SampleData.EXPECTED_DATA_ASCII_TABLE, varietyAnalysis.getStdOut());
+        Assert.assertEquals(SampleData.getExpectedDataAsciiTable(), varietyAnalysis.getStdOut());
     }
 }

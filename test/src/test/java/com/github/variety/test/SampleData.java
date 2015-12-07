@@ -4,29 +4,15 @@ import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 import org.bson.types.Binary;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 class SampleData {
-
-    /**
-     * Ascii table representation of sample data results. It should be possible to verify actual output of Variety
-     * against this table, to check correct formatting.
-     */
-    public static final String EXPECTED_DATA_ASCII_TABLE =
-        "+------------------------------------------------------------+\n" +
-        "| key                | types        | occurrences | percents |\n" +
-        "| ------------------ | ------------ | ----------- | -------- |\n" +
-        "| _id                | ObjectId     |           5 |    100.0 |\n" +
-        "| name               | String       |           5 |    100.0 |\n" +
-        "| bio                | String       |           3 |     60.0 |\n" +
-        "| birthday           | String       |           2 |     40.0 |\n" +
-        "| pets               | Array,String |           2 |     40.0 |\n" +
-        "| someBinData        | BinData-old  |           1 |     20.0 |\n" +
-        "| someWeirdLegacyKey | String       |           1 |     20.0 |\n" +
-        "+------------------------------------------------------------+";
 
     /**
      * Java representation of sample collection provided in variety README:<p>
@@ -75,5 +61,17 @@ class SampleData {
         );
 
         return examples;
+    }
+
+    /**
+     * Ascii table representation of sample data results. It should be possible to verify actual output of Variety
+     * against this table, to check correct formatting.
+     */
+    public static String getExpectedDataAsciiTable() {
+        try {
+            return new String(Files.readAllBytes(Paths.get(SampleData.class.getResource("/expected_ascii_table.txt").getFile())));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

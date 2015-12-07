@@ -5,6 +5,7 @@ import com.mongodb.*;
 import org.junit.Assert;
 
 import java.util.Arrays;
+import java.util.Set;
 
 public class DbResultsValidator implements ResultsValidator {
 
@@ -53,7 +54,8 @@ public class DbResultsValidator implements ResultsValidator {
     }
 
     private void verifyKeyTypes(final String key, final DBObject result, final String[] expectedTypes) {
-        final BasicDBList types = (BasicDBList)((DBObject) result.get("value")).get("types");
+        final BasicDBObject typesObj = (BasicDBObject)((BasicDBObject)result.get("value")).get("types");
+        final Set<String> types = typesObj.keySet();
 
         Assert.assertEquals(
                 "Incorrect count of expected(" + Arrays.toString(expectedTypes) + ") and real types(" + Arrays.toString(types.toArray())

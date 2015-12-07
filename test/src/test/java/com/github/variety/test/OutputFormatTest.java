@@ -46,7 +46,7 @@ public class OutputFormatTest {
                 .filter(line -> line.startsWith("|") || line.startsWith("+"))
                 .collect(Collectors.joining("\n"));
 
-        Assert.assertEquals(SampleData.EXPECTED_DATA_ASCII_TABLE, actual);
+        Assert.assertEquals(SampleData.getExpectedDataAsciiTable(), actual);
 
     }
 }

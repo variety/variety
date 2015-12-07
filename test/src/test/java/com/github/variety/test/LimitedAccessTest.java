@@ -67,7 +67,7 @@ public class LimitedAccessTest {
     @Test
     public void verifyBasicResultsAscii() throws Exception {
         final String stdout = variety.withPersistResults(false).withQuiet(true).runAnalysis();
-        Assert.assertEquals(SampleData.EXPECTED_DATA_ASCII_TABLE, stdout);
+        Assert.assertEquals(SampleData.getExpectedDataAsciiTable(), stdout);
     }
 
 

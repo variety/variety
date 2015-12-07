@@ -2,12 +2,14 @@ package com.github.variety.test;
 
 import com.github.variety.Variety;
 import com.github.variety.validator.ResultsValidator;
+import jdk.nashorn.internal.runtime.regexp.joni.Regex;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.net.URL;
+import java.util.regex.Pattern;
 
 public class PluginsTest {
 
@@ -49,7 +51,7 @@ public class PluginsTest {
     public void verifyPluginParamParsing() throws Exception {
         final String path = getPluginPath("/csvplugin.js");
         final ResultsValidator analysis = variety.withPlugins(path + "|delimiter=;").runDatabaseAnalysis();
-        Assert.assertTrue(analysis.getStdOut().contains("Using plugins of [ \"" + path + "\" ]"));
+        Assert.assertTrue(analysis.getStdOut().contains(path));
     }
 
     private String getPluginPath(final String name) {
