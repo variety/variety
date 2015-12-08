@@ -312,7 +312,7 @@ if(config.persistResults) {
     resultsDB = connect(config.resultsDatabase);
   }
 
-  if (config.resultsUser != null && config.resultsPass != null) {
+  if (config.resultsUser !== null && config.resultsPass !== null) {
     resultsDB.auth(config.resultsUser, config.resultsPass);
   }
 

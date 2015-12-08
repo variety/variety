@@ -23,7 +23,8 @@
     "outputFormat": true,
     "persistResults": true,
     "plugins": true,
-    "slaveOk" : true
+    "slaveOk" : true,
+    "connect": true
   },
   "latedef": true,
   "singleGroups": true,
