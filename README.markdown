@@ -7,7 +7,7 @@ This lightweight tool helps you get a sense of your application's schema, as wel
 
 _“I happen to slowly be falling in love with Variety! It is actually one of the most useful tools to get a sense for a messy/unknown data set, and I have put it in a few of our exercises at Zipfian Academy.”_
 
-Jon Dinu  
+Jon Dinu
 _Co-founder of [Zipfian Academy](http://www.zipfianacademy.com/)_
 
 ***
@@ -28,23 +28,23 @@ So, let's see what we've got here:
 
     $ mongo test --eval "var collection = 'users'" variety.js
 
-    +------------------------------------------------------------+
-    | key                | types        | occurrences | percents |
-    | ------------------ | ------------ | ----------- | -------- |
-    | _id                | ObjectId     |           5 |    100.0 |
-    | name               | String       |           5 |    100.0 |
-    | bio                | String       |           3 |     60.0 |
-    | birthday           | String       |           2 |     40.0 |
-    | pets               | Array,String |           2 |     40.0 |
-    | someBinData        | BinData-old  |           1 |     20.0 |
-    | someWeirdLegacyKey | String       |           1 |     20.0 |
-    +------------------------------------------------------------+
+    +------------------------------------------------------------------+
+    | key                | types              | occurrences | percents |
+    | ------------------ | ------------       | ----------- | -------- |
+    | _id                | ObjectId           |           5 |    100.0 |
+    | name               | String             |           5 |    100.0 |
+    | bio                | String             |           3 |     60.0 |
+    | birthday           | String             |           2 |     40.0 |
+    | pets               | Array(4),String(1) |           5 |     40.0 |
+    | someBinData        | BinData-old        |           1 |     20.0 |
+    | someWeirdLegacyKey | String             |           1 |     20.0 |
+    +------------------------------------------------------------------+
 
 _("test" is the database containing the collection we are analyzing.)_
 
 Hmm. Looks like everybody has a "name" and "_id". Most, but not all have a "bio".
 
-Interestingly, it looks like "pets" can be either an array or a string. Will this cause any problems in the application, I wonder?
+Interestingly, it looks like "pets" can be either an array or a string, but there are more arrays than strings. Will this cause any problems in the application, I wonder?
 
 Seems like the first document created has a weird legacy key—those damn fools who built the prototype didn't clean up after themselves. If there were a thousand such early documents, I might cross-reference the codebase to confirm they are no longer used, and then delete them all. That way they'll not confuse any future developers.
 
@@ -147,6 +147,12 @@ Both MongoDB and Variety output some additional information to standard output. 
 Variety can also read that option and mute unnecessary output. This is useful in connection with ```outputFormat=json```. You would then receive only JSON, without any other characters around it.
 
     $ mongo test --quiet --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
+
+#### Secondary Reads ####
+Analyzing a large collection on a busy replica set primary could take a lot longer than if you read from a secondary. To do so, we have to tell MongoDB it's okay to perform secondary reads
+by setting the ```slaveOk``` property to ```true```:
+
+    $ mongo secondary.replicaset.member:31337/somedb --eval "var collection = 'users', slaveOk = true" variety.js
 
 ### Save Results in MongoDB For Future Use ###
 By default, Variety prints results only to standard output and does not store them in MongoDB itself. If you want to persist them automatically in database for later usage, you can set the parameter ```persistResults```.

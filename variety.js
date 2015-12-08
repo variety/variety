@@ -23,6 +23,12 @@ log('Version 1.5.0, released 14 May 2015');
 var dbs = [];
 var emptyDbs = [];
 
+if (typeof slaveOk !== 'undefined') {
+  if (slaveOk === true) {
+    db.getMongo().setSlaveOk();
+  }
+}
+
 var knownDatabases = db.adminCommand('listDatabases').databases;
 if(typeof knownDatabases !== 'undefined') { // not authorized user receives error response (json) without databases key
   knownDatabases.forEach(function(d){
@@ -214,23 +220,33 @@ var mergeDocument = function(docResult, interimResults) {
   for (var key in docResult) {
     if(key in interimResults) {
       var existing = interimResults[key];
+
       for(var type in docResult[key]) {
-        existing.types[type] = true;
+        if (type in existing.types) {
+          existing.types[type] = existing.types[type] + 1;
+        } else {
+          existing.types[type] = 1;
+        }
       }
       existing.totalOccurrences = existing.totalOccurrences + 1;
     } else {
-      interimResults[key] = {'types':docResult[key],'totalOccurrences':1};
+      var types = {};
+      for (var newType in docResult[key]) {
+        types[newType] = 1;
+      }
+      interimResults[key] = {'types': types,'totalOccurrences':1};
     }
   }
 };
 
 var convertResults = function(interimResults, documentsCount) {
   var getKeys = function(obj) {
-    var keys = [];
+    var keys = {};
     for(var key in obj) {
-      keys.push(key);
+      keys[key] = obj[key];
     }
-    return keys.sort();
+    return keys;
+    //return keys.sort();
   };
   var varietyResults = [];
   //now convert the interimResults into the proper format
@@ -301,7 +317,18 @@ var createAsciiTable = function(results) {
   var maxDigits = varietyResults.map(function(value){return significantDigits(value.percentContaining);}).reduce(function(acc,val){return acc>val?acc:val;});
 
   var rows = results.map(function(row) {
-    return [row._id.key, row.value.types, row.totalOccurrences, row.percentContaining.toFixed(maxDigits)];
+    var types = [];
+    var typeKeys = Object.keys(row.value.types);
+    if (typeKeys.length > 1) {
+      for (var type in row.value.types) {
+          var typestring = type + ' (' + row.value.types[type] + ')';
+          types.push(typestring);
+      }
+    } else {
+      types = typeKeys;
+    }
+
+    return [row._id.key, types, row.totalOccurrences, row.percentContaining.toFixed(maxDigits)];
   });
   var table = [headers, headers.map(function(){return '';})].concat(rows);
   var colMaxWidth = function(arr, index) {return Math.max.apply(null, arr.map(function(row){return row[index].toString().length;}));};
