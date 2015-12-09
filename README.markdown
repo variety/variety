@@ -161,6 +161,19 @@ If the source collection's name is ```users```, Variety will store results in co
 
     $ mongo test --quiet --eval "var collection = 'users', persistResults=true" variety.js
 
+### Command Line Interface
+Variety itself is command line friendly, as shown on examples above.
+But if you are a NPM and Node.js user, you could prefer the 
+[variety-cli](https://github.com/variety/variety-cli) project. It simplifies usage of
+Variety and removes all the complexity of passing variables in the ```--eval``` argument and
+providing a path to the variety.js library.
+
+Example of a simplified command-line usage:
+```
+variety test/users --outputFormat='json' --quiet
+```
+For more details see the [documentation of variety-cli project](https://github.com/variety/variety-cli).
+
 ##### "But my dad told me MongoDB is a schemaless database!" #####
 
 First of all, your father is a great guy. Moving on...
