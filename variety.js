@@ -77,6 +77,10 @@ var readConfig = function(configProvider) {
   read('sort', {_id: -1});
   read('outputFormat', 'ascii');
   read('persistResults', false);
+  read('resultsDatabase', 'varietyResults');
+  read('resultsCollection', collection + 'Keys');
+  read('resultsUser', null);
+  read('resultsPass', null);
   return config;
 };
 
@@ -297,11 +301,23 @@ var varietyResults = convertResults(interimResults, cursor.size())
   .sort(comparator);
 
 if(config.persistResults) {
-  var resultsDB = db.getMongo().getDB('varietyResults');
-  var resultsCollectionName = collection + 'Keys';
+  var resultsDB;
+  var resultsCollectionName = config.resultsCollection;
+
+  if (config.resultsDatabase.indexOf('/') === -1) {
+    // Local database; don't reconnect
+    resultsDB = db.getMongo().getDB(config.resultsDatabase);
+  } else {
+    // Remote database, establish new connection
+    resultsDB = connect(config.resultsDatabase);
+  }
+
+  if (config.resultsUser !== null && config.resultsPass !== null) {
+    resultsDB.auth(config.resultsUser, config.resultsPass);
+  }
 
   // replace results collection
-  log('creating results collection: '+resultsCollectionName);
+  log('replacing results collection: '+ resultsCollectionName);
   resultsDB[resultsCollectionName].drop();
   resultsDB[resultsCollectionName].insert(varietyResults);
 }

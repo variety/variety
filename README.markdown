@@ -155,11 +155,22 @@ by setting the ```slaveOk``` property to ```true```:
     $ mongo secondary.replicaset.member:31337/somedb --eval "var collection = 'users', slaveOk = true" variety.js
 
 ### Save Results in MongoDB For Future Use ###
-By default, Variety prints results only to standard output and does not store them in MongoDB itself. If you want to persist them automatically in database for later usage, you can set the parameter ```persistResults```.
+By default, Variety prints results only to standard output and does not store them in MongoDB itself. If you want to persist them automatically in MongoDB for later usage, you can set the parameter ```persistResults```.
 Variety then stores result documents in database ```varietyResults``` and the collection name is derived from the source collection's name.
 If the source collection's name is ```users```, Variety will store results in collection ```usersKeys``` under ```varietyResults``` database.
 
     $ mongo test --quiet --eval "var collection = 'users', persistResults=true" variety.js
+
+To persist to an alternate MongoDB database, you may specify the following parameters:
+
+  * `resultsDatabase` - The database to store Variety results in. Accepts either a database name or a `host[:port]/database` URL.
+  * `resultsCollection` - Collection to store Variety results in. **WARNING:** This collection is dropped before results are inserted.
+  * `resultsUser` - MongoDB username for results database
+  * `resultsPass` - MongoDB password for results database
+
+```
+$ mongo test --quiet --eval "var collection = 'users', persistResults=true, resultsDatabase='db.example.com/variety' variety.js
+```
 
 ### Command Line Interface
 Variety itself is command line friendly, as shown on examples above.
