@@ -161,12 +161,12 @@ If the source collection's name is ```users```, Variety will store results in co
 
     $ mongo test --quiet --eval "var collection = 'users', persistResults=true" variety.js
 
-To persist to an alternate Mongo database, you may specify the following parameters:
+To persist to an alternate MongoDB database, you may specify the following parameters:
 
   * `resultsDatabase` - The database to store Variety results in. Accepts either a database name or a `host[:port]/database` URL.
   * `resultsCollection` - Collection to store Variety results in. **WARNING:** This collection is dropped before results are inserted.
-  * `resultsUser` - Mongo username for results database
-  * `resultsPass` - Mongo password for results database
+  * `resultsUser` - MongoDB username for results database
+  * `resultsPass` - MongoDB password for results database
 
 ```
 $ mongo test --quiet --eval "var collection = 'users', persistResults=true, resultsDatabase='db.example.com/variety' variety.js
