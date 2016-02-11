@@ -1,0 +1,32 @@
+FROM mongo:{MONGODB_VERSION}
+
+## Java installation
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886
+RUN echo 'deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main' | tee /etc/apt/sources.list.d/webupd8team-java-trusty.list
+RUN echo "oracle-java8-installer shared/accepted-oracle-license-v1-1 select true" | debconf-set-selections
+RUN apt-get update
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --force-yes --no-install-recommends oracle-java8-installer && apt-get clean all
+ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
+RUN java -version
+
+## Maven installation
+RUN apt-get install -y --force-yes --no-install-recommends curl
+RUN apt-get install -y --force-yes --no-install-recommends ca-certificates
+ENV MAVEN_VERSION 3.3.9
+RUN apt-get install -y --force-yes --no-install-recommends curl
+RUN curl -fsSL https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz | tar xzf - -C /usr/share \
+  && mv /usr/share/apache-maven-$MAVEN_VERSION /usr/share/maven \
+  && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
+ENV MAVEN_HOME /usr/share/maven
+RUN mvn --version
+
+## Prepare entrypoint script (start MongoDB, switch to test dir, execute maven)
+RUN mkdir /opt/variety-test
+WORKDIR /opt/variety-test/
+RUN echo "#!/bin/sh" > run.sh
+RUN echo "mongod --logpath /var/log/mongod.log &" >> run.sh
+RUN echo "cd /opt/variety/test" >> run.sh
+RUN echo "mvn test" >> run.sh
+RUN chmod +x /opt/variety-test/run.sh
+
+ENTRYPOINT ["/opt/variety-test/run.sh"]

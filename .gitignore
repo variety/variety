@@ -3,3 +3,4 @@
 # intellij idea project files
 *.iml
 *.ipr
+.idea/

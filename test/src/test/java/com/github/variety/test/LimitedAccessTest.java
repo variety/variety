@@ -9,6 +9,7 @@ import com.mongodb.ServerAddress;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -18,6 +19,7 @@ import java.util.Arrays;
  * Tests, if variety can return results for user with read only access to analyzed database (without permission to list
  * all other dbs / collections, without permission to persist results).
  */
+@Ignore
 public class LimitedAccessTest {
 
     private Variety variety;
