@@ -23,12 +23,6 @@ log('Version 1.5.0, released 14 May 2015');
 var dbs = [];
 var emptyDbs = [];
 
-if (typeof slaveOk !== 'undefined') {
-  if (slaveOk === true) {
-    db.getMongo().setSlaveOk();
-  }
-}
-
 var knownDatabases = db.adminCommand('listDatabases').databases;
 if(typeof knownDatabases !== 'undefined') { // not authorized user receives error response (json) without databases key
   knownDatabases.forEach(function(d){
@@ -77,10 +71,6 @@ var readConfig = function(configProvider) {
   read('sort', {_id: -1});
   read('outputFormat', 'ascii');
   read('persistResults', false);
-  read('resultsDatabase', 'varietyResults');
-  read('resultsCollection', collection + 'Keys');
-  read('resultsUser', null);
-  read('resultsPass', null);
   return config;
 };
 
@@ -215,7 +205,7 @@ var analyseDocument = function(document) {
       result[key] = {};
     }
     var type = varietyTypeOf(value);
-    result[key][type] = true;
+    result[key][type] = 1;
   }
   return result;
 };
@@ -224,33 +214,29 @@ var mergeDocument = function(docResult, interimResults) {
   for (var key in docResult) {
     if(key in interimResults) {
       var existing = interimResults[key];
-
       for(var type in docResult[key]) {
-        if (type in existing.types) {
-          existing.types[type] = existing.types[type] + 1;
+        if (existing.types[type]) {
+          existing.types[type] += 1;
         } else {
           existing.types[type] = 1;
         }
       }
       existing.totalOccurrences = existing.totalOccurrences + 1;
     } else {
-      var types = {};
-      for (var newType in docResult[key]) {
-        types[newType] = 1;
-      }
-      interimResults[key] = {'types': types,'totalOccurrences':1};
+      interimResults[key] = {'types':docResult[key],'totalOccurrences':1};
     }
   }
 };
 
 var convertResults = function(interimResults, documentsCount) {
   var getKeys = function(obj) {
-    var keys = {};
-    for(var key in obj) {
-      keys[key] = obj[key];
+    var keys = [];
+    var types = obj.types
+    var totalOccurrences = obj.totalOccurrences
+    for(var key in types) {
+      keys.push(key + ' (' + ((types[key] * 100 / totalOccurrences).toPrecision(3)).toString() + '%)');
     }
-    return keys;
-    //return keys.sort();
+    return keys.sort();
   };
   var varietyResults = [];
   //now convert the interimResults into the proper format
@@ -258,7 +244,7 @@ var convertResults = function(interimResults, documentsCount) {
     var entry = interimResults[key];
     varietyResults.push({
         '_id': {'key':key},
-        'value': {'types':getKeys(entry.types)},
+        'value': {'types':getKeys(entry)},
         'totalOccurrences': entry.totalOccurrences,
         'percentContaining': entry.totalOccurrences * 100 / documentsCount
     });
@@ -301,23 +287,11 @@ var varietyResults = convertResults(interimResults, cursor.size())
   .sort(comparator);
 
 if(config.persistResults) {
-  var resultsDB;
-  var resultsCollectionName = config.resultsCollection;
-
-  if (config.resultsDatabase.indexOf('/') === -1) {
-    // Local database; don't reconnect
-    resultsDB = db.getMongo().getDB(config.resultsDatabase);
-  } else {
-    // Remote database, establish new connection
-    resultsDB = connect(config.resultsDatabase);
-  }
-
-  if (config.resultsUser !== null && config.resultsPass !== null) {
-    resultsDB.auth(config.resultsUser, config.resultsPass);
-  }
+  var resultsDB = db.getMongo().getDB('varietyResults');
+  var resultsCollectionName = collection + 'Keys';
 
   // replace results collection
-  log('replacing results collection: '+ resultsCollectionName);
+  log('creating results collection: '+resultsCollectionName);
   resultsDB[resultsCollectionName].drop();
   resultsDB[resultsCollectionName].insert(varietyResults);
 }
@@ -333,18 +307,7 @@ var createAsciiTable = function(results) {
   var maxDigits = varietyResults.map(function(value){return significantDigits(value.percentContaining);}).reduce(function(acc,val){return acc>val?acc:val;});
 
   var rows = results.map(function(row) {
-    var types = [];
-    var typeKeys = Object.keys(row.value.types);
-    if (typeKeys.length > 1) {
-      for (var type in row.value.types) {
-          var typestring = type + ' (' + row.value.types[type] + ')';
-          types.push(typestring);
-      }
-    } else {
-      types = typeKeys;
-    }
-
-    return [row._id.key, types, row.totalOccurrences, row.percentContaining.toFixed(maxDigits)];
+    return [row._id.key, row.value.types, row.totalOccurrences, row.percentContaining.toFixed(maxDigits)];
   });
   var table = [headers, headers.map(function(){return '';})].concat(rows);
   var colMaxWidth = function(arr, index) {return Math.max.apply(null, arr.map(function(row){return row[index].toString().length;}));};
