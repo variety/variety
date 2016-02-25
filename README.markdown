@@ -204,7 +204,7 @@ I accept pull requests from forks. Very grateful to accept contributions from fo
 #### Core Maintainers ####
 
 * Tomáš Dvořák ([personal website] (http://www.tomas-dvorak.cz/))
-* Wes Freeman ([software/chess blog] (http://wes.skeweredrook.com))
+* Eve Freeman ([Twitter] (https://twitter.com/wefreema))
 * James Cropcho (original creator of Variety) ([Twitter] (https://twitter.com/Cropcho))
 
 #### Special Thanks ####
@@ -222,4 +222,4 @@ Much thanks also, to Kyle Banker ([@Hwaet] (https://twitter.com/#!/hwaet)) for w
 I have every reason to believe this tool will **not** corrupt your data or harm your computer. But if I were you, I would not use it in a production environment.
 
 
-Released by Maypop Inc, © 2012–2015, under the [MIT License] (http://www.opensource.org/licenses/MIT).
+Released by Maypop Inc, © 2012–2016, under the [MIT License] (http://www.opensource.org/licenses/MIT).
