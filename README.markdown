@@ -174,7 +174,7 @@ $ mongo test --quiet --eval "var collection = 'users', persistResults=true, resu
 
 ### Command Line Interface
 Variety itself is command line friendly, as shown on examples above.
-But if you are a NPM and Node.js user, you could prefer the 
+But if you are a NPM and Node.js user, you could prefer the
 [variety-cli](https://github.com/variety/variety-cli) project. It simplifies usage of
 Variety and removes all the complexity of passing variables in the ```--eval``` argument and
 providing a path to the variety.js library.
@@ -195,6 +195,29 @@ A Mongo collection does not enforce a predefined schema like a relational databa
 
 Absolutely none, except MongoDB. Written in 100% JavaScript. _(mongod's "noscripting" may not be set to true, and 'strict mode' must be disabled.)_
 
+##### Development, Hacking #####
+This project is NPM based and provides standard NPM functionality. As an additional (not required) dependency, [Docker](https://www.docker.com/) can be installed to test against different MongoDB versions.
+
+To install all dev dependencies call as usual:
+```
+npm install
+```
+
+By default, tests expect MongoDB available on ```localhost:27017``` and can be executed by calling:
+
+```
+npm test
+```
+
+If you have Docker installed and don't want to test against your own MongoDB instance,
+you can execute tests against dockerized MongoDB:
+
+```
+MONGODB_VERSION=3.2 npm run test:docker
+```
+The script downloads one of [official MongoDB images](https://hub.docker.com/_/mongo/) (based on your provided version),
+starts the database, executes test suite against it (inside the container) and stops the DB.
+
 #### Reporting Issues / Contributing ####
 
 Please report any bugs and feature requests on the Github issue tracker. I will read all reports!
@@ -203,15 +226,15 @@ I accept pull requests from forks. Very grateful to accept contributions from fo
 
 #### Core Maintainers ####
 
-* Tomáš Dvořák ([personal website] (http://www.tomas-dvorak.cz/))
-* Eve Freeman ([Twitter] (https://twitter.com/wefreema))
-* James Cropcho (original creator of Variety) ([Twitter] (https://twitter.com/Cropcho))
+* Tomáš Dvořák ([personal website](http://www.tomas-dvorak.cz/))
+* Eve Freeman ([Twitter](https://twitter.com/wefreema))
+* James Cropcho (original creator of Variety) ([Twitter](https://twitter.com/Cropcho))
 
 #### Special Thanks ####
 
-Additional special thanks to Gaëtan Voyer-Perraul ([@gatesvp] (https://twitter.com/#!/@gatesvp)) and Kristina Chodorow ([@kchodorow] (https://twitter.com/#!/kchodorow)) for answering other people's questions about how to do this on Stack Overflow, thereby providing me with the initial seed of code which grew into this tool.
+Additional special thanks to Gaëtan Voyer-Perraul ([@gatesvp](https://twitter.com/#!/@gatesvp)) and Kristina Chodorow ([@kchodorow](https://twitter.com/#!/kchodorow)) for answering other people's questions about how to do this on Stack Overflow, thereby providing me with the initial seed of code which grew into this tool.
 
-Much thanks also, to Kyle Banker ([@Hwaet] (https://twitter.com/#!/hwaet)) for writing an unusually good book on MongoDB, which has taught me everything I know about it so far.
+Much thanks also, to Kyle Banker ([@Hwaet](https://twitter.com/#!/hwaet)) for writing an unusually good book on MongoDB, which has taught me everything I know about it so far.
 
 #### Tools Which Use Variety (Open Source) ####
 
