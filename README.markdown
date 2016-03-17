@@ -148,6 +148,11 @@ Variety can also read that option and mute unnecessary output. This is useful in
 
     $ mongo test --quiet --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
 
+#### Log Keys and Types As They Arrive Option ####
+Sometimes you want to see the keys and types come in as it happens.  Maybe you have a large dataset and want accurate results, but you also are impatent and want to see something now.  Or maybe you have a large mangled dataset with crazy keys (that probably shouldn't be keys) and variety is going out of memory.  This option will show you the keys and types as they come in and help you identify problems with your dataset without needing the variety script to finish.  
+
+    $ mongo test --eval "var collection = 'users', sort = { updated_at : -1 }, logKeysContinuously = true" variety.js
+
 #### Secondary Reads ####
 Analyzing a large collection on a busy replica set primary could take a lot longer than if you read from a secondary. To do so, we have to tell MongoDB it's okay to perform secondary reads
 by setting the ```slaveOk``` property to ```true```:
