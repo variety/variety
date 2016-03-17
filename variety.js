@@ -232,7 +232,7 @@ var mergeDocument = function(docResult, interimResults) {
         } else {
           existing.types[type] = 1;
           if (config.logKeysContinuously) {
-            log('Found new key type "' + key + '" type "' + type '"');
+            log('Found new key type "' + key + '" type "' + type + '"');
           }
         }
       }
@@ -242,7 +242,7 @@ var mergeDocument = function(docResult, interimResults) {
       for (var newType in docResult[key]) {
         types[newType] = 1;
         if (config.logKeysContinuously) {
-          log('Found new key type "' + key + '" type "' + newType '"');
+          log('Found new key type "' + key + '" type "' + newType + '"');
         }
       }
       interimResults[key] = {'types': types,'totalOccurrences':1};
