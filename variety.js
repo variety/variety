@@ -81,6 +81,7 @@ var readConfig = function(configProvider) {
   read('resultsCollection', collection + 'Keys');
   read('resultsUser', null);
   read('resultsPass', null);
+  read('logKeysContinuously', false);
   return config;
 };
 
@@ -230,6 +231,9 @@ var mergeDocument = function(docResult, interimResults) {
           existing.types[type] = existing.types[type] + 1;
         } else {
           existing.types[type] = 1;
+          if (config.logKeysContinuously) {
+            log('Found new key type "' + key + '" type "' + type '"');
+          }
         }
       }
       existing.totalOccurrences = existing.totalOccurrences + 1;
@@ -237,6 +241,9 @@ var mergeDocument = function(docResult, interimResults) {
       var types = {};
       for (var newType in docResult[key]) {
         types[newType] = 1;
+        if (config.logKeysContinuously) {
+          log('Found new key type "' + key + '" type "' + newType '"');
+        }
       }
       interimResults[key] = {'types': types,'totalOccurrences':1};
     }
