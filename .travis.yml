@@ -1,10 +1,8 @@
 language: node_js
 node_js:
-  - "4.1"
+  - '5.0'
 sudo: required
 services: docker
-install:
- - npm install jshint -g
 env:
  matrix:
    - MONGODB_VERSION=2.4
@@ -13,5 +11,4 @@ env:
    - MONGODB_VERSION=3.0
    - MONGODB_VERSION=3.2
 script:
- - jshint variety.js
- - ./test.sh
+ - npm run travis-ci
