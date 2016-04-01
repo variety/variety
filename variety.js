@@ -1,4 +1,5 @@
-/* Variety: A MongoDB Schema Analyzer
+/* Variety: A MongoDB Schema Analyzer 
+
 
 This tool helps you get a sense of your application's schema, as well as any
 outliers to that schema. Particularly useful when you inherit a codebase with
