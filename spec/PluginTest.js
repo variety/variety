@@ -1,9 +1,9 @@
-const assert = require('assert');
-const Tester = require('./utils/Tester.js');
-const path = require('path');
-const test = new Tester('test', 'users');
+import assert from 'assert';
+import Tester from './utils/Tester.js';
+import { resolve, join } from 'path';
+import sampleData from './assets/SampleData';
 
-const sampleData = require('./assets/SampleData');
+const test = new Tester('test', 'users');
 
 const expectedOutput = `
 key|types|occurrences|percents
@@ -16,24 +16,22 @@ someBinData|BinData-generic|1|20
 someWeirdLegacyKey|String|1|20
 `.trim();
 
-const getPluginPath = () => path.resolve(path.join(__dirname , 'assets', 'csvplugin.js'));
+const getPluginPath = () => resolve(join(__dirname , 'assets', 'csvplugin.js'));
 
 describe('Plugins', () => {
 
   beforeEach(() => test.init(sampleData));
   afterEach(() => test.cleanUp());
 
-  it('should load plugin and modify output', () => {
-    return test.runAnalysis({collection:'users', plugins: getPluginPath()}, true).then(output => {
-      assert.equal(output, expectedOutput);
-    });
+  it('should load plugin and modify output', async () => {
+    const output = await test.runAnalysis({collection:'users', plugins: getPluginPath()}, true);
+    assert.equal(output, expectedOutput);
   });
 
-  it('should read additional plugin params', () => {
-    return test.runAnalysis({collection:'users', plugins: getPluginPath() + '|delimiter=;'}, true).then(output => {
-      const expectedWithSeparator = expectedOutput.replace(/\|/g, ';');
-      assert.equal(output, expectedWithSeparator);
-    });
+  it('should read additional plugin params', async () => {
+    const output = await test.runAnalysis({collection:'users', plugins: getPluginPath() + '|delimiter=;'}, true);
+    const expectedWithSeparator = expectedOutput.replace(/\|/g, ';');
+    assert.equal(output, expectedWithSeparator);
   });
 
 });

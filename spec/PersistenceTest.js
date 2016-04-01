@@ -1,23 +1,20 @@
-const assert = require('assert');
-const Tester = require('./utils/Tester.js');
+import assert from 'assert';
+import Tester from './utils/Tester.js';
+import sampleData from './assets/SampleData';
 
 const test = new Tester('test', 'users');
-
-const sampleData = require('./assets/SampleData');
 
 describe('Persistence of results', () => {
 
   beforeEach(() => test.init(sampleData));
   afterEach(() => test.cleanUp());
 
-  it('should persist results into varietyResults DB', () => {
-    return test.runAnalysis({collection:'users', persistResults: true}, true)
-      .then(() => test.getDb('varietyResults'))
-      .then((db) => db.collection('usersKeys').find().toArray())
-      .then((arr) => {
-        assert.equal(arr.length, 7);
-        let keys = arr.map(it => it._id.key);
-        assert.deepEqual(keys, ['_id', 'name', 'bio', 'birthday', 'pets', 'someBinData', 'someWeirdLegacyKey']);
-      });
+  it('should persist results into varietyResults DB', async () => {
+    await test.runAnalysis({collection:'users', persistResults: true}, true);
+    const db = await test.getDb('varietyResults');
+    const arr = await db.collection('usersKeys').find().toArray();
+    assert.equal(arr.length, 7);
+    const keys = arr.map(it => it._id.key);
+    assert.deepEqual(keys, ['_id', 'name', 'bio', 'birthday', 'pets', 'someBinData', 'someWeirdLegacyKey']);
   });
 });

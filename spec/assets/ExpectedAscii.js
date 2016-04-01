@@ -1,4 +1,4 @@
-module.exports =`
+export default `
 
 +--------------------------------------------------------------------+
 | key                | types                | occurrences | percents |

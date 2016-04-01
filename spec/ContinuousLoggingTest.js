@@ -1,8 +1,8 @@
-const assert = require('assert');
-const Tester = require('./utils/Tester.js');
-const test = new Tester('test', 'users');
+import assert from 'assert';
+import Tester from './utils/Tester.js';
+import sampleData from './assets/SampleData';
 
-const sampleData = require('./assets/SampleData');
+const test = new Tester('test', 'users');
 
 const pattern = /^Found new key type "(.{1,})" type "(.{1,})"$/g;
 const expectedLines = [
@@ -19,21 +19,20 @@ const expectedLines = [
 
 
 
-describe('Continuous logging', () => {
+describe('Continuous logging', async () => {
 
   beforeEach(() => test.init(sampleData));
   afterEach(() => test.cleanUp());
 
-  it('should log every new key', () => {
-    return test.runAnalysis({collection:'users', logKeysContinuously:true}).then(output => {
-      var filteredOutput = output
-        .split('\n')
-        .filter(line => line.match(pattern));
-      assert.equal(filteredOutput.length, expectedLines.length);
-      expectedLines.forEach(expectedLine => {
-        const found = filteredOutput.indexOf(expectedLine) > -1;
-        assert.ok(found, `Expected line '${expectedLine}' not found in Variety output`);
-      });
+  it('should log every new key', async () => {
+    const output = await test.runAnalysis({collection:'users', logKeysContinuously:true});
+    var filteredOutput = output
+      .split('\n')
+      .filter(line => line.match(pattern));
+    assert.equal(filteredOutput.length, expectedLines.length);
+    expectedLines.forEach(expectedLine => {
+      const found = filteredOutput.indexOf(expectedLine) > -1;
+      assert.ok(found, `Expected line '${expectedLine}' not found in Variety output`);
     });
   });
 });

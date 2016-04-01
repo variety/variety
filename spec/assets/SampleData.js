@@ -1,6 +1,6 @@
-var Binary = require('mongodb').Binary;
+import { Binary } from 'mongodb';
 
-module.exports = [{
+export default [{
   'name': 'Tom',
   'bio': 'A nice guy.',
   'pets': ['monkey', 'fish'],
