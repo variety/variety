@@ -1,6 +1,5 @@
 /* Variety: A MongoDB Schema Analyzer 
 
-
 This tool helps you get a sense of your application's schema, as well as any
 outliers to that schema. Particularly useful when you inherit a codebase with
 data dump and want to quickly learn how the data's structured. Also useful for
