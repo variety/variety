@@ -9,7 +9,7 @@
   "scripts": {
     "lint": "node_modules/.bin/eslint variety.js spec",
     "lint:fix": "node_modules/.bin/eslint variety.js spec --fix",
-    "test": "node_modules/.bin/mocha --compilers js:babel-core/register --recursive --reporter spec --timeout 15000 spec",
+    "test": "node_modules/.bin/mocha --compilers js:babel-core/register --require babel-polyfill  --recursive --reporter spec --timeout 15000 spec",
     "test:docker": "./test.sh",
     "travis-ci": "npm run lint && npm run test:docker"
   },
@@ -30,11 +30,13 @@
   "homepage": "https://github.com/variety/variety#readme",
   "devDependencies": {
     "babel-core": "^6.7.2",
+    "babel-eslint": "^6.0.2",
+    "babel-polyfill": "^6.7.4",
     "babel-preset-es2015": "^6.6.0",
+    "babel-preset-stage-0": "^6.5.0",
     "child-process-promise": "^1.1.0",
     "eslint": "^2.4.0",
     "mocha": "^2.4.5",
-    "mongodb": "^2.1.7",
-    "q": "^1.4.1"
+    "mongodb": "^2.1.7"
   }
 }

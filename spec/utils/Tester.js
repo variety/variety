@@ -1,54 +1,50 @@
 'use strict';
 
-const path = require('path');
-const Q = require('q');
-const MongoClient = require('mongodb').MongoClient;
-const shell = require('./MongoShell');
-const JsonValidator = require('./JsonValidator');
+import { resolve, join } from 'path';
+import { MongoClient } from 'mongodb';
+import execute from './MongoShell';
+import JsonValidator from './JsonValidator';
 
 const mongodb_port = process.env.MONGODB_PORT || 27017;
 const default_url = `mongodb://localhost:${mongodb_port}/test?autoReconnect=true`;
 
-class Tester {
+export default class Tester {
   constructor(databaseName, collectionName) {
     this.databaseName = databaseName;
     this.collectionName = collectionName;
   }
 
-  connect() {
-    return Q.nfcall(MongoClient.connect, default_url)
-      .then((connection) => {
-        this.connection = connection;
-        this.coll = connection.db(this.databaseName).collection(this.collectionName);
-        return connection;
-      });
+  async connect() {
+    const connection = await MongoClient.connect(default_url);
+    this.connection = connection;
+    this.coll = connection.db(this.databaseName).collection(this.collectionName);
+    return connection;
   }
 
-  init(initialData) {
-    return this.connect()
-      .then(() => this.coll.deleteMany())
-      .then(() => this.coll.insertMany(initialData))
-      .then(() => this.connection);
+  async init(initialData) {
+    var connection = await this.connect();
+    await this.coll.deleteMany();
+    await this.coll.insertMany(initialData);
+    return connection;
   }
 
-  cleanUp() {
-    return this.coll.deleteMany()
-      .then(() => this.connection.close());
+  async cleanUp() {
+    await this.coll.deleteMany();
+    await this.connection.close();
   }
 
   getDb(dbName) {
-    return Q(this.connection.db(dbName));
+    return this.connection.db(dbName);
   }
 
   getVarietyPath() {
-    return path.resolve(path.join(__dirname , '..', '..', 'variety.js'));
+    return resolve(join(__dirname , '..', '..', 'variety.js'));
   }
 
-  runJsonAnalysis(options) {
+  async runJsonAnalysis(options) {
     options.outputFormat = 'json';
-    return this.runAnalysis(options, true)
-      .then(JSON.parse)
-      .then(data => new JsonValidator(data));
+    const result = await this.runAnalysis(options, true);
+    return new JsonValidator(JSON.parse(result));
   }
 
 
@@ -60,8 +56,6 @@ class Tester {
         str.push(`var ${key}=${value}`);
       }
     }
-    return shell.execute(this.database, null, '"' + str.join(';') + '"', this.getVarietyPath(), quiet, mongodb_port);
+    return execute(this.database, null, '"' + str.join(';') + '"', this.getVarietyPath(), quiet, mongodb_port);
   }
 }
-
-module.exports = Tester;

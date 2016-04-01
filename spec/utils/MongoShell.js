@@ -1,9 +1,9 @@
 'use strict';
 
-const exec = require('child-process-promise').exec;
+import { exec } from 'child-process-promise';
 
-const execute = (database, credentials, args, script, quiet, port) => {
-  let commands = ['mongo'];
+export default async (database, credentials, args, script, quiet, port) => {
+  const commands = ['mongo'];
 
   commands.push('--port');
   commands.push(port);
@@ -33,10 +33,6 @@ const execute = (database, credentials, args, script, quiet, port) => {
     commands.push(script);
   }
 
-  return exec(commands.join(' '))
-    .then(result => result.stdout.trim());
-};
-
-module.exports = {
-  execute:execute
+  const result = await exec(commands.join(' '));
+  return result.stdout.trim();
 };
