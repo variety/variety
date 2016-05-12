@@ -153,6 +153,29 @@ Sometimes you want to see the keys and types come in as it happens.  Maybe you h
 
     $ mongo test --eval "var collection = 'users', sort = { updated_at : -1 }, logKeysContinuously = true" variety.js
 
+#### Exclude Subkeys ####
+Sometimes you inherit a database full of junk.  Maybe the previous developer put data in the database keys, which causes variety to go out of memory when run.  After you've run the `logKeysContinuously` to figure out which subkeys may be a problem, you can use this option to run variety without those subkeys.  
+
+    db.users.insert({name:"Walter", someNestedObject:{a:{b:{c:{d:{e:1}}}}}, otherNestedObject:{a:{b:{c:{d:{e:1}}}}}});
+
+    $ mongo test --eval "var collection = 'users', sort = { updated_at : -1 }, excludeSubkeys = [ 'someNestedObject.a.b' ]" variety.js
+    
+    +-----------------------------------------------------------------+
+    | key                         | types    | occurrences | percents |
+    | --------------------------- | -------- | ----------- | -------- |
+    | _id                         | ObjectId |           1 |    100.0 |
+    | name                        | String   |           1 |    100.0 |
+    | someNestedObject            | Object   |           1 |    100.0 |
+    | someNestedObject.a          | Object   |           1 |    100.0 |
+    | someNestedObject.a.b        | Object   |           1 |    100.0 |
+    | otherNestedObject           | Object   |           1 |    100.0 |
+    | otherNestedObject.a         | Object   |           1 |    100.0 |
+    | otherNestedObject.a.b       | Object   |           1 |    100.0 |
+    | otherNestedObject.a.b.c     | Object   |           1 |    100.0 |
+    | otherNestedObject.a.b.c.d   | Object   |           1 |    100.0 |
+    | otherNestedObject.a.b.c.d.e | Number   |           1 |    100.0 |
+    +-----------------------------------------------------------------+
+
 #### Secondary Reads ####
 Analyzing a large collection on a busy replica set primary could take a lot longer than if you read from a secondary. To do so, we have to tell MongoDB it's okay to perform secondary reads
 by setting the ```slaveOk``` property to ```true```:
