@@ -2,7 +2,7 @@ import Tester from './utils/Tester.js';
 const test = new Tester('test', 'users');
 
 const sampleData = [
-  {title:'Article 1', comments:[{author:'John', body:'it works', visible:true }]},
+  {title:'Article 1', comments:[{author:'John', body:'it works', visible:true, '123key': '123value' }]},
   {title:'Article 2', comments:[{author:'Tom', body:'thanks'}, {author:'Mark', body:1}]}
 ];
 
@@ -16,8 +16,7 @@ describe('Unnamed object analysis', () => {
 
   it('should handle keys of unnamed object', async () => {
     const results = await test.runJsonAnalysis({collection:'users'}, true);
-
-    results.validateResultsCount(6);
+    results.validateResultsCount(7);
     results.validate('_id', 2, 100.0, {ObjectId: 2});
     results.validate('title', 2, 100.0, {String: 2});
     results.validate('comments', 2, 100.0, {Array: 2});
@@ -26,5 +25,6 @@ describe('Unnamed object analysis', () => {
     results.validate('comments.XX.author', 2, 100.0, {String: 2});
     results.validate('comments.XX.body', 2, 100.0, {String: 2, Number:1});
     results.validate('comments.XX.visible', 1, 50.0, {Boolean: 1});
+    results.validate('comments.XX.123key', 1, 50.0, {String: 1});
   });
 });
