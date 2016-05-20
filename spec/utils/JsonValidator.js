@@ -10,7 +10,7 @@ export default class JsonValidator {
   validate(key, totalOccurrences, percentContaining, types) {
     const row = this.results.filter(item => item._id.key === key)[0];
     if(typeof row === 'undefined') {
-      throw new Error(`Key '${key}' is not present in results`);
+      throw new Error(`Key '${key}' not present in results. Known keys are: [${this.results.map(item => item._id.key).join(',')}].`);
     }
     equal(row.totalOccurrences, totalOccurrences, `TotalOccurrences of key ${key} does not match`);
     equal(row.percentContaining, percentContaining, `PercentContaining of key ${key} does not match`);
