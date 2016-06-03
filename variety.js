@@ -187,7 +187,7 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
     }
 
     function serialize(document, parentKey, maxDepth) {
-      if(Object.prototype.hasOwnProperty.call(excludeSubkeys, parentKey.replace(".XX.", '.')))
+      if(Object.prototype.hasOwnProperty.call(excludeSubkeys, parentKey.replace('.XX.', '.')))
         return;
       for(var key in document) {
         //skip over inherited properties such as string, length, etch
@@ -196,7 +196,7 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
         }
         var value = document[key];
         if(Array.isArray(document))
-          key = "XX"; //translate unnamed object key from {_parent_name_}.{_index_} to {_parent_name_}.XX
+          key = 'XX'; //translate unnamed object key from {_parent_name_}.{_index_} to {_parent_name_}.XX
         result[parentKey+key] = value;
         //it's an object, recurse...only if we haven't reached max depth
         if(isHash(value) && maxDepth > 1) {
