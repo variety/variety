@@ -200,6 +200,11 @@ To persist to an alternate MongoDB database, you may specify the following param
 $ mongo test --quiet --eval "var collection = 'users', persistResults=true, resultsDatabase='db.example.com/variety' variety.js
 ```
 
+### Reserved Keys ###
+Variety expects keys to be well formed, not having any '.'s in them (mongo 2.4 allows dots in certain cases).  Also mongo uses the psudo keys 'XX' and keys coresponding to the regex 'XX\d+XX.*' for use with arrays.  You can change the string XX in these patterns to whatever you like if there is a conflict in your database using the `arrayEscape` parameter.  
+
+    $ mongo test --quiet --eval "var collection = 'users', arrayEscape = 'YY'" variety.js
+
 ### Command Line Interface
 Variety itself is command line friendly, as shown on examples above.
 But if you are a NPM and Node.js user, you could prefer the

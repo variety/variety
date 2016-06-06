@@ -84,6 +84,7 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
     read('resultsPass', null);
     read('logKeysContinuously', false);
     read('excludeSubkeys', []);
+    read('arrayEscape', 'XX');
     
     //Translate excludeSubkeys to set like object... using an object for compatibility...
     config.excludeSubkeys = config.excludeSubkeys.reduce(function (result, item) { result[item+'.'] = true; return result; }, {});
@@ -185,9 +186,11 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
                         v instanceof BinData;
       return !specialObject && (isArray || isObject);
     }
-
+    
+    var arrayRegex = new RegExp('\\.' + config.arrayEscape + '\\d+' + config.arrayEscape + '\\.', 'g');
+    
     function serialize(document, parentKey, maxDepth) {
-      if(Object.prototype.hasOwnProperty.call(excludeSubkeys, parentKey.replace('.XX.', '.')))
+      if(Object.prototype.hasOwnProperty.call(excludeSubkeys, parentKey.replace(arrayRegex, '.')))
         return;
       for(var key in document) {
         //skip over inherited properties such as string, length, etch
@@ -196,7 +199,7 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
         }
         var value = document[key];
         if(Array.isArray(document))
-          key = 'XX'; //translate unnamed object key from {_parent_name_}.{_index_} to {_parent_name_}.XX
+          key = config.arrayEscape + key + config.arrayEscape; //translate unnamed object key from {_parent_name_}.{_index_} to {_parent_name_}.arrayEscape{_index_}arrayEscape.  
         result[parentKey+key] = value;
         //it's an object, recurse...only if we haven't reached max depth
         if(isHash(value) && maxDepth > 1) {
@@ -211,8 +214,10 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
   // convert document to key-value map, where value is always an array with types as plain strings
   var analyseDocument = function(document) {
     var result = {};
+    var arrayRegex = new RegExp('\\.' + config.arrayEscape + '\\d+' + config.arrayEscape, 'g');
     for (var key in document) {
       var value = document[key];
+      key = key.replace(arrayRegex, '.' + config.arrayEscape);
       if(typeof result[key] === 'undefined') {
         result[key] = {};
       }
@@ -283,8 +288,9 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
 
   // We throw away keys which end in an array index, since they are not useful
   // for our analysis. (We still keep the key of their parent array, though.) -JC
+  var arrayRegex = new RegExp('\\.' + config.arrayEscape + '$', 'g');
   var filter = function(item) {
-    return !item._id.key.match(/\.XX$/);
+    return !item._id.key.match(arrayRegex);
   };
 
 // sort desc by totalOccurrences or by key asc if occurrences equal
