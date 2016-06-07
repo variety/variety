@@ -154,7 +154,7 @@ Sometimes you want to see the keys and types come in as it happens.  Maybe you h
     $ mongo test --eval "var collection = 'users', sort = { updated_at : -1 }, logKeysContinuously = true" variety.js
 
 #### Exclude Subkeys ####
-Sometimes you inherit a database full of junk.  Maybe the previous developer put data in the database keys, which causes variety to go out of memory when run.  After you've run the `logKeysContinuously` to figure out which subkeys may be a problem, you can use this option to run variety without those subkeys.  
+Sometimes you inherit a database full of junk.  Maybe the previous developer put data in the database keys, which causes Variety to go out of memory when run.  After you've run the `logKeysContinuously` to figure out which subkeys may be a problem, you can use this option to run Variety without those subkeys.  
 
     db.users.insert({name:"Walter", someNestedObject:{a:{b:{c:{d:{e:1}}}}}, otherNestedObject:{a:{b:{c:{d:{e:1}}}}}});
 
@@ -201,7 +201,7 @@ $ mongo test --quiet --eval "var collection = 'users', persistResults=true, resu
 ```
 
 ### Reserved Keys ###
-Variety expects keys to be well formed, not having any '.'s in them (mongo 2.4 allows dots in certain cases).  Also mongo uses the psudo keys 'XX' and keys coresponding to the regex 'XX\d+XX.*' for use with arrays.  You can change the string XX in these patterns to whatever you like if there is a conflict in your database using the `arrayEscape` parameter.  
+Variety expects keys to be well formed, not having any '.'s in them (mongo 2.4 allows dots in certain cases).  Also mongo uses the pseudo keys 'XX' and keys coresponding to the regex 'XX\d+XX.*' for use with arrays.  You can change the string XX in these patterns to whatever you like if there is a conflict in your database using the `arrayEscape` parameter.  
 
     $ mongo test --quiet --eval "var collection = 'users', arrayEscape = 'YY'" variety.js
 
