@@ -36,6 +36,7 @@ module.exports = {
         "collection": false,
         "DBQuery": false,
         "BinData": false,
+        "NumberLong": false,
         "tojson": false
 
     },
