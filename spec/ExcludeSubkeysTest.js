@@ -1,9 +1,8 @@
-import assert from 'assert';
 import Tester from './utils/Tester.js';
 const test = new Tester('test', 'users');
 
 const sampleData = [
-  {name:"Walter", someNestedObject:{a:{b:{c:{d:{e:1}}}}}, otherNestedObject:{a:{b:{c:{d:{e:1}}}}}}
+  {name:'Walter', someNestedObject:{a:{b:{c:{d:{e:1}}}}}, otherNestedObject:{a:{b:{c:{d:{e:1}}}}}}
 ];
 
 describe('Exclude subkeys', () => {
