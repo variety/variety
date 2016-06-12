@@ -83,6 +83,12 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
     read('resultsUser', null);
     read('resultsPass', null);
     read('logKeysContinuously', false);
+    read('excludeSubkeys', []);
+    read('arrayEscape', 'XX');
+    
+    //Translate excludeSubkeys to set like object... using an object for compatibility...
+    config.excludeSubkeys = config.excludeSubkeys.reduce(function (result, item) { result[item+'.'] = true; return result; }, {});
+    
     return config;
   };
 
@@ -167,7 +173,7 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
 
   //flattens object keys to 1D. i.e. {'key1':1,{'key2':{'key3':2}}} becomes {'key1':1,'key2.key3':2}
   //we assume no '.' characters in the keys, which is an OK assumption for MongoDB
-  var serializeDoc = function(doc, maxDepth) {
+  var serializeDoc = function(doc, maxDepth, excludeSubkeys) {
     var result = {};
 
     //determining if an object is a Hash vs Array vs something else is hard
@@ -180,20 +186,24 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
                         v instanceof BinData;
       return !specialObject && (isArray || isObject);
     }
-
-    function serialize(document, parentKey, maxDepth){
-      for(var key in document){
+    
+    var arrayRegex = new RegExp('\\.' + config.arrayEscape + '\\d+' + config.arrayEscape + '\\.', 'g');
+    
+    function serialize(document, parentKey, maxDepth) {
+      if(Object.prototype.hasOwnProperty.call(excludeSubkeys, parentKey.replace(arrayRegex, '.')))
+        return;
+      for(var key in document) {
         //skip over inherited properties such as string, length, etch
         if(!document.hasOwnProperty(key)) {
           continue;
         }
         var value = document[key];
-        //objects are skipped here and recursed into later
-        //if(typeof value != 'object')
+        if(Array.isArray(document))
+          key = config.arrayEscape + key + config.arrayEscape; //translate unnamed object key from {_parent_name_}.{_index_} to {_parent_name_}.arrayEscape{_index_}arrayEscape.  
         result[parentKey+key] = value;
         //it's an object, recurse...only if we haven't reached max depth
         if(isHash(value) && maxDepth > 1) {
-          serialize(value, parentKey+key+'.',maxDepth-1);
+          serialize(value, parentKey+key+'.', maxDepth-1);
         }
       }
     }
@@ -204,10 +214,10 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
   // convert document to key-value map, where value is always an array with types as plain strings
   var analyseDocument = function(document) {
     var result = {};
+    var arrayRegex = new RegExp('\\.' + config.arrayEscape + '\\d+' + config.arrayEscape, 'g');
     for (var key in document) {
       var value = document[key];
-      //translate unnamed object key from {_parent_name_}.{_index_} to {_parent_name_}.XX
-      key = key.replace(/\.\d+/g,'.XX');
+      key = key.replace(arrayRegex, '.' + config.arrayEscape);
       if(typeof result[key] === 'undefined') {
         result[key] = {};
       }
@@ -271,15 +281,16 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
 
   // Merge the keys and types of current object into accumulator object
   var reduceDocuments = function(accumulator, object) {
-    var docResult = analyseDocument(serializeDoc(object, config.maxDepth));
+    var docResult = analyseDocument(serializeDoc(object, config.maxDepth, config.excludeSubkeys));
     mergeDocument(docResult, accumulator);
     return accumulator;
   };
 
   // We throw away keys which end in an array index, since they are not useful
   // for our analysis. (We still keep the key of their parent array, though.) -JC
+  var arrayRegex = new RegExp('\\.' + config.arrayEscape + '$', 'g');
   var filter = function(item) {
-    return !item._id.key.match(/\.XX$/);
+    return !item._id.key.match(arrayRegex);
   };
 
 // sort desc by totalOccurrences or by key asc if occurrences equal
@@ -347,7 +358,7 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
         types = typeKeys;
       }
 
-      return [row._id.key, types, row.totalOccurrences, row.percentContaining.toFixed(maxDigits)];
+      return [row._id.key, types, row.totalOccurrences, row.percentContaining.toFixed(Math.min(maxDigits, 20))];
     });
     var table = [headers, headers.map(function(){return '';})].concat(rows);
     var colMaxWidth = function(arr, index) {return Math.max.apply(null, arr.map(function(row){return row[index].toString().length;}));};
