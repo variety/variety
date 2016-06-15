@@ -18,6 +18,6 @@ export default class JsonValidator {
   }
 
   validateResultsCount(count) {
-    equal(this.results.length, count, 'Total count of results does not match expected count.');
+    equal(this.results.length, count, `Total count of results does not match expected count. Known keys are: [${this.results.map(item => item._id.key).join(',')}].`);
   }
 }

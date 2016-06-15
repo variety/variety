@@ -85,10 +85,10 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
     read('logKeysContinuously', false);
     read('excludeSubkeys', []);
     read('arrayEscape', 'XX');
-    
+
     //Translate excludeSubkeys to set like object... using an object for compatibility...
     config.excludeSubkeys = config.excludeSubkeys.reduce(function (result, item) { result[item+'.'] = true; return result; }, {});
-    
+
     return config;
   };
 
@@ -154,6 +154,8 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
         return 'null';
       } else if (thing instanceof Date) {
         return 'Date';
+      } else if(thing instanceof NumberLong) {
+        return 'NumberLong';
       } else if (thing instanceof ObjectId) {
         return 'ObjectId';
       } else if (thing instanceof BinData) {
@@ -183,12 +185,13 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
       var isObject = typeof v === 'object';
       var specialObject = v instanceof Date ||
                         v instanceof ObjectId ||
-                        v instanceof BinData;
+                        v instanceof BinData ||
+                        v instanceof NumberLong;
       return !specialObject && (isArray || isObject);
     }
-    
+
     var arrayRegex = new RegExp('\\.' + config.arrayEscape + '\\d+' + config.arrayEscape + '\\.', 'g');
-    
+
     function serialize(document, parentKey, maxDepth) {
       if(Object.prototype.hasOwnProperty.call(excludeSubkeys, parentKey.replace(arrayRegex, '.')))
         return;
@@ -199,7 +202,7 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
         }
         var value = document[key];
         if(Array.isArray(document))
-          key = config.arrayEscape + key + config.arrayEscape; //translate unnamed object key from {_parent_name_}.{_index_} to {_parent_name_}.arrayEscape{_index_}arrayEscape.  
+          key = config.arrayEscape + key + config.arrayEscape; //translate unnamed object key from {_parent_name_}.{_index_} to {_parent_name_}.arrayEscape{_index_}arrayEscape.
         result[parentKey+key] = value;
         //it's an object, recurse...only if we haven't reached max depth
         if(isHash(value) && maxDepth > 1) {
