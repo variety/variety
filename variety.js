@@ -59,7 +59,7 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
         'Please see https://github.com/variety/variety for details.';
   }
 
-  if (db[collection].count() === 0) {
+  if (db.getCollection(collection).count() === 0) {
     throw 'The collection specified (' + collection + ') in the database specified ('+ db +') does not exist or is empty.\n'+
         'Possible collection options for database specified: ' + collNames + '.';
   }
@@ -73,7 +73,7 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
     };
     read('collection', null);
     read('query', {});
-    read('limit', db[config.collection].find(config.query).count());
+    read('limit', db.getCollection(config.collection).find(config.query).count());
     read('maxDepth', 99);
     read('sort', {_id: -1});
     read('outputFormat', 'ascii');
@@ -311,7 +311,7 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
     return result;
   };
 
-  var cursor = db[config.collection].find(config.query).sort(config.sort).limit(config.limit);
+  var cursor = db.getCollection(config.collection).find(config.query).sort(config.sort).limit(config.limit);
   var interimResults = cursor.reduce(reduceDocuments, {});
   var varietyResults = convertResults(interimResults, cursor.size())
   .filter(filter)
@@ -335,8 +335,8 @@ Released by Maypop Inc, © 2012-2016, under the MIT License. */
 
     // replace results collection
     log('replacing results collection: '+ resultsCollectionName);
-    resultsDB[resultsCollectionName].drop();
-    resultsDB[resultsCollectionName].insert(varietyResults);
+    resultsDB.getCollection(resultsCollectionName).drop();
+    resultsDB.getCollection(resultsCollectionName).insert(varietyResults);
   }
 
   var createAsciiTable = function(results) {
