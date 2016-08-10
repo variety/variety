@@ -34,8 +34,8 @@ So, let's see what we've got here:
     | _id                | ObjectId           |           5 |    100.0 |
     | name               | String             |           5 |    100.0 |
     | bio                | String             |           3 |     60.0 |
-    | birthday           | String             |           2 |     40.0 |
-    | pets               | Array(4),String(1) |           5 |     40.0 |
+    | birthday           | Date               |           2 |     40.0 |
+    | pets               | Array(1),String(1) |           2 |     40.0 |
     | someBinData        | BinData-old        |           1 |     20.0 |
     | someWeirdLegacyKey | String             |           1 |     20.0 |
     +------------------------------------------------------------------+
