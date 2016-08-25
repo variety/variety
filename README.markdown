@@ -50,9 +50,53 @@ Seems like the first document created has a weird legacy key—those damn fools 
 
 Results are stored for future use in a varietyResults database.
 
+## Output Options
+
 ### See Progress When Analysis Takes a Long Time ###
 
 Tailing the log is great for this. Mongo provides a "percent complete" measurement for you. These operations can take a long time on huge collections.
+
+### Log Keys and Types As They Arrive Option ###
+Sometimes you want to see the keys and types come in as it happens.  Maybe you have a large dataset and want accurate results, but you also are impatient and want to see something now.  Or maybe you have a large mangled dataset with crazy keys (that probably shouldn't be keys) and Variety is going out of memory.  This option will show you the keys and types as they come in and help you identify problems with your dataset without needing the Variety script to finish.  This option is mutually exclusive with the quiet option.  
+
+    $ mongo test --eval "var collection = 'users', sort = { updated_at : -1 }, logKeysContinuously = true" variety.js
+
+### Quiet Option ###
+Both MongoDB and Variety output some additional information to standard output. If you want to remove this info, you can use ```--quiet``` option provided to ```mongo``` executable.
+Variety can also read that option and mute unnecessary output. This is useful in connection with ```outputFormat=json```. You would then receive only JSON, without any other characters around it.
+
+    $ mongo test --quiet --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
+
+### Render Output As JSON For Easy Ingestion and Parsing ###
+
+Variety supports two different output formats:
+
+- ASCII: nicely formatted tables (as in this README)
+- JSON: valid JSON results for subsequent processing in other tools (see also [quiet option](#quiet-option))
+
+Default format is ```ascii```. You can select the type of format with property ```outputFormat``` provided to Variety. Valid values are ```ascii``` and ```json```.
+
+    $ mongo test --quiet --eval "var collection = 'users', outputFormat='json'" variety.js
+
+### Save Results in MongoDB For Future Use ###
+By default, Variety prints results only to standard output and does not store them in MongoDB itself. If you want to persist them automatically in MongoDB for later usage, you can set the parameter ```persistResults```.
+Variety then stores result documents in database ```varietyResults``` and the collection name is derived from the source collection's name.
+If the source collection's name is ```users```, Variety will store results in collection ```usersKeys``` under ```varietyResults``` database.
+
+    $ mongo test --quiet --eval "var collection = 'users', persistResults=true" variety.js
+
+To persist to an alternate MongoDB database, you may specify the following parameters:
+
+  * `resultsDatabase` - The database to store Variety results in. Accepts either a database name or a `host[:port]/database` URL.
+  * `resultsCollection` - Collection to store Variety results in. **WARNING:** This collection is dropped before results are inserted.
+  * `resultsUser` - MongoDB username for results database
+  * `resultsPass` - MongoDB password for results database
+
+```
+$ mongo test --quiet --eval "var collection = 'users', persistResults=true, resultsDatabase='db.example.com/variety' variety.js
+```
+
+## Filtering Options
 
 ### Analyze Only Recent Documents ###
 
@@ -76,7 +120,23 @@ Let's examine the results closely:
 
 We are only examining the last document here ("limit = 1"). It belongs to Geneviève, and only contains the _id, name and bio fields. So it makes sense these are the only three keys.
 
-### Analyze Documents to a Maximum Depth
+### Analyze Documents Sorted In a Particular Order ###
+
+Perhaps you want to analyze a subset of documents sorted in an order other than creation order, say, for example, sorted by when documents were updated.
+
+One can apply a "sort" constraint, which analyzes documents in the specified order like so:
+
+    $ mongo test --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
+
+### Analyze a Subset of Documents ###
+
+Perhaps you have a large collection, or you only care about some subset of the documents.
+
+One can apply a "query" constraint, which takes a standard Mongo query object, to filter the set of documents required before analysis.
+
+    $ mongo test --eval "var collection = 'users', query = {'caredAbout':true}" variety.js
+
+### Analyze Documents to a Maximum Depth ###
 
 Perhaps you have a potentially very deep nested object structure, and you don't want to see more than a few levels deep in the analysis.
 
@@ -115,45 +175,7 @@ The default will traverse all the way to the bottom of that structure:
 
 As you can see, Variety only traversed three levels deep.
 
-### Analyze a Subset of Documents ###
-
-Perhaps you have a large collection, or you only care about some subset of the documents.
-
-One can apply a "query" constraint, which takes a standard Mongo query object, to filter the set of documents required before analysis.
-
-    $ mongo test --eval "var collection = 'users', query = {'caredAbout':true}" variety.js
-
-### Analyze Documents Sorted In a Particular Order ###
-
-Perhaps you want to analyze a subset of documents sorted in an order other than creation order, say, for example, sorted by when documents were updated.
-
-One can apply a "sort" constraint, which analyzes documents in the specified order like so:
-
-    $ mongo test --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
-
-### Render Output As JSON For Easy Ingestion and Parsing ###
-
-Variety supports two different output formats:
-
-- ASCII: nicely formatted tables (as in this README)
-- JSON: valid JSON results for subsequent processing in other tools (see also [quiet option](#quiet-option))
-
-Default format is ```ascii```. You can select the type of format with property ```outputFormat``` provided to Variety. Valid values are ```ascii``` and ```json```.
-
-    $ mongo test --quiet --eval "var collection = 'users', outputFormat='json'" variety.js
-
-#### Quiet Option ####
-Both MongoDB and Variety output some additional information to standard output. If you want to remove this info, you can use ```--quiet``` option provided to ```mongo``` executable.
-Variety can also read that option and mute unnecessary output. This is useful in connection with ```outputFormat=json```. You would then receive only JSON, without any other characters around it.
-
-    $ mongo test --quiet --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
-
-#### Log Keys and Types As They Arrive Option ####
-Sometimes you want to see the keys and types come in as it happens.  Maybe you have a large dataset and want accurate results, but you also are impatient and want to see something now.  Or maybe you have a large mangled dataset with crazy keys (that probably shouldn't be keys) and Variety is going out of memory.  This option will show you the keys and types as they come in and help you identify problems with your dataset without needing the Variety script to finish.  
-
-    $ mongo test --eval "var collection = 'users', sort = { updated_at : -1 }, logKeysContinuously = true" variety.js
-
-#### Exclude Subkeys ####
+### Exclude Subkeys ###
 Sometimes you inherit a database full of junk.  Maybe the previous developer put data in the database keys, which causes Variety to go out of memory when run.  After you've run the `logKeysContinuously` to figure out which subkeys may be a problem, you can use this option to run Variety without those subkeys.  
 
     db.users.insert({name:"Walter", someNestedObject:{a:{b:{c:{d:{e:1}}}}}, otherNestedObject:{a:{b:{c:{d:{e:1}}}}}});
@@ -176,34 +198,20 @@ Sometimes you inherit a database full of junk.  Maybe the previous developer put
     | otherNestedObject.a.b.c.d.e | Number   |           1 |    100.0 |
     +-----------------------------------------------------------------+
 
-#### Secondary Reads ####
+## Other Options
+
+### Secondary Reads ###
 Analyzing a large collection on a busy replica set primary could take a lot longer than if you read from a secondary. To do so, we have to tell MongoDB it's okay to perform secondary reads
 by setting the ```slaveOk``` property to ```true```:
 
     $ mongo secondary.replicaset.member:31337/somedb --eval "var collection = 'users', slaveOk = true" variety.js
 
-### Save Results in MongoDB For Future Use ###
-By default, Variety prints results only to standard output and does not store them in MongoDB itself. If you want to persist them automatically in MongoDB for later usage, you can set the parameter ```persistResults```.
-Variety then stores result documents in database ```varietyResults``` and the collection name is derived from the source collection's name.
-If the source collection's name is ```users```, Variety will store results in collection ```usersKeys``` under ```varietyResults``` database.
-
-    $ mongo test --quiet --eval "var collection = 'users', persistResults=true" variety.js
-
-To persist to an alternate MongoDB database, you may specify the following parameters:
-
-  * `resultsDatabase` - The database to store Variety results in. Accepts either a database name or a `host[:port]/database` URL.
-  * `resultsCollection` - Collection to store Variety results in. **WARNING:** This collection is dropped before results are inserted.
-  * `resultsUser` - MongoDB username for results database
-  * `resultsPass` - MongoDB password for results database
-
-```
-$ mongo test --quiet --eval "var collection = 'users', persistResults=true, resultsDatabase='db.example.com/variety' variety.js
-```
-
 ### Reserved Keys ###
 Variety expects keys to be well formed, not having any '.'s in them (mongo 2.4 allows dots in certain cases).  Also mongo uses the pseudo keys 'XX' and keys coresponding to the regex 'XX\d+XX.*' for use with arrays.  You can change the string XX in these patterns to whatever you like if there is a conflict in your database using the `arrayEscape` parameter.  
 
     $ mongo test --quiet --eval "var collection = 'users', arrayEscape = 'YY'" variety.js
+
+## Other Information
 
 ### Command Line Interface
 Variety itself is command line friendly, as shown on examples above.
