@@ -271,7 +271,7 @@ Much thanks also, to Kyle Banker ([@Hwaet](https://twitter.com/#!/hwaet)) for wr
 
 #### Tools Which Use Variety (Open Source) ####
 
-* [MightyMightyMongo](https://github.com/JacobGH111/mightymightymongo) (experimental): a browser-based GUI for exploring MongoDB collections, it allows users to also view Variety results. The project is not directly affiliated with Variety, however the creator/core committer has also contributed to Variety.
+Know of one? Built one? Let us know!
 
 ##### Stay Safe #####
 
