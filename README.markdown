@@ -159,7 +159,7 @@ Sometimes you inherit a database full of junk.  Maybe the previous developer put
     db.users.insert({name:"Walter", someNestedObject:{a:{b:{c:{d:{e:1}}}}}, otherNestedObject:{a:{b:{c:{d:{e:1}}}}}});
 
     $ mongo test --eval "var collection = 'users', sort = { updated_at : -1 }, excludeSubkeys = [ 'someNestedObject.a.b' ]" variety.js
-
+    
     +-----------------------------------------------------------------+
     | key                         | types    | occurrences | percents |
     | --------------------------- | -------- | ----------- | -------- |
@@ -278,4 +278,4 @@ Know of one? Built one? Let us know!
 I have every reason to believe this tool will **not** corrupt your data or harm your computer. But if I were you, I would not use it in a production environment.
 
 
-Released by Maypop Inc, © 2012–2017, under the [MIT License] (http://www.opensource.org/licenses/MIT).
+Released by Maypop Inc, © 2012–2016, under the [MIT License] (http://www.opensource.org/licenses/MIT).
