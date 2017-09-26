@@ -140,9 +140,11 @@ Released by Maypop Inc, © 2012-2017, under the MIT License. */
   $plugins.execute('onConfig', config);
 
   var varietyTypeOf = function(thing) {
-    if (typeof thing === 'undefined') { throw 'varietyTypeOf() requires an argument'; }
+  	if (!arguments.length) { throw 'varietyTypeOf() requires an argument'; }
 
-    if (typeof thing !== 'object') {
+    if (typeof thing === 'undefined') {
+    	return 'undefined';
+    } else if (typeof thing !== 'object') {
     // the messiness below capitalizes the first letter, so the output matches
     // the other return values below. -JC
       var typeofThing = typeof thing; // edgecase of JSHint's "singleGroups"
