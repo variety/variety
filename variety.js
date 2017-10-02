@@ -19,7 +19,7 @@ Released by Maypop Inc, © 2012-2017, under the MIT License. */
   };
 
   log('Variety: A MongoDB Schema Analyzer');
-  log('Version 1.5.0, released 14 May 2015');
+  log('Version 1.5.1, released 02 October 2017');
 
   var dbs = [];
   var emptyDbs = [];
