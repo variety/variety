@@ -1,3 +1,5 @@
+(02 October 2017) Version 1.5.1: Fix for "Execution fail when document contains undefined values" (#136/#137) provided by Gian Marco Gherardi ( @gimmi )
+
 (14 May 2015) Version 1.5.0: Introduced basic plugin infrastructure, 'onConfig' and 'formatResults' hooks
 
 (14 Oct 2014) Version 1.4.1: @todvora's fix for maxDepth (matches readme), and fixes for incorrect counts while using query/limit
