@@ -131,6 +131,29 @@ One can apply a "sort" constraint, which analyzes documents in the specified ord
 
     $ mongo test --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
 
+### Include Last Value ###
+
+You can add ```lastValue``` property to show values of the last document.
+
+    $ mongo test --eval "var collection = 'restaurant', lastValue = true" variety.js
+    
+    +------------------------------------------------------------------------------------------------------------------------------+
+    | key            | types                  | occurrences | percents | lastValue                                                 |
+    | -------------- | ---------------------- | ----------- | -------- | --------------------------------------------------------- |
+    | URL            | String                 |         100 |    100.0 | http://www.just-eat.co.uk/restaurants-bluebreeze-le3/menu |
+    | _id            | ObjectId               |         100 |    100.0 | 55f14313c7447c3da7052519                                  |
+    | address        | String                 |         100 |    100.0 | 56 Bonney Road                                            |
+    | address line 2 | String                 |         100 |    100.0 | Leicester                                                 |
+    | name           | String                 |         100 |    100.0 | Blue Breeze Fish Bar                                      |
+    | outcode        | String                 |         100 |    100.0 | LE3                                                       |
+    | postcode       | String                 |         100 |    100.0 | 9NG                                                       |
+    | rating         | Number                 |         100 |    100.0 |                                                       5.5 |
+    | type_of_food   | String                 |         100 |    100.0 | Fish & Chips                                              |
+    +------------------------------------------------------------------------------------------------------------------------------+
+
+
+If use without ```sort``` it will fetch the values of the last natural document result.
+
 ### Render Output As JSON For Easy Ingestion and Parsing ###
 
 Variety supports two different output formats:
