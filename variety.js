@@ -293,13 +293,19 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
     //now convert the interimResults into the proper format
     for(var key in interimResults) {
       var entry = interimResults[key];
-      varietyResults.push({
-        '_id': {'key':key},
-        'value': {'types':getKeys(entry.types)},
-        'lastValue': entry.lastValue,
-        'totalOccurrences': entry.totalOccurrences,
-        'percentContaining': entry.totalOccurrences * 100 / documentsCount
-      });
+
+      var obj = {
+          '_id': {'key':key},
+          'value': {'types':getKeys(entry.types)},
+          'totalOccurrences': entry.totalOccurrences,
+          'percentContaining': entry.totalOccurrences * 100 / documentsCount
+      };
+
+      if(config.lastValue){
+        obj.lastValue = entry.lastValue;
+      }
+
+      varietyResults.push(obj);
     }
     return varietyResults;
   };
