@@ -131,6 +131,38 @@ One can apply a "sort" constraint, which analyzes documents in the specified ord
 
     $ mongo test --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
 
+### Include Last Value ###
+
+You can add ```lastValue``` property to show values of the last document.
+
+    $ mongo test --eval "var collection = 'orders', lastValue = true" variety.js
+    
+    +-----------------------------------------------------------------------------------------------------+
+    | key                                  | types    | occurrences | percents | lastValue                |
+    | ------------------------------------ | -------- | ----------- | -------- | ------------------------ |
+    | _id                                  | ObjectId |           1 |    100.0 | 5a5e7f64956ad87a681c13fb |
+    | my_date                              | Date     |           1 |    100.0 |            1516142436000 |
+    | order                                |          |           1 |    100.0 | .                        |
+    | order.billing_address                |          |           1 |    100.0 | .                        |
+    | order.billing_address.address1       | String   |           1 |    100.0 | 123 Fake Street          |
+    | order.billing_address.city           | String   |           1 |    100.0 | Fakecity                 |
+    | order.billing_address.country        | String   |           1 |    100.0 | Canada                   |
+    | order.customer                       |          |           1 |    100.0 | .                        |
+    | order.customer.email                 | String   |           1 |    100.0 | paul.norman@example.com  |
+    | order.customer.last_name             | String   |           1 |    100.0 | Norman                   |
+    | order.line_items                     |          |           1 |    100.0 | .                        |
+    | order.line_items.__.quantity         | Number   |           1 |    100.0 |                       12 |
+    | order.line_items.__.variant          |          |           1 |    100.0 | .                        |
+    | order.line_items.__.variant.__.price | Number   |           1 |    100.0 |                     4500 |
+    | order.line_items.__.variant_id       | Number   |           1 |    100.0 |                 84616167 |
+    | order.transactions                   |          |           1 |    100.0 | .                        |
+    | order.transactions.__.amount         | Number   |           1 |    100.0 |                     4500 |
+    | order.transactions.__.kind           | String   |           1 |    100.0 | authorization            |
+    | order.transactions.__.status         | Boolean  |           1 |    100.0 | true                     |
+    +-----------------------------------------------------------------------------------------------------+
+    
+If use without ```sort``` it will fetch values of the last natural sorted document. Date is converted into timestamp. Nests are converted into dot ```.```
+
 ### Render Output As JSON For Easy Ingestion and Parsing ###
 
 Variety supports two different output formats:

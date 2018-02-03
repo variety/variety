@@ -85,6 +85,7 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
     read('logKeysContinuously', false);
     read('excludeSubkeys', []);
     read('arrayEscape', 'XX');
+    read('lastValue', false);
 
     //Translate excludeSubkeys to set like object... using an object for compatibility...
     config.excludeSubkeys = config.excludeSubkeys.reduce(function (result, item) { result[item+'.'] = true; return result; }, {});
@@ -227,8 +228,21 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
         result[key] = {};
       }
       var type = varietyTypeOf(value);
-      result[key][type] = true;
+      if(config.lastValue){
+        if (type in {'String': true, 'Boolean': true}) {
+          result[key][type] = value.toString();
+        }else if(type == 'Number'){
+          result[key][type] = parseFloat(value);
+        }else if(type == 'ObjectId'){
+          result[key][type] = value.str;
+        }else if(type == 'Date'){
+          result[key][type] = new Date(value).getTime();
+        }
+      } else {
+        result[key][type] = null;
+      }
     }
+
     return result;
   };
 
@@ -249,14 +263,19 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
         }
         existing.totalOccurrences = existing.totalOccurrences + 1;
       } else {
+        var lastValue = '.';
         var types = {};
         for (var newType in docResult[key]) {
           types[newType] = 1;
+          lastValue = docResult[key][newType];
           if (config.logKeysContinuously) {
             log('Found new key type "' + key + '" type "' + newType + '"');
           }
         }
         interimResults[key] = {'types': types,'totalOccurrences':1};
+        if (config.lastValue) {
+          interimResults[key]['lastValue'] = lastValue;
+        }
       }
     }
   };
@@ -277,6 +296,7 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
       varietyResults.push({
         '_id': {'key':key},
         'value': {'types':getKeys(entry.types)},
+        'lastValue': entry.lastValue,
         'totalOccurrences': entry.totalOccurrences,
         'percentContaining': entry.totalOccurrences * 100 / documentsCount
       });
@@ -343,6 +363,10 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
 
   var createAsciiTable = function(results) {
     var headers = ['key', 'types', 'occurrences', 'percents'];
+    if (config.lastValue) {
+      headers.push('lastValue');
+    }
+
     // return the number of decimal places or 1, if the number is int (1.23=>2, 100=>1, 0.1415=>4)
     var significantDigits = function(value) {
       var res = value.toString().match(/^[0-9]+\.([0-9]+)$/);
@@ -363,10 +387,14 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
         types = typeKeys;
       }
 
-      return [row._id.key, types, row.totalOccurrences, row.percentContaining.toFixed(Math.min(maxDigits, 20))];
+      var rawArray = [row._id.key, types, row.totalOccurrences, row.percentContaining.toFixed(Math.min(maxDigits, 20))];
+      if (config.lastValue && row['lastValue']) {
+        rawArray.push(row['lastValue']);
+      }
+      return rawArray;
     });
     var table = [headers, headers.map(function(){return '';})].concat(rows);
-    var colMaxWidth = function(arr, index) {return Math.max.apply(null, arr.map(function(row){return row[index].toString().length;}));};
+    var colMaxWidth = function(arr, index) {return Math.max.apply(null, arr.map(function(row){return row[index] ? row[index].toString().length : 0;}));};
     var pad = function(width, string, symbol) { return width <= string.length ? string : pad(width, isNaN(string) ? string + symbol : symbol + string, symbol); };
     table = table.map(function(row, ri){
       return '| ' + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell.toString(), ri === 1 ? '-' : ' ');}).join(' | ') + ' |';
