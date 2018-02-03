@@ -263,7 +263,7 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
         }
         existing.totalOccurrences = existing.totalOccurrences + 1;
       } else {
-        var lastValue = null;
+        var lastValue = '.';
         var types = {};
         for (var newType in docResult[key]) {
           types[newType] = 1;
@@ -394,7 +394,7 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
       return rawArray;
     });
     var table = [headers, headers.map(function(){return '';})].concat(rows);
-    var colMaxWidth = function(arr, index) {return Math.max.apply(null, arr.map(function(row){return row[index] ? row[index].toString().length : null;}));};
+    var colMaxWidth = function(arr, index) {return Math.max.apply(null, arr.map(function(row){return row[index] ? row[index].toString().length : 0;}));};
     var pad = function(width, string, symbol) { return width <= string.length ? string : pad(width, isNaN(string) ? string + symbol : symbol + string, symbol); };
     table = table.map(function(row, ri){
       return '| ' + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell.toString(), ri === 1 ? '-' : ' ');}).join(' | ') + ' |';
