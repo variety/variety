@@ -233,7 +233,7 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
 
       if(config.lastValue){
         if (type in {'String': true, 'Boolean': true}) {
-            result[key][type] = value.toString();
+          result[key][type] = value.toString();
         }else if (type in {'Number': true, 'NumberLong': true}) {
           result[key][type] = value.valueOf();
         }else if(type == 'ObjectId'){
