@@ -16,14 +16,14 @@ describe('Basic Analysis', () => {
   });
 
   it('should return JSON results', async () => {
-    const results = await test.runJsonAnalysis({collection:'users'}, true);
+    const results = await test.runJsonAnalysis({collection:'users', lastValue:true}, true);
     results.validateResultsCount(7);
     results.validate('_id', 5, 100.0, {ObjectId: 5});
-    results.validate('name', 5, 100.0, {String: 5});
-    results.validate('bio', 3, 60.0, {String: 3});
-    results.validate('birthday', 2,  40.0, {Date: 2});
-    results.validate('pets', 2,  40.0, {String: 1, Array: 1});
+    results.validate('name', 5, 100.0, {String: 5}, 'Jim');
+    results.validate('bio', 3, 60.0, {String: 3}, 'Ça va?');
+    results.validate('birthday', 2,  40.0, {Date: 2}, 448070400000);
+    results.validate('pets', 2,  40.0, {String: 1, Array: 1}, 'egret');
     results.validate('someBinData', 1,  20.0, {'BinData-generic': 1});
-    results.validate('someWeirdLegacyKey', 1,  20.0, {String: 1});
+    results.validate('someWeirdLegacyKey', 1,  20.0, {String: 1}, 'I like Ike!');
   });
 });
