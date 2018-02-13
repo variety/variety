@@ -295,10 +295,10 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
       var entry = interimResults[key];
 
       var obj = {
-          '_id': {'key':key},
-          'value': {'types':getKeys(entry.types)},
-          'totalOccurrences': entry.totalOccurrences,
-          'percentContaining': entry.totalOccurrences * 100 / documentsCount
+        '_id': {'key':key},
+        'value': {'types':getKeys(entry.types)},
+        'totalOccurrences': entry.totalOccurrences,
+        'percentContaining': entry.totalOccurrences * 100 / documentsCount
       };
 
       if(config.lastValue){
