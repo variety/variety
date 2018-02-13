@@ -167,6 +167,7 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
         binDataTypes[0x01] = 'function';
         binDataTypes[0x02] = 'old';
         binDataTypes[0x03] = 'UUID';
+        binDataTypes[0x04] = 'UUID';
         binDataTypes[0x05] = 'MD5';
         binDataTypes[0x80] = 'user';
         return 'BinData-' + binDataTypes[thing.subtype()];
@@ -232,13 +233,15 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
 
       if(config.lastValue){
         if (type in {'String': true, 'Boolean': true}) {
-          result[key][type] = value.toString();
-        }else if(type == 'Number'){
-          result[key][type] = parseFloat(value);
+            result[key][type] = value.toString();
+        }else if (type in {'Number': true, 'NumberLong': true}) {
+          result[key][type] = value.valueOf();
         }else if(type == 'ObjectId'){
           result[key][type] = value.str;
         }else if(type == 'Date'){
           result[key][type] = new Date(value).getTime();
+        }else if(type.startsWith('BinData')){
+          result[key][type] = value.hex();
         }
       }
     }
@@ -263,7 +266,7 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
         }
         existing.totalOccurrences = existing.totalOccurrences + 1;
       } else {
-        var lastValue = '.';
+        var lastValue = null;
         var types = {};
         for (var newType in docResult[key]) {
           types[newType] = 1;
@@ -274,7 +277,7 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
         }
         interimResults[key] = {'types': types,'totalOccurrences':1};
         if (config.lastValue) {
-          interimResults[key]['lastValue'] = lastValue;
+          interimResults[key]['lastValue'] = lastValue ? lastValue : '['+newType+']';
         }
       }
     }
