@@ -228,6 +228,8 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
         result[key] = {};
       }
       var type = varietyTypeOf(value);
+      result[key][type] = null;
+
       if(config.lastValue){
         if (type in {'String': true, 'Boolean': true}) {
           result[key][type] = value.toString();
@@ -238,8 +240,6 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
         }else if(type == 'Date'){
           result[key][type] = new Date(value).getTime();
         }
-      } else {
-        result[key][type] = null;
       }
     }
 
