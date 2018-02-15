@@ -131,6 +131,31 @@ One can apply a "sort" constraint, which analyzes documents in the specified ord
 
     $ mongo test --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
 
+### Include Last Value ###
+
+You can add ```lastValue``` property to show values of the last document.
+
+    $ mongo test --eval "var collection = 'orders', lastValue = true" variety.js
+    
+    +--------------------------------------------------------------------------------------------+
+    | key             | types        | occurrences | percents | lastValue                        |
+    | --------------- | ------------ | ----------- | -------- | -------------------------------- |
+    | _id             | ObjectId     |           1 |    100.0 | 5a834b76f4d3fa6e578a67f6         |
+    | age             | Number       |           1 |    100.0 |                          38.2569 |
+    | animals         | Array        |           1 |    100.0 | [Array]                          |
+    | animals.XX.type | String       |           1 |    100.0 | dog                              |
+    | balance         | NumberLong   |           1 |    100.0 |                 1236458945684846 |
+    | date            | Date         |           1 |    100.0 |                    1513539969000 |
+    | fn              | Object       |           1 |    100.0 | [Object]                         |
+    | fn.code         | String       |           1 |    100.0 | function (x, y){ return x + y; } |
+    | name            | String       |           1 |    100.0 | John                             |
+    | nil             | null         |           1 |    100.0 | [null]                           |
+    | uid             | BinData-UUID |           1 |    100.0 | 3b241101e2bb42558caf4136c566a962 |
+    +--------------------------------------------------------------------------------------------+
+
+If use without ```sort``` it will fetch values of the last natural sorted document.
+Date is converted into timestamp, ObjectId into string and binary data as hex. Other types shown in square brackets.
+
 ### Render Output As JSON For Easy Ingestion and Parsing ###
 
 Variety supports two different output formats:

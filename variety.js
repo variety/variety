@@ -85,6 +85,7 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
     read('logKeysContinuously', false);
     read('excludeSubkeys', []);
     read('arrayEscape', 'XX');
+    read('lastValue', false);
 
     //Translate excludeSubkeys to set like object... using an object for compatibility...
     config.excludeSubkeys = config.excludeSubkeys.reduce(function (result, item) { result[item+'.'] = true; return result; }, {});
@@ -166,6 +167,7 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
         binDataTypes[0x01] = 'function';
         binDataTypes[0x02] = 'old';
         binDataTypes[0x03] = 'UUID';
+        binDataTypes[0x04] = 'UUID';
         binDataTypes[0x05] = 'MD5';
         binDataTypes[0x80] = 'user';
         return 'BinData-' + binDataTypes[thing.subtype()];
@@ -227,8 +229,23 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
         result[key] = {};
       }
       var type = varietyTypeOf(value);
-      result[key][type] = true;
+      result[key][type] = null;
+
+      if(config.lastValue){
+        if (type in {'String': true, 'Boolean': true}) {
+          result[key][type] = value.toString();
+        }else if (type in {'Number': true, 'NumberLong': true}) {
+          result[key][type] = value.valueOf();
+        }else if(type == 'ObjectId'){
+          result[key][type] = value.str;
+        }else if(type == 'Date'){
+          result[key][type] = new Date(value).getTime();
+        }else if(type.startsWith('BinData')){
+          result[key][type] = value.hex();
+        }
+      }
     }
+
     return result;
   };
 
@@ -249,14 +266,19 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
         }
         existing.totalOccurrences = existing.totalOccurrences + 1;
       } else {
+        var lastValue = null;
         var types = {};
         for (var newType in docResult[key]) {
           types[newType] = 1;
+          lastValue = docResult[key][newType];
           if (config.logKeysContinuously) {
             log('Found new key type "' + key + '" type "' + newType + '"');
           }
         }
         interimResults[key] = {'types': types,'totalOccurrences':1};
+        if (config.lastValue) {
+          interimResults[key]['lastValue'] = lastValue ? lastValue : '['+newType+']';
+        }
       }
     }
   };
@@ -274,12 +296,19 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
     //now convert the interimResults into the proper format
     for(var key in interimResults) {
       var entry = interimResults[key];
-      varietyResults.push({
+
+      var obj = {
         '_id': {'key':key},
         'value': {'types':getKeys(entry.types)},
         'totalOccurrences': entry.totalOccurrences,
         'percentContaining': entry.totalOccurrences * 100 / documentsCount
-      });
+      };
+
+      if(config.lastValue){
+        obj.lastValue = entry.lastValue;
+      }
+
+      varietyResults.push(obj);
     }
     return varietyResults;
   };
@@ -343,6 +372,10 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
 
   var createAsciiTable = function(results) {
     var headers = ['key', 'types', 'occurrences', 'percents'];
+    if (config.lastValue) {
+      headers.push('lastValue');
+    }
+
     // return the number of decimal places or 1, if the number is int (1.23=>2, 100=>1, 0.1415=>4)
     var significantDigits = function(value) {
       var res = value.toString().match(/^[0-9]+\.([0-9]+)$/);
@@ -363,10 +396,14 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
         types = typeKeys;
       }
 
-      return [row._id.key, types, row.totalOccurrences, row.percentContaining.toFixed(Math.min(maxDigits, 20))];
+      var rawArray = [row._id.key, types, row.totalOccurrences, row.percentContaining.toFixed(Math.min(maxDigits, 20))];
+      if (config.lastValue && row['lastValue']) {
+        rawArray.push(row['lastValue']);
+      }
+      return rawArray;
     });
     var table = [headers, headers.map(function(){return '';})].concat(rows);
-    var colMaxWidth = function(arr, index) {return Math.max.apply(null, arr.map(function(row){return row[index].toString().length;}));};
+    var colMaxWidth = function(arr, index) {return Math.max.apply(null, arr.map(function(row){return row[index] ? row[index].toString().length : 0;}));};
     var pad = function(width, string, symbol) { return width <= string.length ? string : pad(width, isNaN(string) ? string + symbol : symbol + string, symbol); };
     table = table.map(function(row, ri){
       return '| ' + row.map(function(cell, i) {return pad(colMaxWidth(table, i), cell.toString(), ri === 1 ? '-' : ' ');}).join(' | ') + ' |';
