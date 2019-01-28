@@ -152,7 +152,11 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
       return typeofThing[0].toUpperCase() + typeofThing.slice(1);
     } else {
       if (thing && thing.constructor === Array) {
-        return 'Array';
+        if (thing.length > 0) {
+          return 'Array-' + varietyTypeOf(thing[0]);
+        } else {
+          return 'EmptyArray';
+        }
       } else if (thing === null) {
         return 'null';
       } else if (thing instanceof Date) {
