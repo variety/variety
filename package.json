@@ -37,6 +37,6 @@
     "child-process-promise": "^1.1.0",
     "eslint": "^2.4.0",
     "mocha": "^2.4.5",
-    "mongodb": "^2.1.7"
+    "mongodb": "^3.6.1"
   }
 }
