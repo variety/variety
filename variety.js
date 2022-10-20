@@ -12,8 +12,9 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
 (function () {
   'use strict'; // wraps everything for which we can use strict mode -JC
 
+  var quiet = typeof this["quiet"] !== 'undefined' ? this["quiet"] : false;
   var log = function(message) {
-    if(!__quiet) { // mongo shell param, coming from https://github.com/mongodb/mongo/blob/5fc306543cd3ba2637e5cb0662cc375f36868b28/src/mongo/shell/dbshell.cpp#L624
+    if(!__quiet&&!quiet) { // mongo shell param, coming from https://github.com/mongodb/mongo/blob/5fc306543cd3ba2637e5cb0662cc375f36868b28/src/mongo/shell/dbshell.cpp#L624
       print(message);
     }
   };

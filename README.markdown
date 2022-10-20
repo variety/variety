@@ -169,9 +169,11 @@ Default format is ```ascii```. You can select the type of format with property `
 
 #### Quiet Option ####
 Both MongoDB and Variety output some additional information to standard output. If you want to remove this info, you can use ```--quiet``` option provided to ```mongo``` executable.
-Variety can also read that option and mute unnecessary output. This is useful in connection with ```outputFormat=json```. You would then receive only JSON, without any other characters around it.
+Variety can also read that option and mute unnecessary output.  You can remove this info also using ```quiet=true``` provided to Variety.
+This is useful in connection with ```outputFormat=json```. You would then receive only JSON, without any other characters around it.
 
     $ mongo test --quiet --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
+    $ mongo test --eval "var collection = 'users', sort = { updated_at : -1 }, quiet = true" variety.js
 
 #### Log Keys and Types As They Arrive Option ####
 Sometimes you want to see the keys and types come in as it happens.  Maybe you have a large dataset and want accurate results, but you also are impatient and want to see something now.  Or maybe you have a large mangled dataset with crazy keys (that probably shouldn't be keys) and Variety is going out of memory.  This option will show you the keys and types as they come in and help you identify problems with your dataset without needing the Variety script to finish.  
