@@ -419,6 +419,8 @@ Released by Maypop Inc, © 2012-2018, under the MIT License. */
 
       // build schema
       var type = Object.keys(currVal.value.types)[0];
+      // convert type to be compatible with mongoose schema types
+      if (type == 'Array') type = [];
       var schema = {type: type, required: true};
 
       if (Object.keys(currVal.value.types).length > 1 ) {
