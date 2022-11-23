@@ -1,6 +1,3 @@
-*~
-node_modules/
-# intellij idea project files
-*.iml
-*.ipr
-.idea/
+/node_modules/
+
+/*.Dockerfile
