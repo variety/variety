@@ -301,4 +301,4 @@ Know of one? Built one? Let us know!
 I have every reason to believe this tool will **not** corrupt your data or harm your computer. But if I were you, I would not use it in a production environment.
 
 
-Released by Maypop Inc, © 2012–2020, under the [MIT License] (http://www.opensource.org/licenses/MIT).
+Released by Maypop Inc, © 2012–2023, under the [MIT License] (http://www.opensource.org/licenses/MIT).
