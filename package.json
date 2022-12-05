@@ -1,23 +1,16 @@
 {
   "name": "variety",
-  "description": "A MongoDB schema analyzer",
   "version": "1.5.1",
+  "description": "A MongoDB schema analyzer",
   "keywords": ["MongoDB", "Variety", "schema", "schema analyzer", "schema analysis", "NoSQL"],
-  "maintainers": [
-    {
-      "name":  "James Kirk Cropcho",
-      "web":   "https://twitter.com/Cropcho"
-    },
-    {
-      "name":  "Tomáš Dvořák",
-      "email": "todvora@gmail.com",
-      "web":   "https://www.tomas-dvorak.cz/"
-  } ],
+  "homepage": "https://github.com/variety/variety#readme",
+  "bugs": "https://github.com/variety/variety/issues",
+  "license": "MIT",
+  "author": {
+    "name":  "James Kirk Cropcho",
+    "web":   "https://twitter.com/Cropcho"
+  },
   "contributors": [
-    {
-      "name":  "James Kirk Cropcho",
-      "web":   "https://twitter.com/Cropcho"
-    },
     {
       "name":  "Tomáš Dvořák",
       "email": "todvora@gmail.com",
@@ -26,25 +19,18 @@
     {
       "name":  "Eve Freeman",
       "web":   "https://twitter.com/wefreema"
-  } ],
-  "bugs": {
-    "web": "https://github.com/variety/variety/issues"
-  },
-  "licenses": [
-   {
-      "type": "MIT",
-      "url":  "https://opensource.org/licenses/MIT"
-  } ],
-  "repositories": [
+    },
     {
-      "type": "git",
-      "url":  "github:variety/variety"
+      "name":  "James Kirk Cropcho",
+      "web":   "https://twitter.com/Cropcho"
   } ],
-  "dependencies": {},
-
-
-
+  "files": [ "variety.js", "bin/variety" ],
   "main": "variety.js",
+  "bin": "./bin/variety",
+  "repository": {
+    "type": "git",
+    "url":  "https://github.com/variety/variety.git"
+  },
   "scripts": {
     "lint":        "./node_modules/.bin/eslint . .eslintrc.js --ignore-pattern '!.eslintrc.js'",
     "lint:fix":    "./node_modules/.bin/eslint . .eslintrc.js --ignore-pattern '!.eslintrc.js' --fix",
@@ -52,7 +38,6 @@
     "test:docker": "./spec/bin/test-on-docker",
     "test:mocha":  "./node_modules/.bin/mocha --compilers js:babel-core/register --require babel-polyfill  --recursive --reporter spec --timeout 15000 spec"
   },
-  "homepage": "https://github.com/variety/variety",
   "devDependencies": {
     "babel-core": "^6.7.2",
     "babel-eslint": "^6.0.2",

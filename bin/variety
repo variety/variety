@@ -1,0 +1,14 @@
+#! /usr/bin/env bash
+
+### SAMPLE USAGE:
+#
+# DB=test EVAL_CMDS="\"var collection = 'users', limit = 1\"" VARIETYJS_DIR=. bin/variety
+# executes, e.g.:
+# mongo test --eval "var collection = 'users', limit = 1" ./variety.js
+
+
+CMD="mongo $DB --eval $EVAL_CMDS $VARIETYJS_DIR/variety.js"
+
+echo
+echo $CMD
+$CMD
