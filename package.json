@@ -2,7 +2,7 @@
   "name": "variety",
   "description": "A MongoDB schema analyzer",
   "version": "1.5.1",
-  "keywords": ["MongoDB", "variety", "schema", "schema analyzer", "schema analysis"],
+  "keywords": ["MongoDB", "Variety", "schema", "schema analyzer", "schema analysis", "NoSQL"],
   "maintainers": [
     {
       "name":  "James Kirk Cropcho",
