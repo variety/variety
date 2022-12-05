@@ -10,9 +10,9 @@ RUN curl --silent --show-error --output - \
       https://raw.githubusercontent.com/nvm-sh/nvm/v{NVM_VERSION}/install.sh | \
     bash > /dev/null
 
-RUN export NVM_DIR="$HOME/.nvm" && \
-    \. "$NVM_DIR/nvm.sh"        && \
+RUN export NVM_DIR="$HOME/.nvm"  && \
+    \. "$NVM_DIR/nvm.sh"         && \
     nvm install {NODEJS_VERSION} && \
     nvm install-latest-npm
 
-ENTRYPOINT ["/opt/variety/docker/start-script.sh"]
+ENTRYPOINT ["/opt/variety/docker/init"]
