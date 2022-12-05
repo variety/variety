@@ -1,33 +1,58 @@
 {
   "name": "variety",
+  "description": "A MongoDB schema analyzer",
   "version": "1.5.1",
-  "description": "A schema analyzer for MongoDB",
-  "main": "variety.js",
-  "directories": {
-    "test": "test"
-  },
-  "scripts": {
-    "lint":     "node_modules/.bin/eslint . .eslintrc.js --ignore-pattern '!.eslintrc.js'",
-    "lint:fix": "node_modules/.bin/eslint . .eslintrc.js --ignore-pattern '!.eslintrc.js' --fix",
-    "test": "node_modules/.bin/mocha --compilers js:babel-core/register --require babel-polyfill  --recursive --reporter spec --timeout 15000 spec",
-    "test:docker": "./test.sh",
-    "travis-ci": "npm run lint && npm run test:docker"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/variety/variety.git"
-  },
-  "author": "James Cropcho (https://twitter.com/Cropcho)",
+  "keywords": ["MongoDB", "variety", "schema", "schema analyzer", "schema analysis"],
+  "maintainers": [
+    {
+      "name":  "James Kirk Cropcho",
+      "web":   "https://twitter.com/Cropcho"
+    },
+    {
+      "name":  "Tomáš Dvořák",
+      "email": "todvora@gmail.com",
+      "web":   "https://www.tomas-dvorak.cz/"
+  } ],
   "contributors": [
-    "James Cropcho (https://twitter.com/Cropcho)",
-    "Eve Freeman (https://twitter.com/wefreema)",
-    "Tomas Dvorak <todvora@gmail.com> (http://www.tomas-dvorak.cz/)"
-  ],
-  "license": "MIT",
+    {
+      "name":  "James Kirk Cropcho",
+      "web":   "https://twitter.com/Cropcho"
+    },
+    {
+      "name":  "Tomáš Dvořák",
+      "email": "todvora@gmail.com",
+      "web":   "https://www.tomas-dvorak.cz/"
+    },
+    {
+      "name":  "Eve Freeman",
+      "web":   "https://twitter.com/wefreema"
+  } ],
   "bugs": {
-    "url": "https://github.com/variety/variety/issues"
+    "web": "https://github.com/variety/variety/issues"
   },
-  "homepage": "https://github.com/variety/variety#readme",
+  "licenses": [
+   {
+      "type": "MIT",
+      "url":  "https://opensource.org/licenses/MIT"
+  } ],
+  "repositories": [
+    {
+      "type": "git",
+      "url":  "github:variety/variety"
+  } ],
+  "dependencies": {},
+
+
+
+  "main": "variety.js",
+  "scripts": {
+    "lint":        "./node_modules/.bin/eslint . .eslintrc.js --ignore-pattern '!.eslintrc.js'",
+    "lint:fix":    "./node_modules/.bin/eslint . .eslintrc.js --ignore-pattern '!.eslintrc.js' --fix",
+    "test":        "npm run lint && npm run test:docker",
+    "test:docker": "./spec/bin/test-on-docker",
+    "test:mocha":  "./node_modules/.bin/mocha --compilers js:babel-core/register --require babel-polyfill  --recursive --reporter spec --timeout 15000 spec"
+  },
+  "homepage": "https://github.com/variety/variety",
   "devDependencies": {
     "babel-core": "^6.7.2",
     "babel-eslint": "^6.0.2",
