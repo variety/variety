@@ -7,8 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "lint": "node_modules/.bin/eslint variety.js spec",
-    "lint:fix": "node_modules/.bin/eslint variety.js spec --fix",
+    "lint":     "node_modules/.bin/eslint . .eslintrc.js --ignore-pattern '!.eslintrc.js'",
+    "lint:fix": "node_modules/.bin/eslint . .eslintrc.js --ignore-pattern '!.eslintrc.js' --fix",
     "test": "node_modules/.bin/mocha --compilers js:babel-core/register --require babel-polyfill  --recursive --reporter spec --timeout 15000 spec",
     "test:docker": "./test.sh",
     "travis-ci": "npm run lint && npm run test:docker"
