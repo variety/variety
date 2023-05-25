@@ -13,9 +13,7 @@ Released by Maypop Inc, © 2012–2023, under the MIT License. */
   'use strict'; // wraps everything for which we can use strict mode -JC
 
   var log = function(message) {
-    if(!__quiet) { // mongo shell param, coming from https://github.com/mongodb/mongo/blob/5fc306543cd3ba2637e5cb0662cc375f36868b28/src/mongo/shell/dbshell.cpp#L624
-      print(message);
-    }
+    print(message);
   };
 
   log('Variety: A MongoDB Schema Analyzer');
@@ -33,10 +31,10 @@ Released by Maypop Inc, © 2012–2023, under the MIT License. */
   var knownDatabases = db.adminCommand('listDatabases').databases;
   if(typeof knownDatabases !== 'undefined') { // not authorized user receives error response (json) without databases key
     knownDatabases.forEach(function(d){
-      if(db.getSisterDB(d.name).getCollectionNames().length > 0) {
+      if(db.getSiblingDB(d.name).getCollectionNames().length > 0) {
         dbs.push(d.name);
       }
-      if(db.getSisterDB(d.name).getCollectionNames().length === 0) {
+      if(db.getSiblingDB(d.name).getCollectionNames().length === 0) {
         emptyDbs.push(d.name);
       }
     });
@@ -59,7 +57,7 @@ Released by Maypop Inc, © 2012–2023, under the MIT License. */
         'Please see https://github.com/variety/variety for details.';
   }
 
-  if (db.getCollection(collection).count() === 0) {
+  if (db.getCollection(collection).countDocuments({}, {limit: 1}) === 0) {
     throw 'The collection specified (' + collection + ') in the database specified ('+ db +') does not exist or is empty.\n'+
         'Possible collection options for database specified: ' + collNames + '.';
   }
@@ -69,7 +67,7 @@ Released by Maypop Inc, © 2012–2023, under the MIT License. */
     var read = function(name, defaultValue) {
       var value = typeof configProvider[name] !== 'undefined' ? configProvider[name] : defaultValue;
       config[name] = value;
-      log('Using '+name+' of ' + tojson(value));
+      log('Using '+name+' of ' + JSON.stringify(value));
     };
     read('collection', null);
     read('query', {});
@@ -134,7 +132,9 @@ Released by Maypop Inc, © 2012–2023, under the MIT License. */
       });
     };
 
-    log('Using plugins of ' + tojson(this.plugins.map(function(plugin){return plugin.path;})));
+    log('Using plugins of ' + JSON.stringify(this.plugins.map(p => p.path)));
+
+    return this;
   };
 
   var $plugins = new PluginsClass(this);
@@ -333,17 +333,13 @@ Released by Maypop Inc, © 2012–2023, under the MIT License. */
     return countsDiff !== 0 ? countsDiff : a._id.key.localeCompare(b._id.key);
   };
 
-  // extend standard MongoDB cursor of reduce method - call forEach and combine the results
-  DBQuery.prototype.reduce = function(callback, initialValue) {
-    var result = initialValue;
-    this.forEach(function(obj){
-      result = callback(result, obj);
-    });
-    return result;
-  };
-
   var cursor = db.getCollection(config.collection).find(config.query).sort(config.sort).limit(config.limit);
-  var interimResults = cursor.reduce(reduceDocuments, {});
+
+  var interimResults = {};
+  cursor.forEach(function(obj){
+    interimResults = reduceDocuments(interimResults, obj);
+  });
+
   var varietyResults = convertResults(interimResults, cursor.size())
   .filter(filter)
   .sort(comparator);
