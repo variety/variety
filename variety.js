@@ -12,8 +12,9 @@ Released by Maypop Inc, © 2012–2023, under the MIT License. */
 (function () {
   'use strict'; // wraps everything for which we can use strict mode -JC
 
+  var quiet = typeof this["quiet"] !== 'undefined' ? this["quiet"] : false;
   var log = function(message) {
-    if(!__quiet) { // mongo shell param, coming from https://github.com/mongodb/mongo/blob/5fc306543cd3ba2637e5cb0662cc375f36868b28/src/mongo/shell/dbshell.cpp#L624
+    if(!__quiet&&!quiet) { // mongo shell param, coming from https://github.com/mongodb/mongo/blob/5fc306543cd3ba2637e5cb0662cc375f36868b28/src/mongo/shell/dbshell.cpp#L624
       print(message);
     }
   };
@@ -245,7 +246,6 @@ Released by Maypop Inc, © 2012–2023, under the MIT License. */
         }
       }
     }
-
     return result;
   };
 
@@ -412,11 +412,43 @@ Released by Maypop Inc, © 2012–2023, under the MIT License. */
     return [border].concat(table).concat(border).join('\n');
   };
 
+  var createMoongoseSchema = function(result) {
+    var res = result.reduce(function(accum, currVal) {
+      var k = currVal._id.key;
+      if (k == '_id') return accum; // I don't want _id field
+
+      // build schema
+      var type = Object.keys(currVal.value.types)[0];
+      // convert type to be compatible with mongoose schema types
+      if (type == 'Array') type = [];
+      if (type == 'null') type = "Mixed";
+      var schema = {type: type, required: true};
+
+      if (Object.keys(currVal.value.types).length > 1 ) {
+        if (Object.keys(currVal.value.types)[1] == "null" )
+          delete schema.required;
+      }
+      
+      // check if is a nested value
+      if (k.includes('.')) {
+        const arr = k.split(".");
+        if (accum[arr[0]].type == "Object") accum[arr[0]] = {};
+        accum[arr[0]][arr[1]] = schema;
+      } else {
+        accum[k] = schema;
+      }
+      return accum;
+    }, {});
+    return res;
+  }
+
   var pluginsOutput = $plugins.execute('formatResults', varietyResults);
   if (pluginsOutput.length > 0) {
     pluginsOutput.forEach(function(i){print(i);});
   } else if(config.outputFormat === 'json') {
     printjson(varietyResults); // valid formatted json output, compressed variant is printjsononeline()
+  } else if(config.outputFormat === 'mongoose') {
+    printjson(createMoongoseSchema(varietyResults));
   } else {
     print(createAsciiTable(varietyResults)); // output nice ascii table with results
   }
