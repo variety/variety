@@ -10,7 +10,7 @@ _Co-founder of [Zipfian Academy](http://www.zipfianacademy.com/)_
 
 ***
 
-Also featured on the [official MongoDB blog](http://blog.mongodb.org/post/21923016898/meet-variety-a-schema-analyzer-for-mongodb).
+Also featured on the [official MongoDB blog](https://web.archive.org/web/20231002225312/http://www.mongodb.com:80/blog/post/meet-variety-a-schema-analyzer-for-mongodb).
 
 ### An Easy Example ###
 
