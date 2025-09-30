@@ -282,7 +282,7 @@ I accept pull requests from forks. Very grateful to accept contributions from fo
 
 #### Core Maintainers ####
 
-* Tomáš Dvořák ([personal website](http://www.tomas-dvorak.cz/))
+* Tomáš Dvořák ([LinkedIn](https://www.linkedin.com/in/dvoraktomas/))
 * Eve Freeman ([Twitter](https://twitter.com/wefreema))
 * James Cropcho (original creator of Variety) ([Twitter](https://twitter.com/Cropcho))
 
@@ -301,4 +301,4 @@ Know of one? Built one? Let us know!
 I have every reason to believe this tool will **not** corrupt your data or harm your computer. But if I were you, I would not use it in a production environment.
 
 
-Released by Maypop Inc, © 2012–2023, under the [MIT License] (http://www.opensource.org/licenses/MIT).
+Released by Maypop Inc, © 2012–2023, under the [MIT License](http://www.opensource.org/licenses/MIT).
