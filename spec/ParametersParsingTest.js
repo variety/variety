@@ -63,4 +63,36 @@ describe('Parameters parsing', () => {
     }
   });
 
+  it('should return empty object when there are no Using lines', () => {
+    const output = [
+      'Some unrelated log line',
+      'Another line without the keyword'
+    ].join('\n');
+
+    const params = parseParams(output);
+    assert.deepEqual(params, {});
+  });
+
+  it('should ignore non-matching Using lines and parse matching ones', () => {
+    const output = [
+      'Using collection users', // missing "of" and JSON part, will not match regex
+      'Using collection of {"name":"Alice"}'
+    ].join('\n');
+
+    const params = parseParams(output);
+    assert.deepEqual(params.collection, { name: 'Alice' });
+    assert.strictEqual(Object.keys(params).length, 1);
+  });
+
+  it('should throw when Using line contains invalid JSON', () => {
+    const output = 'Using collection of {invalidJson}';
+
+    assert.throws(
+      () => {
+        parseParams(output);
+      },
+      SyntaxError
+    );
+  });
+
 });
