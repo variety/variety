@@ -18,7 +18,7 @@ cd "$VARIETY_DOCKERDIR" || exit
 # its cache to /data/db, which mongod owns and makes non-writable at runtime.
 export HOME="$VARIETY_DOCKERDIR"
 
-npm install
+npm install || { echo "npm install failed"; exit 1; }
 
 MAX_RETRIES=60
 retries=0
