@@ -6,7 +6,7 @@ import execute from './MongoShell';
 import JsonValidator from './JsonValidator';
 
 const mongodb_port = process.env.MONGODB_PORT || 27017;
-const default_url = `mongodb://localhost:${mongodb_port}/test?autoReconnect=true`;
+const default_url = `mongodb://localhost:${mongodb_port}/test`;
 
 export default class Tester {
   constructor(databaseName, collectionName) {
@@ -29,8 +29,12 @@ export default class Tester {
   }
 
   async cleanUp() {
-    await this.coll.deleteMany();
-    await this.connection.close();
+    if (this.coll) {
+      await this.coll.deleteMany();
+    }
+    if (this.connection) {
+      await this.connection.close();
+    }
   }
 
   getDb(dbName) {
