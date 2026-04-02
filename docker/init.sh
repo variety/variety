@@ -9,14 +9,16 @@ VARIETY_DOCKERDIR=/opt/variety
 # shellcheck disable=SC1091
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-# Start MongoDB with disabled journaling and disabled logging
-mongod --nojournal --logpath /dev/null &
+# Start MongoDB quietly. Newer server releases removed --nojournal.
+mongod --logpath /dev/null &
 
 cd "$VARIETY_DOCKERDIR" || exit
 
 # NVM is already sourced; redirect HOME so babel-register doesn't try to write
 # its cache to /data/db, which mongod owns and makes non-writable at runtime.
-export HOME="$VARIETY_DOCKERDIR"
+# Keep it out of the mounted repo so mongosh logs do not pollute the worktree.
+export HOME=/tmp/variety-home
+mkdir -p "$HOME"
 
 npm install || { echo "npm install failed"; exit 1; }
 

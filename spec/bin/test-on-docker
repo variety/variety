@@ -8,7 +8,7 @@ if [ -z "$RUNNER" ]; then
 fi
 
 # default versions if none in env
-MONGODB_VERSION=${MONGODB_VERSION:=4.4}
+MONGODB_VERSION=${MONGODB_VERSION:=8.0}
 NODEJS_VERSION=${NODEJS_VERSION:=22}
 
 NVM_VERSION=0.39.2

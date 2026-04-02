@@ -12,10 +12,43 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 (function () {
   'use strict'; // wraps everything for which we can use strict mode -JC
 
+  var shellContext = typeof globalThis !== 'undefined' ? globalThis : Function('return this')();
+
+  var shellIsQuiet = function() {
+    if (typeof __quiet !== 'undefined' && __quiet) {
+      return true;
+    }
+
+    return typeof process !== 'undefined' &&
+      process &&
+      process.argv &&
+      process.argv.indexOf('--quiet') !== -1;
+  };
+
   var log = function(message) {
-    if(!__quiet) { // mongo shell param, coming from https://github.com/mongodb/mongo/blob/5fc306543cd3ba2637e5cb0662cc375f36868b28/src/mongo/shell/dbshell.cpp#L624
+    if(!shellIsQuiet()) {
       print(message);
     }
+  };
+
+  var shellToJson = function(value) {
+    if (typeof tojson === 'function') {
+      return tojson(value);
+    }
+
+    return JSON.stringify(value);
+  };
+
+  var shellPrintJson = function(value) {
+    print(JSON.stringify(value, null, 2));
+  };
+
+  var getDatabase = function(name) {
+    if (typeof db.getSisterDB === 'function') {
+      return db.getSisterDB(name);
+    }
+
+    return db.getMongo().getDB(name);
   };
 
   log('Variety: A MongoDB Schema Analyzer');
@@ -33,21 +66,21 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
   var knownDatabases = db.adminCommand('listDatabases').databases;
   if(typeof knownDatabases !== 'undefined') { // not authorized user receives error response (json) without databases key
     knownDatabases.forEach(function(d){
-      if(db.getSisterDB(d.name).getCollectionNames().length > 0) {
+      if(getDatabase(d.name).getCollectionNames().length > 0) {
         dbs.push(d.name);
       }
-      if(db.getSisterDB(d.name).getCollectionNames().length === 0) {
+      if(getDatabase(d.name).getCollectionNames().length === 0) {
         emptyDbs.push(d.name);
       }
     });
 
     if (emptyDbs.indexOf(db.getName()) !== -1) {
-      throw 'The database specified ('+ db +') is empty.\n'+
+      throw 'The database specified ('+ db.getName() +') is empty.\n'+
           'Possible database options are: ' + dbs.join(', ') + '.';
     }
 
     if (dbs.indexOf(db.getName()) === -1) {
-      throw 'The database specified ('+ db +') does not exist.\n'+
+      throw 'The database specified ('+ db.getName() +') does not exist.\n'+
           'Possible database options are: ' + dbs.join(', ') + '.';
     }
   }
@@ -59,8 +92,24 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
         'Please see https://github.com/variety/variety for details.';
   }
 
-  if (db.getCollection(collection).count() === 0) {
-    throw 'The collection specified (' + collection + ') in the database specified ('+ db +') does not exist or is empty.\n'+
+  function countMatchingDocuments(collectionName, query, limit) {
+    var coll = db.getCollection(collectionName);
+
+    if (typeof coll.countDocuments === 'function') {
+      var options = typeof limit === 'number' ? {limit: limit} : undefined;
+      return coll.countDocuments(query, options);
+    }
+
+    var cursor = coll.find(query);
+    if (typeof limit === 'number') {
+      cursor = cursor.limit(limit);
+    }
+
+    return cursor.count();
+  }
+
+  if (countMatchingDocuments(collection, {}) === 0) {
+    throw 'The collection specified (' + collection + ') in the database specified ('+ db.getName() +') does not exist or is empty.\n'+
         'Possible collection options for database specified: ' + collNames + '.';
   }
 
@@ -69,11 +118,11 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     var read = function(name, defaultValue) {
       var value = typeof configProvider[name] !== 'undefined' ? configProvider[name] : defaultValue;
       config[name] = value;
-      log('Using '+name+' of ' + tojson(value));
+      log('Using '+name+' of ' + shellToJson(value));
     };
     read('collection', null);
     read('query', {});
-    read('limit', db.getCollection(config.collection).find(config.query).count());
+    read('limit', countMatchingDocuments(config.collection, config.query));
     read('maxDepth', 99);
     read('sort', {_id: -1});
     read('outputFormat', 'ascii');
@@ -93,9 +142,9 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     return config;
   };
 
-  var config = readConfig(this);
+  var config = readConfig(shellContext);
 
-  var PluginsClass = function(context) {
+  var createPluginsRunner = function(context) {
     var parsePath = function(val) { return val.slice(-3) !== '.js' ? val + '.js' : val;};
     var parseConfig = function(val) {
       var config = {};
@@ -107,38 +156,63 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
       return config;
     };
 
+    var plugins;
+
     if(typeof context.plugins !== 'undefined') {
-      this.plugins = context.plugins.split(',')
+      plugins = context.plugins.split(',')
         .map(function(path){return path.trim();})
         .map(function(definition){
           var path = parsePath(definition.split('|')[0]);
           var config = parseConfig(definition.split('|')[1] || '');
-          context.module = context.module || {};
+          context.module = {exports: {}};
           load(path);
           var plugin = context.module.exports;
+          delete context.module;
           plugin.path = path;
           if(typeof plugin.init === 'function') {
             plugin.init(config);
           }
           return plugin;
-        }, this);
+        });
     } else {
-      this.plugins = [];
+      plugins = [];
     }
 
-    this.execute = function(methodName) {
-      var args = Array.prototype.slice.call(arguments, 1);
-      var applicablePlugins = this.plugins.filter(function(plugin){return typeof plugin[methodName] === 'function';});
-      return applicablePlugins.map(function(plugin) {
-        return plugin[methodName].apply(plugin, args);
-      });
-    };
+    log('Using plugins of ' + shellToJson(plugins.map(function(plugin){return plugin.path;})));
 
-    log('Using plugins of ' + tojson(this.plugins.map(function(plugin){return plugin.path;})));
+    return {
+      execute: function(methodName) {
+        var args = Array.prototype.slice.call(arguments, 1);
+        var applicablePlugins = plugins.filter(function(plugin){return typeof plugin[methodName] === 'function';});
+        return applicablePlugins.map(function(plugin) {
+          return plugin[methodName].apply(plugin, args);
+        });
+      }
+    };
   };
 
-  var $plugins = new PluginsClass(this);
-  $plugins.execute('onConfig', config);
+  var pluginsRunner = createPluginsRunner(shellContext);
+  pluginsRunner.execute('onConfig', config);
+
+  var getBinDataSubtype = function(binData) {
+    if (binData && typeof binData.subtype === 'function') {
+      return binData.subtype();
+    }
+    if (binData && typeof binData.sub_type !== 'undefined') {
+      return binData.sub_type;
+    }
+    return undefined;
+  };
+
+  var getBinDataHex = function(binData) {
+    if (binData && typeof binData.hex === 'function') {
+      return binData.hex();
+    }
+    if (binData && typeof Buffer !== 'undefined' && binData.buffer) {
+      return Buffer.from(binData.buffer).toString('hex');
+    }
+    return shellToJson(binData);
+  };
 
   var varietyTypeOf = function(thing) {
     if (!arguments.length) { throw 'varietyTypeOf() requires an argument'; }
@@ -151,7 +225,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
       var typeofThing = typeof thing; // edgecase of JSHint's "singleGroups"
       return typeofThing[0].toUpperCase() + typeofThing.slice(1);
     } else {
-      if (thing && thing.constructor === Array) {
+      if (Array.isArray(thing)) {
         return 'Array';
       } else if (thing === null) {
         return 'null';
@@ -170,7 +244,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
         binDataTypes[0x04] = 'UUID';
         binDataTypes[0x05] = 'MD5';
         binDataTypes[0x80] = 'user';
-        return 'BinData-' + binDataTypes[thing.subtype()];
+        return 'BinData-' + binDataTypes[getBinDataSubtype(thing)];
       } else {
         return 'Object';
       }
@@ -241,7 +315,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
         }else if(type == 'Date'){
           result[key][type] = new Date(value).getTime();
         }else if(type.startsWith('BinData')){
-          result[key][type] = value.hex();
+          result[key][type] = getBinDataHex(value);
         }
       }
     }
@@ -333,18 +407,17 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     return countsDiff !== 0 ? countsDiff : a._id.key.localeCompare(b._id.key);
   };
 
-  // extend standard MongoDB cursor of reduce method - call forEach and combine the results
-  DBQuery.prototype.reduce = function(callback, initialValue) {
+  var reduceCursor = function(cursor, callback, initialValue) {
     var result = initialValue;
-    this.forEach(function(obj){
+    cursor.forEach(function(obj){
       result = callback(result, obj);
     });
     return result;
   };
 
   var cursor = db.getCollection(config.collection).find(config.query).sort(config.sort).limit(config.limit);
-  var interimResults = cursor.reduce(reduceDocuments, {});
-  var varietyResults = convertResults(interimResults, cursor.size())
+  var interimResults = reduceCursor(cursor, reduceDocuments, {});
+  var varietyResults = convertResults(interimResults, countMatchingDocuments(config.collection, config.query, config.limit))
     .filter(filter)
     .sort(comparator);
 
@@ -412,13 +485,13 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     return [border].concat(table).concat(border).join('\n');
   };
 
-  var pluginsOutput = $plugins.execute('formatResults', varietyResults);
+  var pluginsOutput = pluginsRunner.execute('formatResults', varietyResults);
   if (pluginsOutput.length > 0) {
     pluginsOutput.forEach(function(i){print(i);});
   } else if(config.outputFormat === 'json') {
-    printjson(varietyResults); // valid formatted json output, compressed variant is printjsononeline()
+    shellPrintJson(varietyResults); // valid formatted json output, compressed variant is printjsononeline()
   } else {
     print(createAsciiTable(varietyResults)); // output nice ascii table with results
   }
 
-}.bind(this)()); // end strict mode
+}()); // end strict mode

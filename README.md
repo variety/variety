@@ -24,7 +24,7 @@ We'll make a collection:
 
 So, let's see what we've got here:
 
-    $ mongo test --eval "var collection = 'users'" variety.js
+    $ mongosh test --eval "var collection = 'users'" variety.js
 
     +------------------------------------------------------------------+
     | key                | types              | occurrences | percents |
@@ -39,6 +39,9 @@ So, let's see what we've got here:
     +------------------------------------------------------------------+
 
 _("test" is the database containing the collection we are analyzing.)_
+
+These examples use `mongosh`. If your environment still ships the legacy `mongo`
+shell instead, substitute that executable in the commands below.
 
 Hmm. Looks like everybody has a "name" and "_id". Most, but not all have a "bio".
 
@@ -60,7 +63,7 @@ Perhaps you want to ignore a collection's oldest documents, and only see what th
 
 One can apply a "limit" constraint, which analyzes only the newest documents in a collection ([unless sorting](https://github.com/variety/variety#analyze-documents-sorted-in-a-particular-order)), like so:
 
-    $ mongo test --eval "var collection = 'users', limit = 1" variety.js
+    $ mongosh test --eval "var collection = 'users', limit = 1" variety.js
 
 Let's examine the results closely:
 
@@ -84,7 +87,7 @@ One can apply a "maxDepth" constraint, which limits the depth Variety will recur
 
 The default will traverse all the way to the bottom of that structure:
 
-    $ mongo test --eval "var collection = 'users'" variety.js
+    $ mongosh test --eval "var collection = 'users'" variety.js
 
     +----------------------------------------------------------------+
     | key                        | types    | occurrences | percents |
@@ -99,7 +102,7 @@ The default will traverse all the way to the bottom of that structure:
     | someNestedObject.a.b.c.d.e | Number   |           1 |    100.0 |
     +----------------------------------------------------------------+
 
-    $ mongo test --eval "var collection = 'users', maxDepth = 3" variety.js
+    $ mongosh test --eval "var collection = 'users', maxDepth = 3" variety.js
 
     +----------------------------------------------------------+
     | key                  | types    | occurrences | percents |
@@ -119,7 +122,7 @@ Perhaps you have a large collection, or you only care about some subset of the d
 
 One can apply a "query" constraint, which takes a standard MongoDB query object, to filter the set of documents required before analysis.
 
-    $ mongo test --eval "var collection = 'users', query = {'caredAbout':true}" variety.js
+    $ mongosh test --eval "var collection = 'users', query = {'caredAbout':true}" variety.js
 
 ### Analyze Documents Sorted In a Particular Order ###
 
@@ -127,13 +130,13 @@ Perhaps you want to analyze a subset of documents sorted in an order other than 
 
 One can apply a "sort" constraint, which analyzes documents in the specified order like so:
 
-    $ mongo test --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
+    $ mongosh test --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
 
 ### Include Last Value ###
 
 You can add ```lastValue``` property to show values of the last document.
 
-    $ mongo test --eval "var collection = 'orders', lastValue = true" variety.js
+    $ mongosh test --eval "var collection = 'orders', lastValue = true" variety.js
     
     +--------------------------------------------------------------------------------------------+
     | key             | types        | occurrences | percents | lastValue                        |
@@ -163,25 +166,25 @@ Variety supports two different output formats:
 
 Default format is ```ascii```. You can select the type of format with property ```outputFormat``` provided to Variety. Valid values are ```ascii``` and ```json```.
 
-    $ mongo test --quiet --eval "var collection = 'users', outputFormat='json'" variety.js
+    $ mongosh test --quiet --eval "var collection = 'users', outputFormat='json'" variety.js
 
 #### Quiet Option ####
-Both MongoDB and Variety output some additional information to standard output. If you want to remove this info, you can use ```--quiet``` option provided to ```mongo``` executable.
+Both MongoDB and Variety output some additional information to standard output. If you want to remove this info, you can use ```--quiet``` option provided to the MongoDB shell executable.
 Variety can also read that option and mute unnecessary output. This is useful in connection with ```outputFormat=json```. You would then receive only JSON, without any other characters around it.
 
-    $ mongo test --quiet --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
+    $ mongosh test --quiet --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
 
 #### Log Keys and Types As They Arrive Option ####
 Sometimes you want to see the keys and types come in as it happens.  Maybe you have a large dataset and want accurate results, but you also are impatient and want to see something now.  Or maybe you have a large mangled dataset with crazy keys (that probably shouldn't be keys) and Variety is going out of memory.  This option will show you the keys and types as they come in and help you identify problems with your dataset without needing the Variety script to finish.  
 
-    $ mongo test --eval "var collection = 'users', sort = { updated_at : -1 }, logKeysContinuously = true" variety.js
+    $ mongosh test --eval "var collection = 'users', sort = { updated_at : -1 }, logKeysContinuously = true" variety.js
 
 #### Exclude Subkeys ####
 Sometimes you inherit a database full of junk.  Maybe the previous developer put data in the database keys, which causes Variety to go out of memory when run.  After you've run the `logKeysContinuously` to figure out which subkeys may be a problem, you can use this option to run Variety without those subkeys.  
 
     db.users.insert({name:"Walter", someNestedObject:{a:{b:{c:{d:{e:1}}}}}, otherNestedObject:{a:{b:{c:{d:{e:1}}}}}});
 
-    $ mongo test --eval "var collection = 'users', sort = { updated_at : -1 }, excludeSubkeys = [ 'someNestedObject.a.b' ]" variety.js
+    $ mongosh test --eval "var collection = 'users', sort = { updated_at : -1 }, excludeSubkeys = [ 'someNestedObject.a.b' ]" variety.js
 
     +-----------------------------------------------------------------+
     | key                         | types    | occurrences | percents |
@@ -203,14 +206,14 @@ Sometimes you inherit a database full of junk.  Maybe the previous developer put
 Analyzing a large collection on a busy replica set primary could take a lot longer than if you read from a secondary. To do so, we have to tell MongoDB it's okay to perform secondary reads
 by setting the ```slaveOk``` property to ```true```:
 
-    $ mongo secondary.replicaset.member:31337/somedb --eval "var collection = 'users', slaveOk = true" variety.js
+    $ mongosh secondary.replicaset.member:31337/somedb --eval "var collection = 'users', slaveOk = true" variety.js
 
 ### Save Results in MongoDB For Future Use ###
 By default, Variety prints results only to standard output and does not store them in MongoDB itself. If you want to persist them automatically in MongoDB for later usage, you can set the parameter ```persistResults```.
 Variety then stores result documents in database ```varietyResults``` and the collection name is derived from the source collection's name.
 If the source collection's name is ```users```, Variety will store results in collection ```usersKeys``` under ```varietyResults``` database.
 
-    $ mongo test --quiet --eval "var collection = 'users', persistResults=true" variety.js
+    $ mongosh test --quiet --eval "var collection = 'users', persistResults=true" variety.js
 
 To persist to an alternate MongoDB database, you may specify the following parameters:
 
@@ -220,13 +223,13 @@ To persist to an alternate MongoDB database, you may specify the following param
 - `resultsPass` - MongoDB password for results database
 
 ```
-$ mongo test --quiet --eval "var collection = 'users', persistResults=true, resultsDatabase='db.example.com/variety' variety.js
+$ mongosh test --quiet --eval "var collection = 'users', persistResults=true, resultsDatabase='db.example.com/variety'" variety.js
 ```
 
 ### Reserved Keys ###
 Variety expects keys to be well formed, not having any `.`s in them (MongoDB 2.4 allows dots in certain cases).  Also MongoDB uses the pseudo keys 'XX' and keys corresponding to the regex 'XX\d+XX.*' for use with arrays.  You can change the string XX in these patterns to whatever you like if there is a conflict in your database using the `arrayEscape` parameter.  
 
-    $ mongo test --quiet --eval "var collection = 'users', arrayEscape = 'YY'" variety.js
+    $ mongosh test --quiet --eval "var collection = 'users', arrayEscape = 'YY'" variety.js
 
 ### Command Line Interface ###
 Variety itself is command line friendly, as shown on examples above.
@@ -259,10 +262,10 @@ To install all dev dependencies call as usual:
 npm install
 ```
 
-By default, tests expect MongoDB available on ```localhost:27017``` and can be executed by calling:
+`npm test` runs lint plus the default Docker-backed integration test lane. If you already have MongoDB listening on `localhost:27017` and want to run only the mocha suite directly, use:
 
 ```
-npm test
+npm run test:mocha
 ```
 
 If you have Docker installed and don't want to test against your own MongoDB instance,
@@ -274,14 +277,17 @@ npm run test:docker
 The script downloads one of [official MongoDB images](https://hub.docker.com/_/mongo/) (based on your provided version),
 starts the database, executes test suite against it (inside the container) and stops the DB.
 
-Dockerized tests default to MongoDB 4.4 on Node.js 22. You can override `MONGODB_VERSION` and `NODEJS_VERSION` when you want to try another supported combination:
+The Docker harness prefers `mongosh` when it is available and falls back to the legacy `mongo` shell for older images.
+
+Dockerized tests default to MongoDB 8.0 on Node.js 22. You can override `MONGODB_VERSION` and `NODEJS_VERSION` when you want to try another supported combination:
 
 ```
-MONGODB_VERSION=5.0 npm run test:docker
-MONGODB_VERSION=5.0 NODEJS_VERSION=24 npm run test:docker
+MONGODB_VERSION=7.0 npm run test:docker
+MONGODB_VERSION=8.0 npm run test:docker
+MONGODB_VERSION=8.0 NODEJS_VERSION=24 npm run test:docker
 ```
 
-GitHub Actions runs the supported MongoDB matrix (`4.4`, `5.0`) on Node.js 22, plus a single Node.js 24 smoke test against MongoDB 5.0. The older official MongoDB `4.0` and `4.2` images are too old for Node.js 22+ in this Docker-based test harness.
+GitHub Actions runs the supported MongoDB matrix (`7.0`, `8.0`) on Node.js 22, plus a single Node.js 24 smoke test against MongoDB 8.0. MongoDB 6.0+ no longer ships the legacy `mongo` shell, and MongoDB 7.0+ rejects the old `mongod --nojournal` flag, so the test harness now targets `mongosh` and modern `mongod` defaults.
 
 ##### Linting #####
 

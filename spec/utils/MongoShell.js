@@ -1,38 +1,67 @@
 'use strict';
 
-import { exec } from 'promisify-child-process';
+import { execFile } from 'promisify-child-process';
+
+let mongoShellCommandPromise;
+
+const findMongoShellCommand = async () => {
+  if (!mongoShellCommandPromise) {
+    mongoShellCommandPromise = execFile('sh', ['-lc', `
+      if command -v mongosh >/dev/null 2>&1; then
+        printf mongosh
+      elif command -v mongo >/dev/null 2>&1; then
+        printf mongo
+      else
+        printf 'Neither mongosh nor mongo is available in PATH.' >&2
+        exit 127
+      fi
+    `]).then((result) => result.stdout.trim());
+  }
+
+  return mongoShellCommandPromise;
+};
 
 export default async (database, credentials, args, script, quiet, port) => {
-  const commands = ['mongo'];
+  const command = await findMongoShellCommand();
+  const commandArgs = [];
 
-  commands.push('--port');
-  commands.push(port);
+  commandArgs.push('--port');
+  commandArgs.push(String(port));
 
   if (database) {
-    commands.push(database);
+    commandArgs.push(database);
   }
   if (quiet) {
-    commands.push('--quiet');
+    commandArgs.push('--quiet');
   }
 
   if (credentials) {
-    commands.push('--username');
-    commands.push(credentials.username);
-    commands.push('--password');
-    commands.push(credentials.password);
-    commands.push('--authenticationDatabase');
-    commands.push(credentials.authDatabase);
+    commandArgs.push('--username');
+    commandArgs.push(credentials.username);
+    commandArgs.push('--password');
+    commandArgs.push(credentials.password);
+    commandArgs.push('--authenticationDatabase');
+    commandArgs.push(credentials.authDatabase);
   }
 
   if (args) {
-    commands.push('--eval');
-    commands.push(args);
+    commandArgs.push('--eval');
+    commandArgs.push(args);
   }
 
   if (script) {
-    commands.push(script);
+    commandArgs.push(script);
   }
 
-  const result = await exec(commands.join(' '));
-  return result.stdout.trim();
+  try {
+    const result = await execFile(command, commandArgs);
+    return result.stdout.trim();
+  } catch (error) {
+    // mongosh reports thrown script errors on stderr; keep the legacy stdout
+    // contract that the specs already assert against.
+    if (error.stderr) {
+      error.stdout = [error.stdout, error.stderr].filter(Boolean).join('\n');
+    }
+    throw error;
+  }
 };
