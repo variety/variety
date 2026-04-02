@@ -33,6 +33,7 @@ export default async (database, credentials, args, script, quiet, port) => {
     commands.push(script);
   }
 
-  const result = await exec(commands.join(' '));
+  const [command, ...commandArgs] = commands;
+  const result = await exec(command, commandArgs);
   return result.stdout.trim();
 };
