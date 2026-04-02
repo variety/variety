@@ -274,6 +274,19 @@ MONGODB_VERSION=3.2 npm run test:docker
 The script downloads one of [official MongoDB images](https://hub.docker.com/_/mongo/) (based on your provided version),
 starts the database, executes test suite against it (inside the container) and stops the DB.
 
+##### Linting #####
+
+Pre-commit hooks are managed by [Husky](https://typierce.github.io/husky/) and installed automatically on `npm install`. Each commit runs all of the following, and is blocked if any fail:
+
+- `npm run lint` — ESLint (JavaScript)
+- `npm run lint:json` — jsonlint (JSON files and `.babelrc`)
+- `npm run lint:markdown` — markdownlint (Markdown files)
+- `npm run lint:yaml` — js-yaml (YAML files)
+- `npm run lint:dockerfile` — hadolint (`docker/Dockerfile.template`)
+- `npm run lint:shell` — shellcheck (shell scripts)
+
+The last two require a container runtime: [Docker](https://www.docker.com/) is used if available, with [Podman](https://podman.io/) as a fallback. At least one must be installed.
+
 #### Reporting Issues / Contributing ####
 
 Please report any bugs and feature requests on the Github issue tracker. I will read all reports!

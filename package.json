@@ -49,8 +49,8 @@
     "lint:json":     "find . \\( -name '*.json' ! -name 'package-lock.json' \\) -not -path '*/node_modules/*' -not -path './.git/*' | xargs ./node_modules/.bin/jsonlint -q && ./node_modules/.bin/jsonlint -q .babelrc",
     "lint:markdown": "./node_modules/.bin/markdownlint '**/*.md' '**/*.markdown' --ignore node_modules",
     "lint:yaml":     "find . -name '*.yml' -not -path '*/node_modules/*' -not -path './.git/*' | xargs ./node_modules/.bin/js-yaml > /dev/null",
-    "lint:dockerfile": "podman run --rm -i ghcr.io/hadolint/hadolint < docker/Dockerfile.template",
-    "lint:shell":      "podman run --rm -v \"${PWD}:/mnt:z\" docker.io/koalaman/shellcheck:stable /mnt/bin/variety /mnt/docker/init /mnt/spec/bin/test-on-docker",
+    "lint:dockerfile": "RUNNER=$(command -v docker 2>/dev/null || command -v podman 2>/dev/null) && $RUNNER run --rm -i ghcr.io/hadolint/hadolint < docker/Dockerfile.template",
+    "lint:shell":      "RUNNER=$(command -v docker 2>/dev/null || command -v podman 2>/dev/null) && $RUNNER run --rm -v \"${PWD}:/mnt:z\" docker.io/koalaman/shellcheck:stable /mnt/bin/variety /mnt/docker/init /mnt/spec/bin/test-on-docker",
     "test":          "npm run lint && npm run test:docker",
     "test:docker":   "./spec/bin/test-on-docker",
     "test:mocha":    "./node_modules/.bin/mocha --compilers js:babel-core/register --require babel-polyfill  --recursive --reporter spec --timeout 15000 spec"
