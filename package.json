@@ -48,7 +48,7 @@
     "lint:fix":      "./node_modules/.bin/eslint . --fix",
     "lint:json":     "find . \\( -name '*.json' ! -name 'package-lock.json' \\) -not -path '*/node_modules/*' -not -path './.git/*' | xargs ./node_modules/.bin/jsonlint -q && ./node_modules/.bin/jsonlint -q .babelrc",
     "lint:markdown": "./node_modules/.bin/markdownlint '**/*.md' '**/*.markdown' --ignore node_modules",
-    "lint:yaml":     "find . -name '*.yml' -not -path '*/node_modules/*' -not -path './.git/*' | xargs ./node_modules/.bin/js-yaml > /dev/null",
+    "lint:yaml":     "find . \\( -name '*.yml' -o -name '*.yaml' \\) -not -path '*/node_modules/*' -not -path './.git/*' -print0 | xargs -0 -n1 ./node_modules/.bin/js-yaml > /dev/null",
     "lint:dockerfile": "RUNNER=$(command -v docker 2>/dev/null || command -v podman 2>/dev/null) && $RUNNER run --rm -i ghcr.io/hadolint/hadolint < docker/Dockerfile.template",
     "lint:shell":      "RUNNER=$(command -v docker 2>/dev/null || command -v podman 2>/dev/null) && $RUNNER run --rm -v \"${PWD}:/mnt:z\" docker.io/koalaman/shellcheck:stable /mnt/bin/variety /mnt/docker/init /mnt/spec/bin/test-on-docker",
     "test":          "npm run lint && npm run test:docker",
