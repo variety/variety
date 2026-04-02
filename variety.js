@@ -109,19 +109,19 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 
     if(typeof context.plugins !== 'undefined') {
       this.plugins = context.plugins.split(',')
-      .map(function(path){return path.trim();})
-      .map(function(definition){
-        var path = parsePath(definition.split('|')[0]);
-        var config = parseConfig(definition.split('|')[1] || '');
-        context.module = context.module || {};
-        load(path);
-        var plugin = context.module.exports;
-        plugin.path = path;
-        if(typeof plugin.init === 'function') {
-          plugin.init(config);
-        }
-        return plugin;
-      }, this);
+        .map(function(path){return path.trim();})
+        .map(function(definition){
+          var path = parsePath(definition.split('|')[0]);
+          var config = parseConfig(definition.split('|')[1] || '');
+          context.module = context.module || {};
+          load(path);
+          var plugin = context.module.exports;
+          plugin.path = path;
+          if(typeof plugin.init === 'function') {
+            plugin.init(config);
+          }
+          return plugin;
+        }, this);
     } else {
       this.plugins = [];
     }
@@ -201,7 +201,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
         return;
       for(var key in document) {
         //skip over inherited properties such as string, length, etc.
-        if(!document.hasOwnProperty(key)) {
+        if(!Object.prototype.hasOwnProperty.call(document, key)) {
           continue;
         }
         var value = document[key];
@@ -327,7 +327,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     return !item._id.key.match(arrayRegex);
   };
 
-// sort desc by totalOccurrences or by key asc if occurrences equal
+  // sort desc by totalOccurrences or by key asc if occurrences equal
   var comparator = function(a, b) {
     var countsDiff = b.totalOccurrences - a.totalOccurrences;
     return countsDiff !== 0 ? countsDiff : a._id.key.localeCompare(b._id.key);
@@ -345,8 +345,8 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
   var cursor = db.getCollection(config.collection).find(config.query).sort(config.sort).limit(config.limit);
   var interimResults = cursor.reduce(reduceDocuments, {});
   var varietyResults = convertResults(interimResults, cursor.size())
-  .filter(filter)
-  .sort(comparator);
+    .filter(filter)
+    .sort(comparator);
 
   if(config.persistResults) {
     var resultsDB;

@@ -19,9 +19,9 @@ describe('Limited results count analysis', () => {
 
   it('should analyze all and compute real percentages', async () => {
     const results = await test.runJsonAnalysis({collection:'users', limit:10});
-      // limit is set to higher number, that the actual number of documents in collection
-      // analysis should compute percentages based on the real number of documents, not on the
-      // number provided in the limit var.
+    // limit is set to higher number, that the actual number of documents in collection
+    // analysis should compute percentages based on the real number of documents, not on the
+    // number provided in the limit var.
     results.validateResultsCount(7);
     results.validate('_id', 5, 100.0, {ObjectId: 5});
     results.validate('name', 5, 100.0, {String: 5});
