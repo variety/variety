@@ -50,7 +50,7 @@ Results are stored for future use in a varietyResults database.
 
 ### See Progress When Analysis Takes a Long Time ###
 
-Tailing the log is great for this. Mongo provides a "percent complete" measurement for you. These operations can take a long time on huge collections.
+Tailing the log is great for this. MongoDB provides a "percent complete" measurement for you. These operations can take a long time on huge collections.
 
 ### Analyze Only Recent Documents ###
 
@@ -117,7 +117,7 @@ As you can see, Variety only traversed three levels deep.
 
 Perhaps you have a large collection, or you only care about some subset of the documents.
 
-One can apply a "query" constraint, which takes a standard Mongo query object, to filter the set of documents required before analysis.
+One can apply a "query" constraint, which takes a standard MongoDB query object, to filter the set of documents required before analysis.
 
     $ mongo test --eval "var collection = 'users', query = {'caredAbout':true}" variety.js
 
@@ -224,7 +224,7 @@ $ mongo test --quiet --eval "var collection = 'users', persistResults=true, resu
 ```
 
 ### Reserved Keys ###
-Variety expects keys to be well formed, not having any '.'s in them (mongo 2.4 allows dots in certain cases).  Also mongo uses the pseudo keys 'XX' and keys coresponding to the regex 'XX\d+XX.*' for use with arrays.  You can change the string XX in these patterns to whatever you like if there is a conflict in your database using the `arrayEscape` parameter.  
+Variety expects keys to be well formed, not having any `.`s in them (MongoDB 2.4 allows dots in certain cases).  Also MongoDB uses the pseudo keys 'XX' and keys corresponding to the regex 'XX\d+XX.*' for use with arrays.  You can change the string XX in these patterns to whatever you like if there is a conflict in your database using the `arrayEscape` parameter.  
 
     $ mongo test --quiet --eval "var collection = 'users', arrayEscape = 'YY'" variety.js
 

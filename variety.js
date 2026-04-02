@@ -200,7 +200,7 @@ Released by Maypop Inc, © 2012–2023, under the MIT License. */
       if(Object.prototype.hasOwnProperty.call(excludeSubkeys, parentKey.replace(arrayRegex, '.')))
         return;
       for(var key in document) {
-        //skip over inherited properties such as string, length, etch
+        //skip over inherited properties such as string, length, etc.
         if(!document.hasOwnProperty(key)) {
           continue;
         }
