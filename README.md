@@ -279,7 +279,7 @@ starts the database, executes test suite against it (inside the container) and s
 Pre-commit hooks are managed by [Husky](https://typierce.github.io/husky/) and installed automatically on `npm install`. Each commit runs all of the following, and is blocked if any fail:
 
 - `npm run lint` — ESLint (JavaScript)
-- `npm run lint:json` — jsonlint (JSON files and `.babelrc`)
+- `npm run lint:json` — `@prantlf/jsonlint` (JSON files and `.babelrc`)
 - `npm run lint:markdown` — markdownlint (Markdown files)
 - `npm run lint:yaml` — js-yaml (YAML files)
 - `npm run lint:dockerfile` — hadolint (`docker/Dockerfile.template`)
