@@ -1,5 +1,5 @@
 import Tester from './utils/Tester.js';
-import sampleData from './assets/SampleData';
+import sampleData from './assets/SampleData.js';
 
 const test = new Tester('test', 'users');
 

@@ -18,5 +18,5 @@ export default [{
   'bio': 'Ça va?'
 }, {
   'name': 'Jim',
-  'someBinData': new Binary('1234')  //Binary.SUBTYPE_BYTE_ARRAY
+  'someBinData': new Binary(Uint8Array.from([49, 50, 51, 52]))  //Binary.SUBTYPE_BYTE_ARRAY
 }];

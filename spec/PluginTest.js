@@ -1,7 +1,7 @@
 import assert from 'assert';
 import Tester from './utils/Tester.js';
 import { resolve, join } from 'path';
-import sampleData from './assets/SampleData';
+import sampleData from './assets/SampleData.js';
 
 const test = new Tester('test', 'users');
 

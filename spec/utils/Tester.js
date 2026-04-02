@@ -2,8 +2,8 @@
 
 import { resolve, join } from 'path';
 import { MongoClient } from 'mongodb';
-import execute from './MongoShell';
-import JsonValidator from './JsonValidator';
+import execute from './MongoShell.js';
+import JsonValidator from './JsonValidator.js';
 
 const mongodb_port = process.env.MONGODB_PORT || 27017;
 const default_url = `mongodb://localhost:${mongodb_port}/test`;

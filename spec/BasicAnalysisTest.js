@@ -2,8 +2,8 @@ import assert from 'assert';
 import Tester from './utils/Tester.js';
 const test = new Tester('test', 'users');
 
-import sampleData from './assets/SampleData';
-import expectedAscii  from './assets/ExpectedAscii';
+import sampleData from './assets/SampleData.js';
+import expectedAscii  from './assets/ExpectedAscii.js';
 
 describe('Basic Analysis', () => {
 

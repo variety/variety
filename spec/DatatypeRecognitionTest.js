@@ -8,7 +8,7 @@ const crazyObject = {
   key_boolean: true,
   key_number: 1,
   key_date: new Date(),
-  'key_binData-generic': new Binary('1234'), // TODO: how to create other bin-data types?
+  'key_binData-generic': new Binary(Uint8Array.from([49, 50, 51, 52])), // TODO: how to create other bin-data types?
   key_array: [],
   key_object: {},
   key_null: null,
