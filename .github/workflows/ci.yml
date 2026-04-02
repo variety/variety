@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm install
+        env:
+          HUSKY: '0'
+      - run: npm run lint
+      - run: npm run lint:json
+      - run: npm run lint:markdown
+      - run: npm run lint:yaml
+      - run: npm run lint:dockerfile
+      - run: npm run lint:shell
+
+  test:
+    name: Test (MongoDB ${{ matrix.mongodb-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mongodb-version: ['2.4', '2.6', '2.8', '3.0', '3.2']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm install
+        env:
+          HUSKY: '0'
+      - run: mkdir -p docker/Dockerfiles
+      - run: npm run test:docker
+        env:
+          MONGODB_VERSION: ${{ matrix.mongodb-version }}
