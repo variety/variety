@@ -1,5 +1,10 @@
 FROM mongo:${MONGODB_VERSION}
 
+# The base image pre-configures the MongoDB apt repo, whose signing key has
+# expired for older releases. Remove it before updating — MongoDB is already
+# installed in the base image and we don't need the repo.
+RUN rm -f /etc/apt/sources.list.d/mongodb*.list
+
 # hadolint ignore=DL3008
 RUN apt-get update  -qq && \
     apt-get install -qq --assume-yes --no-install-recommends --no-install-suggests \
