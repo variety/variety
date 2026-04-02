@@ -1,6 +1,6 @@
 'use strict';
 
-import { exec } from 'child-process-promise';
+import { exec } from 'promisify-child-process';
 
 export default async (database, credentials, args, script, quiet, port) => {
   const commands = ['mongo'];
