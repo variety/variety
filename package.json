@@ -49,6 +49,7 @@
     "lint:json":     "find . \\( -name '*.json' ! -name 'package-lock.json' \\) -not -path '*/node_modules/*' -not -path './.git/*' | xargs ./node_modules/.bin/jsonlint -q && ./node_modules/.bin/jsonlint -q .babelrc",
     "lint:markdown": "./node_modules/.bin/markdownlint '**/*.md' '**/*.markdown' --ignore node_modules",
     "lint:yaml":     "find . -name '*.yml' -not -path '*/node_modules/*' -not -path './.git/*' | xargs ./node_modules/.bin/js-yaml > /dev/null",
+    "lint:dockerfile": "podman run --rm -i ghcr.io/hadolint/hadolint < docker/Dockerfile.template",
     "test":          "npm run lint && npm run test:docker",
     "test:docker":   "./spec/bin/test-on-docker",
     "test:mocha":    "./node_modules/.bin/mocha --compilers js:babel-core/register --require babel-polyfill  --recursive --reporter spec --timeout 15000 spec"

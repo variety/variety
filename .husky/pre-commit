@@ -12,6 +12,9 @@ npm run lint:markdown
 echo "→ js-yaml (YAML)"
 npm run lint:yaml
 
+echo "→ hadolint (Dockerfile.template)"
+npm run lint:dockerfile
+
 echo "→ shellcheck (shell scripts)"
 if command -v shellcheck >/dev/null 2>&1; then
   shellcheck bin/variety docker/init spec/bin/test-on-docker
