@@ -14,9 +14,11 @@ RUN apt-get update  -qq && \
     rm -rf /var/lib/apt/lists/*
 
 # hadolint ignore=DL4006
-RUN curl --silent --show-error --output - \
-      "https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh" | \
-    bash > /dev/null
+RUN curl --silent --show-error --location \
+      --output /tmp/install_nvm.sh \
+      "https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh" && \
+    bash /tmp/install_nvm.sh > /dev/null && \
+    rm -f /tmp/install_nvm.sh
 
 # Keep the npm bundled with the selected Node.js release. Newer npm majors
 # can drop support for older test lanes before Node.js itself does.
