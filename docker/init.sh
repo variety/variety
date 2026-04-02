@@ -18,12 +18,20 @@ cd "$VARIETY_DOCKERDIR" || exit
 # its cache to /data/db, which mongod owns and makes non-writable at runtime.
 export HOME="$VARIETY_DOCKERDIR"
 
-npm install
+npm install || { echo "npm install failed"; exit 1; }
+
+MAX_RETRIES=60
+retries=0
 
 while ! curl --silent http://localhost:$MONGODB_PORT > /dev/null 2>&1
 do
+  if [ "$retries" -ge "$MAX_RETRIES" ]; then
+    echo "MongoDB did not become ready after $MAX_RETRIES seconds, giving up."
+    exit 1
+  fi
   echo "Waiting for MongoDB connection…"
   sleep 1
+  retries=$((retries + 1))
 done
 echo "MongoDB ready"
 
