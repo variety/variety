@@ -23,4 +23,4 @@ RUN export NVM_DIR="$HOME/.nvm"  && \
     nvm install "${NODEJS_VERSION}" && \
     nvm install-latest-npm
 
-ENTRYPOINT ["/opt/variety/docker/init"]
+ENTRYPOINT ["/opt/variety/docker/init.sh"]
