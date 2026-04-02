@@ -7,7 +7,7 @@ finding rare keys.
 
 Please see https://github.com/variety/variety for details.
 
-Released by Maypop Inc, © 2012–2023, under the MIT License. */
+Released by James Cropcho, © 2012–2026, under the MIT License. */
 
 (function () {
   'use strict'; // wraps everything for which we can use strict mode -JC
