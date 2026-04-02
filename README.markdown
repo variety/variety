@@ -60,7 +60,7 @@ Perhaps you want to ignore a collection's oldest documents, and only see what th
 
 One can apply a "limit" constraint, which analyzes only the newest documents in a collection ([unless sorting](https://github.com/variety/variety#analyze-documents-sorted-in-a-particular-order)), like so:
 
-	$ mongo test --eval "var collection = 'users', limit = 1" variety.js
+    $ mongo test --eval "var collection = 'users', limit = 1" variety.js
 
 Let's examine the results closely:
 
@@ -74,7 +74,7 @@ Let's examine the results closely:
 
 We are only examining the last document here ("limit = 1"). It belongs to Geneviève, and only contains the _id, name and bio fields. So it makes sense these are the only three keys.
 
-### Analyze Documents to a Maximum Depth
+### Analyze Documents to a Maximum Depth ###
 
 Perhaps you have a potentially very deep nested object structure, and you don't want to see more than a few levels deep in the analysis.
 
@@ -214,10 +214,10 @@ If the source collection's name is ```users```, Variety will store results in co
 
 To persist to an alternate MongoDB database, you may specify the following parameters:
 
-  * `resultsDatabase` - The database to store Variety results in. Accepts either a database name or a `host[:port]/database` URL.
-  * `resultsCollection` - Collection to store Variety results in. **WARNING:** This collection is dropped before results are inserted.
-  * `resultsUser` - MongoDB username for results database
-  * `resultsPass` - MongoDB password for results database
+- `resultsDatabase` - The database to store Variety results in. Accepts either a database name or a `host[:port]/database` URL.
+- `resultsCollection` - Collection to store Variety results in. **WARNING:** This collection is dropped before results are inserted.
+- `resultsUser` - MongoDB username for results database
+- `resultsPass` - MongoDB password for results database
 
 ```
 $ mongo test --quiet --eval "var collection = 'users', persistResults=true, resultsDatabase='db.example.com/variety' variety.js
@@ -228,7 +228,7 @@ Variety expects keys to be well formed, not having any `.`s in them (MongoDB 2.4
 
     $ mongo test --quiet --eval "var collection = 'users', arrayEscape = 'YY'" variety.js
 
-### Command Line Interface
+### Command Line Interface ###
 Variety itself is command line friendly, as shown on examples above.
 But if you are a NPM and Node.js user, you could prefer the
 [variety-cli](https://github.com/variety/variety-cli) project. It simplifies usage of
@@ -282,15 +282,15 @@ I accept pull requests from forks. Very grateful to accept contributions from fo
 
 #### Core Maintainers ####
 
-* Tomáš Dvořák ([LinkedIn](https://www.linkedin.com/in/dvoraktomas/))
-* Eve Freeman ([Twitter](https://twitter.com/wefreema))
-* James Cropcho (original creator of Variety) ([Twitter](https://twitter.com/Cropcho))
+- Tomáš Dvořák ([LinkedIn](https://www.linkedin.com/in/dvoraktomas/))
+- Eve Freeman ([Github](https://github.com/freeeve))
+- James Cropcho (original creator of Variety) ([Twitter/X](https://x.com/Cropcho))
 
 #### Special Thanks ####
 
-Additional special thanks to Gaëtan Voyer-Perraul ([@gatesvp](https://twitter.com/#!/@gatesvp)) and Kristina Chodorow ([@kchodorow](https://twitter.com/#!/kchodorow)) for answering other people's questions about how to do this on Stack Overflow, thereby providing me with the initial seed of code which grew into this tool.
+Additional special thanks to Gaëtan Voyer-Perraul ([@gatesvp](https://x.com/#!/@gatesvp)) and Kristina Chodorow ([@kchodorow](https://x.com/#!/kchodorow)) for answering other people's questions about how to do this on Stack Overflow, thereby providing me with the initial seed of code which grew into this tool.
 
-Much thanks also, to Kyle Banker ([@Hwaet](https://twitter.com/#!/hwaet)) for writing an unusually good book on MongoDB, which has taught me everything I know about it so far.
+Much thanks also, to Kyle Banker ([@Hwaet](https://x.com/#!/hwaet)) for writing an unusually good book on MongoDB, which has taught me everything I know about it so far.
 
 #### Tools Which Use Variety (Open Source) ####
 
@@ -299,6 +299,5 @@ Know of one? Built one? Let us know!
 ##### Stay Safe #####
 
 I have every reason to believe this tool will **not** corrupt your data or harm your computer. But if I were you, I would not use it in a production environment.
-
 
 Released by James Cropcho, © 2012–2026, under the [MIT License](http://www.opensource.org/licenses/MIT).

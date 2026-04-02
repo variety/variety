@@ -1,0 +1,20 @@
+#!/bin/sh
+
+echo "→ ESLint (JavaScript)"
+npm run lint
+
+echo "→ jsonlint (JSON)"
+npm run lint:json
+
+echo "→ markdownlint (Markdown)"
+npm run lint:markdown
+
+echo "→ js-yaml (YAML)"
+npm run lint:yaml
+
+echo "→ shellcheck (shell scripts)"
+if command -v shellcheck >/dev/null 2>&1; then
+  shellcheck bin/variety docker/init spec/bin/test-on-docker
+else
+  echo "  shellcheck not installed — skipping (install via your OS package manager to enable)"
+fi

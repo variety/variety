@@ -2,41 +2,56 @@
   "name": "variety",
   "version": "1.5.1",
   "description": "A MongoDB schema analyzer",
-  "keywords": ["MongoDB", "Variety", "schema", "schema analyzer", "schema analysis", "NoSQL"],
+  "keywords": [
+    "MongoDB",
+    "Variety",
+    "schema",
+    "schema analyzer",
+    "schema analysis",
+    "NoSQL"
+  ],
   "homepage": "https://github.com/variety/variety#readme",
   "bugs": "https://github.com/variety/variety/issues",
   "license": "MIT",
   "author": {
-    "name":  "James Kirk Cropcho",
-    "web":   "https://twitter.com/Cropcho"
+    "name": "James Kirk Cropcho",
+    "web": "https://x.com/Cropcho"
   },
   "contributors": [
     {
-      "name":  "Tomáš Dvořák",
+      "name": "Tomáš Dvořák",
       "email": "todvora@gmail.com",
-      "web":   "https://www.tomas-dvorak.cz/"
+      "web": "https://www.tomas-dvorak.cz/"
     },
     {
-      "name":  "Eve Freeman",
-      "web":   "https://twitter.com/wefreema"
+      "name": "Eve Freeman",
+      "web": "https://github.com/freeeve"
     },
     {
-      "name":  "James Kirk Cropcho",
-      "web":   "https://twitter.com/Cropcho"
-  } ],
-  "files": [ "variety.js", "bin/variety" ],
+      "name": "James Kirk Cropcho",
+      "web": "https://x.com/Cropcho"
+    }
+  ],
+  "files": [
+    "variety.js",
+    "bin/variety"
+  ],
   "main": "variety.js",
   "bin": "./bin/variety",
   "repository": {
     "type": "git",
-    "url":  "https://github.com/variety/variety.git"
+    "url": "https://github.com/variety/variety.git"
   },
   "scripts": {
-    "lint":        "./node_modules/.bin/eslint . .eslintrc.js --ignore-pattern '!.eslintrc.js'",
-    "lint:fix":    "./node_modules/.bin/eslint . .eslintrc.js --ignore-pattern '!.eslintrc.js' --fix",
-    "test":        "npm run lint && npm run test:docker",
-    "test:docker": "./spec/bin/test-on-docker",
-    "test:mocha":  "./node_modules/.bin/mocha --compilers js:babel-core/register --require babel-polyfill  --recursive --reporter spec --timeout 15000 spec"
+    "prepare":       "husky",
+    "lint":          "./node_modules/.bin/eslint . .eslintrc.js --ignore-pattern '!.eslintrc.js'",
+    "lint:fix":      "./node_modules/.bin/eslint . .eslintrc.js --ignore-pattern '!.eslintrc.js' --fix",
+    "lint:json":     "find . \\( -name '*.json' ! -name 'package-lock.json' \\) -not -path '*/node_modules/*' -not -path './.git/*' | xargs ./node_modules/.bin/jsonlint -q && ./node_modules/.bin/jsonlint -q .babelrc",
+    "lint:markdown": "./node_modules/.bin/markdownlint '**/*.md' '**/*.markdown' --ignore node_modules",
+    "lint:yaml":     "find . -name '*.yml' -not -path '*/node_modules/*' -not -path './.git/*' | xargs ./node_modules/.bin/js-yaml > /dev/null",
+    "test":          "npm run lint && npm run test:docker",
+    "test:docker":   "./spec/bin/test-on-docker",
+    "test:mocha":    "./node_modules/.bin/mocha --compilers js:babel-core/register --require babel-polyfill  --recursive --reporter spec --timeout 15000 spec"
   },
   "devDependencies": {
     "babel-core": "^6.7.2",
@@ -46,6 +61,10 @@
     "babel-preset-stage-0": "^6.5.0",
     "child-process-promise": "^1.1.0",
     "eslint": "^2.4.0",
+    "husky": "^9.1.7",
+    "js-yaml": "^4.1.1",
+    "jsonlint": "^1.6.3",
+    "markdownlint-cli": "^0.48.0",
     "mocha": "^2.4.5",
     "mongodb": "^2.1.7"
   }
