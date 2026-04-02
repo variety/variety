@@ -8,8 +8,8 @@ if [ -z "$RUNNER" ]; then
 fi
 
 # default versions if none in env
-MONGODB_VERSION=${MONGODB_VERSION:=3}
-NODEJS_VERSION=${NODEJS_VERSION:=16}
+MONGODB_VERSION=${MONGODB_VERSION:=4.4}
+NODEJS_VERSION=${NODEJS_VERSION:=22}
 
 NVM_VERSION=0.39.2
 VARIETY_VERSION=$(node -p -e "require('./package.json').version")

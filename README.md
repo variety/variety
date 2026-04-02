@@ -269,10 +269,19 @@ If you have Docker installed and don't want to test against your own MongoDB ins
 you can execute tests against dockerized MongoDB:
 
 ```
-MONGODB_VERSION=3.2 npm run test:docker
+npm run test:docker
 ```
 The script downloads one of [official MongoDB images](https://hub.docker.com/_/mongo/) (based on your provided version),
 starts the database, executes test suite against it (inside the container) and stops the DB.
+
+Dockerized tests default to MongoDB 4.4 on Node.js 22. You can override `MONGODB_VERSION` and `NODEJS_VERSION` when you want to try another supported combination:
+
+```
+MONGODB_VERSION=5.0 npm run test:docker
+MONGODB_VERSION=5.0 NODEJS_VERSION=24 npm run test:docker
+```
+
+GitHub Actions runs the supported MongoDB matrix (`4.4`, `5.0`) on Node.js 22, plus a single Node.js 24 smoke test against MongoDB 5.0. The older official MongoDB `4.0` and `4.2` images are too old for Node.js 22+ in this Docker-based test harness.
 
 ##### Linting #####
 

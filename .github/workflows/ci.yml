@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   lint:
-    name: Lint
+    name: Lint (Node 22)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -30,11 +30,11 @@ jobs:
       - run: npm run lint:shell
 
   test:
-    name: Test (MongoDB ${{ matrix.mongodb-version }})
+    name: Test (Node 22, MongoDB ${{ matrix.mongodb-version }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        mongodb-version: ['4.0', '4.2', '4.4', '5.0']
+        mongodb-version: ['4.4', '5.0']
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -48,3 +48,22 @@ jobs:
       - run: npm run test:docker
         env:
           MONGODB_VERSION: ${{ matrix.mongodb-version }}
+          NODEJS_VERSION: '22'
+
+  test-smoke:
+    name: Smoke Test (Node 24, MongoDB 5.0)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm install
+        env:
+          HUSKY: '0'
+      - run: mkdir -p docker/Dockerfiles
+      - run: npm run test:docker
+        env:
+          MONGODB_VERSION: '5.0'
+          NODEJS_VERSION: '24'
