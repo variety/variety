@@ -8,7 +8,7 @@ const parseParams = (output) => {
   return output
     .split('\n') // split by new line
     .filter(line => line.indexOf('Using') === 0) // take only lines starting with Using
-    .map(line => /^Using\s(\w+)\sof\s(.*)$/.exec(line)) // parse with regular expression
+    .map(line => /^Using\s(\S+)\sof\s(.*)$/.exec(line)) // parse with regular expression
     .filter(match => match) // filter out non-matching lines
     .reduce((acc, match) => ({ ...acc, [match[1]]: JSON.parse(match[2]) }), {}); // reduce to params object
 };
@@ -54,13 +54,46 @@ describe('Parameters parsing', () => {
   });
 
   it('should recognize unknown collection', async () => {
+    const unknownCollection = '--unknown--';
     try {
-      await test.runAnalysis({collection:'--unknown--'});
-      assert.fail('Expected runAnalysis to throw an error for unknown collection');
+      await test.runAnalysis({collection: unknownCollection});
+      assert.fail(`Expected runAnalysis to throw an error for unknown collection "${unknownCollection}"`);
     } catch(err) {
       assert.ok(err.code > 0);
       assert.ok(err.stdout.indexOf('The collection specified (--unknown--) in the database specified (test) does not exist or is empty.') > -1);
     }
+  });
+
+  it('should return empty object when there are no Using lines', () => {
+    const output = [
+      'Some unrelated log line',
+      'Another line without the keyword'
+    ].join('\n');
+
+    const params = parseParams(output);
+    assert.deepEqual(params, {});
+  });
+
+  it('should ignore non-matching Using lines and parse matching ones', () => {
+    const output = [
+      'Using collection users', // missing "of" and JSON part, will not match regex
+      'Using collection of {"name":"Alice"}'
+    ].join('\n');
+
+    const params = parseParams(output);
+    assert.deepEqual(params.collection, { name: 'Alice' });
+    assert.strictEqual(Object.keys(params).length, 1);
+  });
+
+  it('should throw when Using line contains invalid JSON', () => {
+    const output = 'Using collection of {invalidJson}';
+
+    assert.throws(
+      () => {
+        parseParams(output);
+      },
+      SyntaxError
+    );
   });
 
 });
