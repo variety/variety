@@ -54,9 +54,10 @@ describe('Parameters parsing', () => {
   });
 
   it('should recognize unknown collection', async () => {
+    const unknownCollection = '--unknown--';
     try {
-      await test.runAnalysis({collection:'--unknown--'});
-      assert.fail('Expected runAnalysis to throw an error for unknown collection');
+      await test.runAnalysis({collection: unknownCollection});
+      assert.fail(`Expected runAnalysis to throw an error for unknown collection "${unknownCollection}"`);
     } catch(err) {
       assert.ok(err.code > 0);
       assert.ok(err.stdout.indexOf('The collection specified (--unknown--) in the database specified (test) does not exist or is empty.') > -1);
