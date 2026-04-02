@@ -10,5 +10,5 @@
 CMD="mongo $DB --eval $EVAL_CMDS $VARIETYJS_DIR/variety.js"
 
 echo
-echo $CMD
+echo "$CMD"
 $CMD
