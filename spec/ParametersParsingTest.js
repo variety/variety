@@ -52,14 +52,13 @@ describe('Parameters parsing', () => {
     assert.deepEqual(params.query, {name:'Harry'});
   });
 
-  it('should recognize unknown collection', async (done) => {
+  it('should recognize unknown collection', async () => {
     try {
       await test.runAnalysis({collection:'--unknown--'});
-      done(new Error('Should throw an exception!'));
+      throw new Error('Should throw an exception!');
     } catch(err) {
       assert.ok(err.code > 0);
       assert.ok(err.stdout.indexOf('The collection specified (--unknown--) in the database specified (test) does not exist or is empty.') > -1);
-      done();
     }
   });
 
