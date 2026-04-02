@@ -66,6 +66,6 @@
     "jsonlint": "^1.6.3",
     "markdownlint-cli": "^0.48.0",
     "mocha": "^2.4.5",
-    "mongodb": "^2.1.7"
+    "mongodb": "^3.1.13"
   }
 }
