@@ -1,4 +1,4 @@
-FROM mongo:${MONGODB_VERSION}
+FROM docker.io/library/mongo:${MONGODB_VERSION}
 
 # The base image pre-configures the MongoDB apt repo, whose signing key has
 # expired for older releases. Remove it before updating — MongoDB is already

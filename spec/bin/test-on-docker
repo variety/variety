@@ -1,6 +1,12 @@
 #! /usr/bin/env bash
 set -e
 
+RUNNER=$(command -v docker 2>/dev/null || command -v podman 2>/dev/null)
+if [ -z "$RUNNER" ]; then
+  echo "Error: neither docker nor podman found in PATH" >&2
+  exit 1
+fi
+
 # default versions if none in env
 MONGODB_VERSION=${MONGODB_VERSION:=3}
 NODEJS_VERSION=${NODEJS_VERSION:=16}
@@ -27,10 +33,12 @@ echo "* "
 echo "* NodeJS  v$NODEJS_VERSION"
 echo "* MongoDB v$MONGODB_VERSION"
 echo "* "
-echo "* $(docker --version)"
+echo "* $("$RUNNER" --version)"
 echo "* "
 echo "****************************************"
 echo
+
+mkdir -p "$DOCKERFILES_DIR"
 
 sed -e "s/\${MONGODB_VERSION}/$MONGODB_VERSION/g" \
     -e "s/\${NVM_VERSION}/$NVM_VERSION/g"         \
@@ -38,7 +46,6 @@ sed -e "s/\${MONGODB_VERSION}/$MONGODB_VERSION/g" \
     docker/Dockerfile.template > "$DOCKERFILES_DIR/$DOCKERFILE"
 
 echo "Building Docker image for Variety tests…"
-sudo docker build --no-cache --tag "$DOCKERIMAGE" -f "$DOCKERFILES_DIR/$DOCKERFILE" .
-#sudo docker build --tag $DOCKERIMAGE -f $DOCKERFILES_DIR/$DOCKERFILE .
+"$RUNNER" build --no-cache --tag "$DOCKERIMAGE" -f "$DOCKERFILES_DIR/$DOCKERFILE" .
 
-sudo docker run --rm --tty --volume "$VARIETY_SOURCECODE_PATH:$VARIETY_DOCKERDIR" --name "$CONTAINER" "$DOCKERIMAGE"
+"$RUNNER" run --rm --tty --volume "$VARIETY_SOURCECODE_PATH:$VARIETY_DOCKERDIR" --name "$CONTAINER" "$DOCKERIMAGE"
