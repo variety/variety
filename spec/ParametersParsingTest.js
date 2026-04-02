@@ -56,7 +56,7 @@ describe('Parameters parsing', () => {
   it('should recognize unknown collection', async () => {
     try {
       await test.runAnalysis({collection:'--unknown--'});
-      throw new Error('Expected runAnalysis to throw an error for unknown collection');
+      assert.fail('Expected runAnalysis to throw an error for unknown collection');
     } catch(err) {
       assert.ok(err.code > 0);
       assert.ok(err.stdout.indexOf('The collection specified (--unknown--) in the database specified (test) does not exist or is empty.') > -1);
