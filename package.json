@@ -55,6 +55,9 @@
     "test:docker":   "./spec/bin/test-on-docker",
     "test:mocha":    "./node_modules/.bin/mocha --require @babel/register --recursive --reporter spec --timeout 15000 spec"
   },
+  "overrides": {
+    "serialize-javascript": "7.0.5"
+  },
   "devDependencies": {
     "@babel/core": "^7.29.0",
     "@babel/eslint-parser": "^7.28.6",
