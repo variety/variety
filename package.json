@@ -71,7 +71,7 @@
     "js-yaml": "^4.1.1",
     "markdownlint-cli": "^0.48.0",
     "mocha": "^11.7.5",
-    "mongodb": "^4.17.2",
+    "mongodb": "^5.9.2",
     "promisify-child-process": "^5.0.1"
   }
 }
