@@ -23,7 +23,7 @@ npm install || { echo "npm install failed"; exit 1; }
 MAX_RETRIES=60
 retries=0
 
-while ! curl --silent http://localhost:$MONGODB_PORT > /dev/null 2>&1
+while ! mongosh --quiet --eval "db.adminCommand('ping')" > /dev/null 2>&1
 do
   if [ "$retries" -ge "$MAX_RETRIES" ]; then
     echo "MongoDB did not become ready after $MAX_RETRIES seconds, giving up."
