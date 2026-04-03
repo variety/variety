@@ -1,5 +1,5 @@
 # Meet Variety, a Schema Analyzer for MongoDB ###
-This lightweight tool helps you get a sense of your application's schema, as well as any outliers to that schema. Particularly useful when you inherit a codebase with data dump and want to quickly learn how the data's structured. Also useful for finding rare keys.
+This lightweight tool helps you get a sense of your application's schema, as well as any outliers to that schema. Particularly useful when you inherit a codebase with a data dump and want to quickly learn how the data's structured. Also useful for finding rare keys.
 
 ***
 
@@ -281,7 +281,7 @@ Example of a simplified command-line usage:
 ```
 variety test/users --outputFormat='json' --quiet
 ```
-For more details see the [documentation of variety-cli project](https://github.com/variety/variety-cli).
+For more details see the [documentation of the variety-cli project](https://github.com/variety/variety-cli).
 
 ##### "But my dad told me MongoDB is a schemaless database!" #####
 
@@ -313,8 +313,8 @@ you can execute tests against dockerized MongoDB:
 ```
 npm run test:docker
 ```
-The script downloads one of [official MongoDB images](https://hub.docker.com/_/mongo/) (based on your provided version),
-starts the database, executes test suite against it (inside the container) and stops the DB.
+The script downloads one of [the official MongoDB images](https://hub.docker.com/_/mongo/) (based on your provided version),
+starts the database, executes the test suite against it (inside the container) and stops the DB.
 
 The Docker harness prefers `mongosh` when it is available and falls back to the legacy `mongo` shell for older images.
 
