@@ -156,6 +156,7 @@ One can also apply a `lastValue` constraint to show values of the last document.
 
 If used without `sort`, it fetches values from the last naturally sorted document.
 `Date` is converted into `timestamp`, `ObjectId` into `string`, and binary data into hex. Other types are shown in square brackets.
+Variety reports BSON wrapper types such as `Decimal128`, `Timestamp`, `Code`, `BSONRegExp`, `MinKey`, `MaxKey`, and `DBRef` by their BSON type names in the `types` column.
 
 ### Render Output As JSON For Easy Ingestion and Parsing ###
 
