@@ -16,7 +16,7 @@ RUN apt-get update  -qq && \
 # hadolint ignore=DL4006
 RUN curl --silent --show-error --location \
       --output /tmp/install_nvm.sh \
-      "https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh" && \
+      "https://raw.githubusercontent.com/nvm-sh/nvm/c8e4d1b5f16c5b5f9cd6ef450ee8094b6d6510f0/install.sh" && \
     bash /tmp/install_nvm.sh > /dev/null && \
     rm -f /tmp/install_nvm.sh && \
     export NVM_DIR="$HOME/.nvm"  && \
