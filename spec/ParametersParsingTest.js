@@ -1,8 +1,10 @@
 import assert from 'assert';
+import execute from './utils/MongoShell.js';
 import Tester from './utils/Tester.js';
 import sampleData from './assets/SampleData.js';
 
 const test = new Tester('test', 'users');
+const mongodbPort = Number(process.env.MONGODB_PORT || 27017);
 
 const parseParams = (output) => {
   return output
@@ -95,6 +97,23 @@ describe('Parameters parsing', () => {
       },
       SyntaxError
     );
+  });
+
+  it('should log BSON values as parseable JSON when tojson is unavailable', async () => {
+    const doc = await test.coll.findOne({name: 'Tom'});
+    const output = await execute(
+      'test',
+      null,
+      `"var collection='users'; var tojson=undefined; var query={_id:ObjectId('${doc._id.toHexString()}')}"`,
+      test.getVarietyPath(),
+      false,
+      mongodbPort
+    );
+
+    const params = parseParams(output);
+    assert.deepEqual(params.query, {
+      _id: { $oid: doc._id.toHexString() }
+    });
   });
 
 });
