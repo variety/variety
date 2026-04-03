@@ -198,7 +198,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     if (binData && typeof binData.subtype === 'function') {
       return binData.subtype();
     }
-    if (binData && typeof binData.sub_type !== 'undefined') {
+    if (typeof binData.sub_type !== 'undefined') {
       return binData.sub_type;
     }
     return undefined;
