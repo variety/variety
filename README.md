@@ -81,7 +81,7 @@ We are only examining the last document here ("limit = 1"). It belongs to Genevi
 
 Perhaps you have a potentially very deep nested object structure, and you don't want to see more than a few levels deep in the analysis.
 
-One can apply a "maxDepth" constraint, which limits the depth Variety will recursively search to find new objects.
+One can apply a `maxDepth` constraint, which limits the depth Variety will recursively search to find new objects.
 
     db.users.insert({name:"Walter", someNestedObject:{a:{b:{c:{d:{e:1}}}}}});
 
