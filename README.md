@@ -154,8 +154,8 @@ One can also apply a `lastValue` constraint to show values of the last document.
     | uid             | BinData-UUID |           1 |    100.0 | 3b241101e2bb42558caf4136c566a962 |
     +--------------------------------------------------------------------------------------------+
 
-If use without `sort` it will fetch values of the last natural sorted document.
-`Date` is converted into `timestamp`, `ObjectId` into `string` and binary data as hex. Other types shown in square brackets.
+If used without `sort`, it fetches values from the last naturally sorted document.
+`Date` is converted into `timestamp`, `ObjectId` into `string`, and binary data into hex. Other types are shown in square brackets.
 
 ### Render Output As JSON For Easy Ingestion and Parsing ###
 
@@ -164,14 +164,14 @@ Variety supports two different output formats:
 - ASCII: nicely formatted tables (as in this README)
 - JSON: valid JSON results for subsequent processing in other tools (see also [quiet option](#quiet-option))
 
-Default format is ```ascii```. You can select the type of format with property ```outputFormat``` provided to Variety. Valid values are ```ascii``` and ```json```.
+Default format is `ascii`. You can select the format with the `outputFormat` property provided to Variety. Valid values are `ascii` and `json`.
 
     $ mongosh test --quiet --eval "var collection = 'users', outputFormat='json'" variety.js
 
 #### Quiet Option ####
 
-Both MongoDB and Variety output some additional information to standard output. If you want to remove this info, you can use ```--quiet``` option provided to the MongoDB shell executable.
-Variety can also read that option and mute unnecessary output. This is useful in connection with ```outputFormat=json```. You would then receive only JSON, without any other characters around it.
+Both MongoDB and Variety output some additional information to standard output. If you want to remove this info, you can use the `--quiet` option provided by the MongoDB shell executable.
+Variety can also read that option and mute unnecessary output. This is useful in connection with `outputFormat=json`. You would then receive only JSON, without any other characters around it.
 
     $ mongosh test --quiet --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
 
@@ -205,14 +205,14 @@ Sometimes you inherit a database full of junk.  Maybe the previous developer put
 
 #### Secondary Reads ####
 Analyzing a large collection on a busy replica set primary could take a lot longer than if you read from a secondary. To do so, we have to tell MongoDB it's okay to perform secondary reads
-by setting the ```slaveOk``` property to ```true```:
+by setting the `slaveOk` property to `true`:
 
     $ mongosh secondary.replicaset.member:31337/somedb --eval "var collection = 'users', slaveOk = true" variety.js
 
 ### Save Results in MongoDB For Future Use ###
-By default, Variety prints results only to standard output and does not store them in MongoDB itself. If you want to persist them automatically in MongoDB for later usage, you can set the parameter ```persistResults```.
-Variety then stores result documents in database ```varietyResults``` and the collection name is derived from the source collection's name.
-If the source collection's name is ```users```, Variety will store results in collection ```usersKeys``` under ```varietyResults``` database.
+By default, Variety prints results only to standard output and does not store them in MongoDB itself. If you want to persist them automatically in MongoDB for later usage, you can set the `persistResults` parameter.
+Variety then stores result documents in the `varietyResults` database, and the collection name is derived from the source collection's name.
+If the source collection's name is `users`, Variety stores results in the `usersKeys` collection under the `varietyResults` database.
 
     $ mongosh test --quiet --eval "var collection = 'users', persistResults=true" variety.js
 
@@ -236,7 +236,7 @@ Variety expects keys to be well formed, not having any `.`s in them (MongoDB 2.4
 Variety itself is command line friendly, as shown on examples above.
 But if you are a NPM and Node.js user, you could prefer the
 [variety-cli](https://github.com/variety/variety-cli) project. It simplifies usage of
-Variety and removes all the complexity of passing variables in the ```--eval``` argument and
+Variety and removes all the complexity of passing variables in the `--eval` argument and
 providing a path to the variety.js library.
 
 Example of a simplified command-line usage:
@@ -302,7 +302,7 @@ Pre-commit hooks are managed by [Husky](https://typierce.github.io/husky/) and i
 - `npm run lint:shell` — shellcheck (shell scripts)
 - `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for Node-side helper code under `spec/utils`
 
-The last two require a container runtime: [Docker](https://www.docker.com/) is used if available, with [Podman](https://podman.io/) as a fallback. At least one must be installed.
+The container-based checks, `npm run lint:dockerfile` and `npm run lint:shell`, require a container runtime. [Docker](https://www.docker.com/) is used if available, with [Podman](https://podman.io/) as a fallback. At least one must be installed.
 
 #### Reporting Issues / Contributing ####
 
