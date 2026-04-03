@@ -206,6 +206,70 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     return shellToJson(binData);
   };
 
+  var getRawBsonTypeName = function(thing) {
+    if (!thing || typeof thing !== 'object') {
+      return undefined;
+    }
+
+    if (typeof thing._bsontype === 'string') {
+      return thing._bsontype;
+    }
+
+    if (thing.constructor && typeof thing.constructor.name === 'string') {
+      return thing.constructor.name;
+    }
+
+    return undefined;
+  };
+
+  var normalizeBsonTypeName = function(rawTypeName) {
+    var typeMap = {
+      Binary: 'Binary',
+      BinData: 'Binary',
+      UUID: 'Binary',
+      Long: 'NumberLong',
+      NumberLong: 'NumberLong',
+      ObjectId: 'ObjectId',
+      Decimal128: 'Decimal128',
+      NumberDecimal: 'Decimal128',
+      Timestamp: 'Timestamp',
+      Code: 'Code',
+      RegExp: 'BSONRegExp',
+      BSONRegExp: 'BSONRegExp',
+      MinKey: 'MinKey',
+      MaxKey: 'MaxKey',
+      DBRef: 'DBRef',
+      Double: 'Double',
+      Int32: 'Int32',
+      BSONSymbol: 'BSONSymbol'
+    };
+
+    return typeMap[rawTypeName];
+  };
+
+  var getSpecialTypeName = function(thing) {
+    // Issue #164 (@vitorcampos-db): BSON wrappers like Decimal128 should not
+    // fall through as plain Object values.
+    var normalizedType = normalizeBsonTypeName(getRawBsonTypeName(thing));
+    if (typeof normalizedType !== 'undefined') {
+      return normalizedType;
+    }
+
+    if (typeof NumberLong !== 'undefined' && thing instanceof NumberLong) {
+      return 'NumberLong';
+    }
+
+    if (typeof ObjectId !== 'undefined' && thing instanceof ObjectId) {
+      return 'ObjectId';
+    }
+
+    if (typeof BinData !== 'undefined' && thing instanceof BinData) {
+      return 'Binary';
+    }
+
+    return undefined;
+  };
+
   var varietyTypeOf = function(thing) {
     if (!arguments.length) { throw 'varietyTypeOf() requires an argument'; }
 
@@ -217,17 +281,14 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
       var typeofThing = typeof thing; // edgecase of JSHint's "singleGroups"
       return typeofThing[0].toUpperCase() + typeofThing.slice(1);
     } else {
+      var specialType = getSpecialTypeName(thing);
       if (Array.isArray(thing)) {
         return 'Array';
       } else if (thing === null) {
         return 'null';
       } else if (thing instanceof Date) {
         return 'Date';
-      } else if(thing instanceof NumberLong) {
-        return 'NumberLong';
-      } else if (thing instanceof ObjectId) {
-        return 'ObjectId';
-      } else if (thing instanceof BinData) {
+      } else if (specialType === 'Binary') {
         var binDataTypes = {};
         binDataTypes[0x00] = 'generic';
         binDataTypes[0x01] = 'function';
@@ -237,6 +298,8 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
         binDataTypes[0x05] = 'MD5';
         binDataTypes[0x80] = 'user';
         return 'BinData-' + binDataTypes[getBinDataSubtype(thing)];
+      } else if (typeof specialType !== 'undefined') {
+        return specialType;
       } else {
         return 'Object';
       }
@@ -248,16 +311,10 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
   var serializeDoc = function(doc, maxDepth, excludeSubkeys) {
     var result = {};
 
-    //determining if an object is a Hash vs Array vs something else is hard
-    //returns true, if object in argument may have nested objects and makes sense to analyse its content
+    // Recurse only into plain objects and arrays; BSON wrappers should stay scalar.
     function isHash(v) {
-      var isArray = Array.isArray(v);
-      var isObject = typeof v === 'object';
-      var specialObject = v instanceof Date ||
-                        v instanceof ObjectId ||
-                        v instanceof BinData ||
-                        v instanceof NumberLong;
-      return !specialObject && (isArray || isObject);
+      var type = varietyTypeOf(v);
+      return type === 'Array' || type === 'Object';
     }
 
     var arrayRegex = new RegExp('\\.' + config.arrayEscape + '\\d+' + config.arrayEscape + '\\.', 'g');
