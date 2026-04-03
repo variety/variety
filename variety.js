@@ -43,6 +43,10 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     print(JSON.stringify(value, null, 2));
   };
 
+  var createKeyMap = function() {
+    return Object.create(null);
+  };
+
   var getDatabase = function(name) {
     if (typeof db.getSisterDB === 'function') {
       return db.getSisterDB(name);
@@ -128,7 +132,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     read('lastValue', false);
 
     // Translate excludeSubkeys into a set-like object for compatibility.
-    config.excludeSubkeys = config.excludeSubkeys.reduce(function (result, item) { result[item+'.'] = true; return result; }, {});
+    config.excludeSubkeys = config.excludeSubkeys.reduce(function (result, item) { result[item+'.'] = true; return result; }, createKeyMap());
 
     return config;
   };
@@ -309,7 +313,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
   //flattens object keys to 1D. i.e. {'key1':1,{'key2':{'key3':2}}} becomes {'key1':1,'key2.key3':2}
   //we assume no '.' characters in the keys, which is an OK assumption for MongoDB
   var serializeDoc = function(doc, maxDepth, excludeSubkeys) {
-    var result = {};
+    var result = createKeyMap();
 
     // Recurse only into plain objects and arrays; BSON wrappers should stay scalar.
     function isHash(v) {
@@ -343,7 +347,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 
   // convert document to key-value map, where value is always an array with types as plain strings
   var analyseDocument = function(document) {
-    var result = {};
+    var result = createKeyMap();
     var arrayRegex = new RegExp('\\.' + config.arrayEscape + '\\d+' + config.arrayEscape, 'g');
     for (var key in document) {
       var value = document[key];
@@ -390,7 +394,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
         existing.totalOccurrences = existing.totalOccurrences + 1;
       } else {
         var lastValue = null;
-        var types = {};
+        var types = createKeyMap();
         for (var newType in docResult[key]) {
           types[newType] = 1;
           lastValue = docResult[key][newType];
@@ -469,7 +473,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
   // limit(0) meant "no limit" in MongoDB ≤7 but is rejected by MongoDB 8+; guard against it.
   var cursor = db.getCollection(config.collection).find(config.query).sort(config.sort);
   if (config.limit > 0) { cursor = cursor.limit(config.limit); }
-  var interimResults = reduceCursor(cursor, reduceDocuments, {});
+  var interimResults = reduceCursor(cursor, reduceDocuments, createKeyMap());
   var varietyResults = convertResults(interimResults, countMatchingDocuments(config.collection, config.query, config.limit))
     .filter(filter)
     .sort(comparator);
