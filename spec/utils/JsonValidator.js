@@ -25,12 +25,13 @@ export default class JsonValidator {
   }
 
   /**
-   * @param {string} key
-   * @param {number} totalOccurrences
-   * @param {number} percentContaining
-   * @param {Record<string, number>} types
-   */
-  validate(key, totalOccurrences, percentContaining, types) {
+ * @param {string} key
+ * @param {number} totalOccurrences
+ * @param {number} percentContaining
+ * @param {Record<string, number>} types
+ * @param {unknown} [lastValue]
+  */
+  validate(key, totalOccurrences, percentContaining, types, lastValue) {
     const row = this.results.find((item) => item._id.key === key);
     if(typeof row === 'undefined') {
       throw new Error(`Key '${key}' not present in results. Known keys are: [${this.results.map((item) => item._id.key).join(',')}].`);
@@ -38,6 +39,9 @@ export default class JsonValidator {
     equal(row.totalOccurrences, totalOccurrences, `TotalOccurrences of key ${key} does not match`);
     equal(row.percentContaining, percentContaining, `PercentContaining of key ${key} does not match`);
     deepEqual(row.value.types, types, `Types of key ${key} do not match`);
+    if (arguments.length === 5) {
+      deepEqual(row.lastValue, lastValue, `LastValue of key ${key} does not match`);
+    }
   }
 
   /**

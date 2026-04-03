@@ -12,11 +12,12 @@
     "strict": true,
     "target": "ES2022",
     "types": [
-      "node"
+      "node",
+      "mocha"
     ]
   },
   "include": [
-    "spec/utils/**/*.js",
-    "spec/utils/**/*.d.ts"
+    "spec/**/*.js",
+    "spec/**/*.d.ts"
   ]
 }

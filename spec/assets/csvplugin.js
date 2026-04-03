@@ -1,3 +1,14 @@
+/**
+ * @typedef {import('../utils/JsonValidator.js').VarietyResultRow} VarietyResultRow
+ * @typedef {{ delimiter?: string }} CsvPluginContext
+ * @typedef {{ delimiter?: string }} CsvPluginConfig
+ */
+
+/**
+ * @this {CsvPluginContext}
+ * @param {VarietyResultRow[]} varietyResults
+ * @returns {string}
+ */
 var getCsv = function(varietyResults) {
   var delimiter = this.delimiter || '|';
   var headers = ['key', 'types', 'occurrences', 'percents'];
@@ -8,6 +19,10 @@ var getCsv = function(varietyResults) {
   return table.concat(rows).join('\n');
 };
 
+/**
+ * @this {CsvPluginContext}
+ * @param {CsvPluginConfig} pluginConfig
+ */
 var setConfig = function(pluginConfig) {
   this.delimiter = pluginConfig.delimiter;
 };
