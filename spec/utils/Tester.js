@@ -84,12 +84,12 @@ export default class Tester {
 
   /**
    * @param {AnalysisOptions} options
-   * @param {boolean} [quiet=false]
+   * @param {boolean} [quiet=true]
    */
   async runJsonAnalysis(options, quiet) {
     const analysisOptions = { ...options, outputFormat: 'json' };
     /** @type {unknown} */
-    const parsedResults = JSON.parse(await this.runAnalysis(analysisOptions, quiet));
+    const parsedResults = JSON.parse(await this.runAnalysis(analysisOptions, typeof quiet === 'undefined' ? true : quiet));
     if (!Array.isArray(parsedResults)) {
       throw new Error('Expected JSON analysis output to be an array.');
     }
