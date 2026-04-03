@@ -22,7 +22,7 @@ export default class Tester {
   }
 
   async init(initialData) {
-    var connection = await this.connect();
+    const connection = await this.connect();
     await this.coll.deleteMany();
     await this.coll.insertMany(initialData);
     return connection;
