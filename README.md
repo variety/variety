@@ -239,6 +239,16 @@ Without `showArrayElements`, only the `tags` key (type `Array`) appears. With it
 
 This reveals that `tags` contains mixed element types across the collection.
 
+#### Compact Array Types ####
+
+If you want the parent array key itself to carry a more informative summary than plain `Array`, set `compactArrayTypes` to `true`:
+
+    $ mongosh test --eval "var collection = 'users', compactArrayTypes = true" variety.js
+
+With this option enabled, parent keys can be reported as values such as `Array(String)`, `Array(Number|String)`, or `Array(empty)` instead of just `Array`.
+
+This option is complementary to `showArrayElements`: `compactArrayTypes` makes the parent key more descriptive, while `showArrayElements` still exposes the `tags.XX`-style child keys when you want per-element detail.
+
 _Thanks to [@oufeng](https://github.com/oufeng) for suggesting this feature ([#166](https://github.com/variety/variety/issues/166))._
 
 #### Secondary Reads ####
