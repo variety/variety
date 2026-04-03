@@ -26,17 +26,17 @@ So, let's see what we've got here:
 
     $ mongosh test --eval "var collection = 'users'" variety.js
 
-    +------------------------------------------------------------------+
-    | key                | types              | occurrences | percents |
-    | ------------------ | ------------       | ----------- | -------- |
-    | _id                | ObjectId           |           5 |    100.0 |
-    | name               | String             |           5 |    100.0 |
-    | bio                | String             |           3 |     60.0 |
-    | birthday           | Date               |           2 |     40.0 |
-    | pets               | Array(1),String(1) |           2 |     40.0 |
-    | someBinData        | BinData-old        |           1 |     20.0 |
-    | someWeirdLegacyKey | String             |           1 |     20.0 |
-    +------------------------------------------------------------------+
+    +--------------------------------------------------------------------+
+    | key                | types                | occurrences | percents |
+    | ------------------ | -------------------- | ----------- | -------- |
+    | _id                | ObjectId             |           5 |    100.0 |
+    | name               | String               |           5 |    100.0 |
+    | bio                | String               |           3 |     60.0 |
+    | birthday           | Date                 |           2 |     40.0 |
+    | pets               | String (1),Array (1) |           2 |     40.0 |
+    | someBinData        | BinData-old          |           1 |     20.0 |
+    | someWeirdLegacyKey | String               |           1 |     20.0 |
+    +--------------------------------------------------------------------+
 
 _(`test` is the database containing the collection we are analyzing.)_
 
@@ -49,7 +49,7 @@ Interestingly, it looks like `pets` can be either an array or a string, but ther
 
 Seems like the first document created has a weird legacy key—those damn fools who built the prototype didn't clean up after themselves. If there were a thousand such early documents, I might cross-reference the codebase to confirm they are no longer used, and then delete them all. That way they'll not confuse any future developers.
 
-Results are stored for future use in a `varietyResults` database.
+By default, Variety prints results to standard output. If you want to store them in MongoDB for later use, see [Save Results in MongoDB For Future Use](#save-results-in-mongodb-for-future-use).
 
 ### See Progress When Analysis Takes a Long Time ###
 
@@ -86,7 +86,7 @@ Let's examine the results closely:
     | someBinData | BinData-old |           1 |    100.0 |
     +----------------------------------------------------+
 
-We are only examining the last document here (`limit = 1`). It belongs to Geneviève, and only contains the `_id`, `name` and `bio` fields. So it makes sense these are the only three keys.
+We are only examining the newest document here (`limit = 1`, using Variety's default `_id: -1` sort). It belongs to Jim, and only contains the `_id`, `name`, and `someBinData` fields. So it makes sense these are the only three keys.
 
 ### Analyze Documents to a Maximum Depth ###
 
@@ -145,7 +145,7 @@ One can apply a `sort` constraint, which analyzes documents in the specified ord
 
 ### Include Last Value ###
 
-One can also apply a `lastValue` constraint to show values of the last document.
+One can also apply a `lastValue` constraint to capture one representative value for each key.
 
     $ mongosh test --eval "var collection = 'orders', lastValue = true" variety.js
     
@@ -165,18 +165,18 @@ One can also apply a `lastValue` constraint to show values of the last document.
     | uid             | BinData-UUID |           1 |    100.0 | 3b241101e2bb42558caf4136c566a962 |
     +--------------------------------------------------------------------------------------------+
 
-If used without `sort`, it fetches values from the last naturally sorted document.
+Variety captures each `lastValue` from the first matching document it sees in the configured sort order. If you do not provide `sort`, it uses the default `{ _id: -1 }` ordering, so these values come from the newest matching documents encountered during the scan.
 `Date` is converted into `timestamp`, `ObjectId` into `string`, and binary data into hex. Other types are shown in square brackets.
 Variety reports BSON wrapper types such as `Decimal128`, `Timestamp`, `Code`, `BSONRegExp`, `MinKey`, `MaxKey`, and `DBRef` by their BSON type names in the `types` column.
 
 ### Render Output As JSON For Easy Ingestion and Parsing ###
 
-Variety supports two different output formats:
+Variety supports two built-in output formats:
 
 - ASCII: nicely formatted tables (as in this README)
 - JSON: valid JSON results for subsequent processing in other tools (see also [quiet option](#quiet-option))
 
-Default format is `ascii`. You can select the format with the `outputFormat` property provided to Variety. Valid values are `ascii` and `json`.
+Default format is `ascii`. You can select the format with the `outputFormat` property provided to Variety. Valid values are `ascii` and `json`. If you load a plugin with a `formatResults` hook, the plugin can emit a custom format instead.
 
     $ mongosh test --quiet --eval "var collection = 'users', outputFormat='json'" variety.js
 
@@ -185,7 +185,7 @@ Default format is `ascii`. You can select the format with the `outputFormat` pro
 Both MongoDB and Variety output some additional information to standard output. If you want to remove this info, you can use the `--quiet` option provided by the MongoDB shell executable.
 Variety can also read that option and mute unnecessary output. This is useful in connection with `outputFormat=json`. You would then receive only JSON, without any other characters around it.
 
-    $ mongosh test --quiet --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
+    $ mongosh test --quiet --eval "var collection = 'users', outputFormat='json', sort = { updated_at : -1 }" variety.js
 
 #### Log Keys and Types As They Arrive Option ####
 Sometimes you want to see the keys and types come in as it happens.  Maybe you have a large dataset and want accurate results, but you also are impatient and want to see something now.  Or maybe you have a large mangled dataset with crazy keys (that probably shouldn't be keys) and Variety is going out of memory.  This option will show you the keys and types as they come in and help you identify problems with your dataset without needing the Variety script to finish.  
@@ -230,12 +230,12 @@ For example, given documents like:
 
 Without `showArrayElements`, only the `tags` key (type `Array`) appears. With it enabled, you also see:
 
-    +--------------------------------------------------+
-    | key     | types          | occurrences | percents |
-    | ------- | -------------- | ----------- | -------- |
-    | tags    | Array          |           2 |    100.0 |
-    | tags.XX | Number, String |           2 |    100.0 |
-    +--------------------------------------------------+
+    +----------------------------------------------------------+
+    | key     | types                 | occurrences | percents |
+    | ------- | --------------------- | ----------- | -------- |
+    | tags    | Array                 |           2 |    100.0 |
+    | tags.XX | String (2),Number (1) |           2 |    100.0 |
+    +----------------------------------------------------------+
 
 This reveals that `tags` contains mixed element types across the collection.
 
@@ -271,13 +271,19 @@ Variety expects keys to be well formed, not having any `.`s in them (MongoDB 2.4
     $ mongosh test --quiet --eval "var collection = 'users', arrayEscape = 'YY'" variety.js
 
 ### Command Line Interface ###
-Variety itself is command line friendly, as shown on examples above.
-But if you are a NPM and Node.js user, you could prefer the
+This package ships a small `bin/variety` wrapper (published as the package's `variety` executable) that chooses `mongosh` when available and falls back to the legacy `mongo` shell.
+
+Example:
+```
+DB=test EVAL_CMDS="var collection = 'users', outputFormat='json'" VARIETYJS_DIR=. bin/variety
+```
+
+If you want a more fully featured argument-parsing CLI, you could also prefer the
 [variety-cli](https://github.com/variety/variety-cli) project. It simplifies usage of
 Variety and removes all the complexity of passing variables in the `--eval` argument and
 providing a path to the variety.js library.
 
-Example of a simplified command-line usage:
+Example of a simplified command-line usage with `variety-cli`:
 ```
 variety test/users --outputFormat='json' --quiet
 ```
@@ -291,23 +297,23 @@ A MongoDB collection does not enforce a predefined schema like a relational data
 
 ##### Dependencies #####
 
-Absolutely none, except MongoDB. Written in 100% JavaScript. _(`mongod`'s "noscripting" may not be set to true, and 'strict mode' must be disabled.)_
+At runtime, Variety itself depends only on MongoDB plus a MongoDB shell (`mongosh` is preferred; the legacy `mongo` shell still works where available). Development and testing add local npm dev dependencies.
 
 ##### Development, Hacking #####
-This project is NPM based and provides standard NPM functionality. As an additional (not required) dependency, [Docker](https://www.docker.com/) can be installed to test against different MongoDB versions.
+This project is NPM based and provides standard NPM functionality. As an additional (not required) dependency, [Docker](https://www.docker.com/) or [Podman](https://podman.io/) can be installed to test against different MongoDB versions.
 
 To install all dev dependencies call as usual:
 ```
 npm install
 ```
 
-`npm test` runs lint plus the default Docker-backed integration test lane. If you already have MongoDB listening on `localhost:27017` and want to run only the mocha suite directly, use:
+`npm test` runs ESLint plus the default Docker-backed integration test lane. If you already have MongoDB listening on `localhost:27017` and want to run only the mocha suite directly, use:
 
 ```
 npm run test:mocha
 ```
 
-If you have Docker installed and don't want to test against your own MongoDB instance,
+If you have Docker or Podman installed and don't want to test against your own MongoDB instance,
 you can execute tests against dockerized MongoDB:
 
 ```
