@@ -25,11 +25,11 @@ export default class JsonValidator {
   }
 
   /**
- * @param {string} key
- * @param {number} totalOccurrences
- * @param {number} percentContaining
- * @param {Record<string, number>} types
- * @param {unknown} [lastValue]
+   * @param {string} key
+   * @param {number} totalOccurrences
+   * @param {number} percentContaining
+   * @param {Record<string, number>} types
+   * @param {unknown} [lastValue]
   */
   validate(key, totalOccurrences, percentContaining, types, lastValue) {
     const row = this.results.find((item) => item._id.key === key);

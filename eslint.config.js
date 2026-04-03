@@ -51,10 +51,6 @@ const nodeModernizationRules = {
   'prefer-template': 'error',
 };
 
-const typedSpecUtilsRules = {
-  ...tseslint.configs.recommendedTypeChecked[2].rules,
-};
-
 module.exports = [
   js.configs.recommended,
   {
@@ -86,18 +82,14 @@ module.exports = [
     // the repo intentionally drops legacy mongo shell compatibility.
     rules: nodeModernizationRules,
   },
-  {
+  ...tseslint.config({
     files: ['spec/utils/**/*.js'],
+    extends: [tseslint.configs.recommendedTypeChecked],
     languageOptions: {
-      parser: tseslint.parser,
       parserOptions: {
         project: './tsconfig.checkjs.json',
         tsconfigRootDir: __dirname,
       },
     },
-    plugins: {
-      '@typescript-eslint': tseslint.plugin,
-    },
-    rules: typedSpecUtilsRules,
-  },
+  }),
 ];
