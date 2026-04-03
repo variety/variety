@@ -6,13 +6,19 @@ import sampleData from './assets/SampleData.js';
 const test = new Tester('test', 'users');
 const mongodbPort = Number(process.env.MONGODB_PORT || 27017);
 
+/** @typedef {Record<string, unknown>} ParsedParams */
+
+/**
+ * @param {string} output
+ * @returns {ParsedParams}
+ */
 const parseParams = (output) => {
   return output
     .split('\n') // split by new line
-    .filter(line => line.startsWith('Using')) // take only lines starting with Using
-    .map(line => /^Using\s(\S+)\sof\s(.*)$/.exec(line)) // parse with regular expression
-    .filter(match => match) // filter out non-matching lines
-    .reduce((acc, match) => ({ ...acc, [match[1]]: JSON.parse(match[2]) }), {}); // reduce to params object
+    .filter((line) => line.startsWith('Using')) // take only lines starting with Using
+    .map((line) => /^Using\s(\S+)\sof\s(.*)$/.exec(line)) // parse with regular expression
+    .filter((match) => match !== null) // filter out non-matching lines
+    .reduce((acc, match) => ({ ...acc, [match[1]]: JSON.parse(match[2]) }), /** @type {ParsedParams} */ ({})); // reduce to params object
 };
 
 describe('Parameters parsing', () => {
@@ -63,8 +69,9 @@ describe('Parameters parsing', () => {
       await test.runAnalysis({collection: unknownCollection});
       assert.fail(`Expected runAnalysis to throw an error for unknown collection "${unknownCollection}"`);
     } catch(err) {
-      assert.ok(err.code > 0);
-      assert.ok(err.stdout.includes('The collection specified (--unknown--) in the database specified (test) does not exist or is empty.'));
+      const error = /** @type {NodeJS.ErrnoException & { stdout?: string }} */ (err);
+      assert.ok(typeof error.code === 'number' && error.code > 0);
+      assert.ok(typeof error.stdout === 'string' && error.stdout.includes('The collection specified (--unknown--) in the database specified (test) does not exist or is empty.'));
     }
   });
 
@@ -101,7 +108,14 @@ describe('Parameters parsing', () => {
   });
 
   it('should log BSON values as parseable JSON when tojson is unavailable', async () => {
+    if (!test.coll) {
+      throw new Error('Collection connection is not available.');
+    }
+    /** @type {{ _id: import('mongodb').ObjectId } | null} */
     const doc = await test.coll.findOne({name: 'Tom'});
+    if (!doc) {
+      throw new Error('Expected Tom document to exist.');
+    }
     const output = await execute(
       'test',
       null,

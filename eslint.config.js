@@ -3,6 +3,7 @@
 const babelParser = require('@babel/eslint-parser');
 const globals = require('globals');
 const js = require('@eslint/js');
+const tseslint = require('typescript-eslint');
 
 const commonRules = {
   'brace-style': [2, '1tbs', { 'allowSingleLine': true }],
@@ -81,4 +82,14 @@ module.exports = [
     // the repo intentionally drops legacy mongo shell compatibility.
     rules: nodeModernizationRules,
   },
+  ...tseslint.config({
+    files: ['spec/utils/**/*.js'],
+    extends: [tseslint.configs.recommendedTypeChecked],
+    languageOptions: {
+      parserOptions: {
+        project: './tsconfig.checkjs.json',
+        tsconfigRootDir: __dirname,
+      },
+    },
+  }),
 ];

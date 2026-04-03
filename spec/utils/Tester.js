@@ -11,6 +11,7 @@ import JsonValidator from './JsonValidator.js';
  * @typedef {import('mongodb').MongoClient} MongoClientType
  * @typedef {import('mongodb').Collection<MongoDocument>} MongoCollection
  * @typedef {Record<string, unknown> & { outputFormat?: string }} AnalysisOptions
+ * @typedef {import('./JsonValidator.js').VarietyResultRow} VarietyResultRow
  */
 
 const mongodbPort = Number(process.env.MONGODB_PORT || 27017);
@@ -83,11 +84,17 @@ export default class Tester {
 
   /**
    * @param {AnalysisOptions} options
+   * @param {boolean} [quiet=true]
    */
-  async runJsonAnalysis(options) {
+  async runJsonAnalysis(options, quiet) {
     const analysisOptions = { ...options, outputFormat: 'json' };
-    const result = await this.runAnalysis(analysisOptions, true);
-    return new JsonValidator(/** @type {JsonValidator['results']} */ (JSON.parse(result)));
+    /** @type {unknown} */
+    const parsedResults = JSON.parse(await this.runAnalysis(analysisOptions, typeof quiet === 'undefined' ? true : quiet));
+    if (!Array.isArray(parsedResults)) {
+      throw new Error('Expected JSON analysis output to be an array.');
+    }
+    const typedResults = /** @type {VarietyResultRow[]} */ (parsedResults);
+    return new JsonValidator(typedResults);
   }
 
 
