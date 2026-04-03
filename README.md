@@ -203,6 +203,32 @@ Sometimes you inherit a database full of junk.  Maybe the previous developer put
     | otherNestedObject.a.b.c.d.e | Number   |           1 |    100.0 |
     +-----------------------------------------------------------------+
 
+#### Show Array Elements ####
+
+By default, Variety suppresses keys that end with an array index (e.g. `tags.XX`), because the parent key already captures the `Array` type. If you want to see the types of the values _inside_ primitive arrays — useful for verifying element-type consistency — set `showArrayElements` to `true`:
+
+    $ mongosh test --eval "var collection = 'users', showArrayElements = true" variety.js
+
+For example, given documents like:
+
+    db.users.insertMany([
+      { name: 'Alice', tags: ['a', 'b'] },
+      { name: 'Bob',   tags: ['c', 1]   }
+    ]);
+
+Without `showArrayElements`, only the `tags` key (type `Array`) appears. With it enabled, you also see:
+
+    +--------------------------------------------------+
+    | key     | types          | occurrences | percents |
+    | ------- | -------------- | ----------- | -------- |
+    | tags    | Array          |           2 |    100.0 |
+    | tags.XX | Number, String |           2 |    100.0 |
+    +--------------------------------------------------+
+
+This reveals that `tags` contains mixed element types across the collection.
+
+_Thanks to [@oufeng](https://github.com/oufeng) for suggesting this feature ([#166](https://github.com/variety/variety/issues/166))._
+
 #### Secondary Reads ####
 Analyzing a large collection on a busy replica set primary could take a lot longer than if you read from a secondary. To do so, we have to tell MongoDB it's okay to perform secondary reads
 by setting the `slaveOk` property to `true`:

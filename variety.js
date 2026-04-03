@@ -134,6 +134,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     read('logKeysContinuously', false);
     read('excludeSubkeys', []);
     read('arrayEscape', 'XX');
+    read('showArrayElements', false);
     read('lastValue', false);
 
     // Translate excludeSubkeys into a set-like object for compatibility.
@@ -394,10 +395,12 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     return accumulator;
   };
 
-  // We throw away keys which end in an array index, since they are not useful
-  // for our analysis. (We still keep the key of their parent array, though.) ―JC
+  // By default, keys ending in an array index (e.g. "tags.XX") are suppressed,
+  // since the parent key already captures the Array type. Set showArrayElements:true
+  // to include them — useful for verifying element-type consistency within arrays.
   var arrayRegex = new RegExp('\\.' + config.arrayEscape + '$', 'g');
   var filter = function(item) {
+    if (config.showArrayElements) { return true; }
     return !item._id.key.match(arrayRegex);
   };
 
