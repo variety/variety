@@ -94,7 +94,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 
   function countMatchingDocuments(collectionName, query, limit) {
     var coll = db.getCollection(collectionName);
-    var options = typeof limit === 'number' ? {limit: limit} : undefined;
+    var options = (typeof limit === 'number' && limit > 0) ? {limit: limit} : undefined;
     return coll.countDocuments(query, options);
   }
 
@@ -409,7 +409,9 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     return result;
   };
 
-  var cursor = db.getCollection(config.collection).find(config.query).sort(config.sort).limit(config.limit);
+  // limit(0) meant "no limit" in MongoDB ≤7 but is rejected by MongoDB 8+; guard against it.
+  var cursor = db.getCollection(config.collection).find(config.query).sort(config.sort);
+  if (config.limit > 0) { cursor = cursor.limit(config.limit); }
   var interimResults = reduceCursor(cursor, reduceDocuments, {});
   var varietyResults = convertResults(interimResults, countMatchingDocuments(config.collection, config.query, config.limit))
     .filter(filter)
@@ -449,7 +451,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
       return res !== null ? res[1].length : 1;
     };
 
-    var maxDigits = varietyResults.map(function(value){return significantDigits(value.percentContaining);}).reduce(function(acc,val){return acc>val?acc:val;});
+    var maxDigits = varietyResults.map(function(value){return significantDigits(value.percentContaining);}).reduce(function(acc,val){return acc>val?acc:val;}, 1);
 
     var rows = results.map(function(row) {
       var types = [];
