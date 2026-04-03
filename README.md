@@ -346,6 +346,8 @@ Pre-commit hooks are managed by [Husky](https://typicode.github.io/husky/) and i
 - `npm run lint:shell` — shellcheck (shell scripts)
 - `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for Node-side helper code under `spec/utils`
 
+ESLint applies a shared baseline of formatting and safety rules across the repo. Node-side JavaScript such as `eslint.config.js`, the test suite, and `spec/utils` also opts into a stricter modernization set (`const`, template literals, object shorthand, `Object.hasOwn`, and throwing `Error` objects). Shell-executed files such as `variety.js` and shell plugins intentionally stay on the shared baseline until the project explicitly drops legacy `mongo` shell compatibility.
+
 The container-based checks, `npm run lint:dockerfile` and `npm run lint:shell`, require a container runtime. [Docker](https://www.docker.com/) is used if available, with [Podman](https://podman.io/) as a fallback. At least one must be installed.
 
 #### Reporting Issues / Contributing ####

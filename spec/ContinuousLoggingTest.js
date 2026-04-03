@@ -26,7 +26,7 @@ describe('Continuous logging', async () => {
 
   it('should log every new key', async () => {
     const output = await test.runAnalysis({collection:'users', logKeysContinuously:true});
-    var filteredOutput = output
+    const filteredOutput = output
       .split('\n')
       .filter(line => line.match(pattern));
     assert.equal(filteredOutput.length, expectedLines.length);
