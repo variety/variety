@@ -33,6 +33,7 @@ describe('Parameters parsing', () => {
     assert.equal(params.resultsUser, null);
     assert.equal(params.resultsPass, null);
     assert.equal(params.showArrayElements, false);
+    assert.equal(params.compactArrayTypes, false);
     assert.deepEqual(params.plugins, []);
   });
 

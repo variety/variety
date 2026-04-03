@@ -125,6 +125,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     read('excludeSubkeys', []);
     read('arrayEscape', 'XX');
     read('showArrayElements', false);
+    read('compactArrayTypes', false);
     read('lastValue', false);
 
     // Translate excludeSubkeys into a set-like object for compatibility.
@@ -283,7 +284,20 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     } else {
       var specialType = getSpecialTypeName(thing);
       if (Array.isArray(thing)) {
-        return 'Array';
+        if (!config.compactArrayTypes) {
+          return 'Array';
+        }
+
+        if (thing.length === 0) {
+          return 'Array(empty)';
+        }
+
+        var seenElementTypes = Object.create(null);
+        thing.forEach(function(item) {
+          seenElementTypes[varietyTypeOf(item)] = true;
+        });
+
+        return 'Array(' + Object.keys(seenElementTypes).sort().join('|') + ')';
       } else if (thing === null) {
         return 'null';
       } else if (thing instanceof Date) {
@@ -313,8 +327,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 
     // Recurse only into plain objects and arrays; BSON wrappers should stay scalar.
     function isHash(v) {
-      var type = varietyTypeOf(v);
-      return type === 'Array' || type === 'Object';
+      return Array.isArray(v) || varietyTypeOf(v) === 'Object';
     }
 
     var arrayRegex = new RegExp('\\.' + config.arrayEscape + '\\d+' + config.arrayEscape + '\\.', 'g');
