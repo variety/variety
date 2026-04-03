@@ -9,10 +9,10 @@ Please see https://github.com/variety/variety for details.
 
 Released by James Cropcho, © 2012–2026, under the MIT License. */
 
-(function () {
+(function (shellContext) {
   'use strict'; // wraps everything for which we can use strict mode ―JC
 
-  var shellContext = typeof globalThis !== 'undefined' ? globalThis : Function('return this')();
+  shellContext = typeof globalThis !== 'undefined' ? globalThis : shellContext;
 
   var shellIsQuiet = function() {
     if (typeof __quiet !== 'undefined' && __quiet) {
@@ -22,7 +22,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     return typeof process !== 'undefined' &&
       process &&
       process.argv &&
-      process.argv.indexOf('--quiet') !== -1;
+      process.argv.includes('--quiet');
   };
 
   var log = function(message) {
@@ -74,12 +74,12 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
       }
     });
 
-    if (emptyDbs.indexOf(db.getName()) !== -1) {
+    if (emptyDbs.includes(db.getName())) {
       throw 'The database specified ('+ db.getName() +') is empty.\n'+
           'Possible database options are: ' + dbs.join(', ') + '.';
     }
 
-    if (dbs.indexOf(db.getName()) === -1) {
+    if (!dbs.includes(db.getName())) {
       throw 'The database specified ('+ db.getName() +') does not exist.\n'+
           'Possible database options are: ' + dbs.join(', ') + '.';
     }
@@ -348,25 +348,27 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     var result = {};
     var arrayRegex = new RegExp('\\.' + config.arrayEscape + '\\d+' + config.arrayEscape, 'g');
     for (var key in document) {
-      var value = document[key];
-      key = key.replace(arrayRegex, '.' + config.arrayEscape);
-      if(typeof result[key] === 'undefined') {
-        result[key] = {};
-      }
-      var type = varietyTypeOf(value);
-      result[key][type] = null;
+      if (Object.prototype.hasOwnProperty.call(document, key)) {
+        var value = document[key];
+        key = key.replace(arrayRegex, '.' + config.arrayEscape);
+        if(typeof result[key] === 'undefined') {
+          result[key] = {};
+        }
+        var type = varietyTypeOf(value);
+        result[key][type] = null;
 
-      if(config.lastValue){
-        if (type in {'String': true, 'Boolean': true}) {
-          result[key][type] = value.toString();
-        }else if (type in {'Number': true, 'NumberLong': true}) {
-          result[key][type] = value.valueOf();
-        }else if(type === 'ObjectId'){
-          result[key][type] = value.str;
-        }else if(type === 'Date'){
-          result[key][type] = new Date(value).getTime();
-        }else if(type.startsWith('BinData')){
-          result[key][type] = getBinDataHex(value);
+        if(config.lastValue){
+          if (type in {'String': true, 'Boolean': true}) {
+            result[key][type] = value.toString();
+          }else if (type in {'Number': true, 'NumberLong': true}) {
+            result[key][type] = value.valueOf();
+          }else if(type === 'ObjectId'){
+            result[key][type] = value.str;
+          }else if(type === 'Date'){
+            result[key][type] = new Date(value).getTime();
+          }else if(type.startsWith('BinData')){
+            result[key][type] = getBinDataHex(value);
+          }
         }
       }
     }
@@ -394,10 +396,12 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
         var lastValue = null;
         var types = {};
         for (var newType in docResult[key]) {
-          types[newType] = 1;
-          lastValue = docResult[key][newType];
-          if (config.logKeysContinuously) {
-            log('Found new key type "' + key + '" type "' + newType + '"');
+          if (Object.prototype.hasOwnProperty.call(docResult[key], newType)) {
+            types[newType] = 1;
+            lastValue = docResult[key][newType];
+            if (config.logKeysContinuously) {
+              log('Found new key type "' + key + '" type "' + newType + '"');
+            }
           }
         }
         interimResults[key] = {'types': types,'totalOccurrences':1};
@@ -412,7 +416,9 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     var getKeys = function(obj) {
       var keys = {};
       for(var key in obj) {
-        keys[key] = obj[key];
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          keys[key] = obj[key];
+        }
       }
       return keys;
     //return keys.sort();
@@ -420,20 +426,22 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     var varietyResults = [];
     //now convert the interimResults into the proper format
     for(var key in interimResults) {
-      var entry = interimResults[key];
+      if (Object.prototype.hasOwnProperty.call(interimResults, key)) {
+        var entry = interimResults[key];
 
-      var obj = {
-        '_id': {'key':key},
-        'value': {'types':getKeys(entry.types)},
-        'totalOccurrences': entry.totalOccurrences,
-        'percentContaining': entry.totalOccurrences * 100 / documentsCount
-      };
+        var obj = {
+          '_id': {'key':key},
+          'value': {'types':getKeys(entry.types)},
+          'totalOccurrences': entry.totalOccurrences,
+          'percentContaining': entry.totalOccurrences * 100 / documentsCount
+        };
 
-      if(config.lastValue){
-        obj.lastValue = entry.lastValue;
+        if(config.lastValue){
+          obj.lastValue = entry.lastValue;
+        }
+
+        varietyResults.push(obj);
       }
-
-      varietyResults.push(obj);
     }
     return varietyResults;
   };
@@ -480,7 +488,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     var resultsDB;
     var resultsCollectionName = config.resultsCollection;
 
-    if (config.resultsDatabase.indexOf('/') === -1) {
+    if (!config.resultsDatabase.includes('/')) {
     // Local database; don't reconnect
       resultsDB = db.getMongo().getDB(config.resultsDatabase);
     } else {
@@ -517,8 +525,10 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
       var typeKeys = Object.keys(row.value.types);
       if (typeKeys.length > 1) {
         for (var type in row.value.types) {
-          var typestring = type + ' (' + row.value.types[type] + ')';
-          types.push(typestring);
+          if (Object.prototype.hasOwnProperty.call(row.value.types, type)) {
+            var typestring = type + ' (' + row.value.types[type] + ')';
+            types.push(typestring);
+          }
         }
       } else {
         types = typeKeys;
@@ -549,4 +559,4 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     print(createAsciiTable(varietyResults)); // output nice ascii table with results
   }
 
-}()); // end strict mode
+}(this)); // end strict mode
