@@ -10,7 +10,7 @@ Please see https://github.com/variety/variety for details.
 Released by James Cropcho, © 2012–2026, under the MIT License. */
 
 (function () {
-  'use strict'; // wraps everything for which we can use strict mode -JC
+  'use strict'; // wraps everything for which we can use strict mode ―JC
 
   var shellContext = typeof globalThis !== 'undefined' ? globalThis : Function('return this')();
 
@@ -136,7 +136,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     read('arrayEscape', 'XX');
     read('lastValue', false);
 
-    //Translate excludeSubkeys to set like object... using an object for compatibility...
+    // Translate excludeSubkeys into a set-like object for compatibility.
     config.excludeSubkeys = config.excludeSubkeys.reduce(function (result, item) { result[item+'.'] = true; return result; }, {});
 
     return config;
@@ -221,7 +221,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
       return 'undefined';
     } else if (typeof thing !== 'object') {
     // the messiness below capitalizes the first letter, so the output matches
-    // the other return values below. -JC
+    // the other return values below. ―JC
       var typeofThing = typeof thing; // edgecase of JSHint's "singleGroups"
       return typeofThing[0].toUpperCase() + typeofThing.slice(1);
     } else {
@@ -282,7 +282,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
         if(Array.isArray(document))
           key = config.arrayEscape + key + config.arrayEscape; //translate unnamed object key from {_parent_name_}.{_index_} to {_parent_name_}.arrayEscape{_index_}arrayEscape.
         result[parentKey+key] = value;
-        //it's an object, recurse...only if we haven't reached max depth
+        // Recurse into nested objects only if we have not reached max depth.
         if(isHash(value) && maxDepth > 1) {
           serialize(value, parentKey+key+'.', maxDepth-1);
         }
@@ -395,7 +395,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
   };
 
   // We throw away keys which end in an array index, since they are not useful
-  // for our analysis. (We still keep the key of their parent array, though.) -JC
+  // for our analysis. (We still keep the key of their parent array, though.) ―JC
   var arrayRegex = new RegExp('\\.' + config.arrayEscape + '$', 'g');
   var filter = function(item) {
     return !item._id.key.match(arrayRegex);
