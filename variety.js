@@ -320,16 +320,18 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     var arrayRegex = new RegExp('\\.' + config.arrayEscape + '\\d+' + config.arrayEscape + '\\.', 'g');
 
     function serialize(document, parentKey, maxDepth) {
-      if(Object.prototype.hasOwnProperty.call(excludeSubkeys, parentKey.replace(arrayRegex, '.')))
+      if(Object.prototype.hasOwnProperty.call(excludeSubkeys, parentKey.replace(arrayRegex, '.'))) {
         return;
+      }
       for(var key in document) {
         //skip over inherited properties such as string, length, etc.
         if(!Object.prototype.hasOwnProperty.call(document, key)) {
           continue;
         }
         var value = document[key];
-        if(Array.isArray(document))
+        if(Array.isArray(document)) {
           key = config.arrayEscape + key + config.arrayEscape; //translate unnamed object key from {_parent_name_}.{_index_} to {_parent_name_}.arrayEscape{_index_}arrayEscape.
+        }
         result[parentKey+key] = value;
         // Recurse into nested objects only if we have not reached max depth.
         if(isHash(value) && maxDepth > 1) {

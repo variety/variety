@@ -104,6 +104,6 @@ export default class Tester {
         str.push(`var ${key}=${value}`);
       }
     }
-    return execute(this.databaseName, null, str.length > 0 ? '"' + str.join(';') + '"' : undefined, this.getVarietyPath(), quiet, mongodbPort);
+    return execute(this.databaseName, null, str.length > 0 ? `"${str.join(';')}"` : undefined, this.getVarietyPath(), quiet, mongodbPort);
   }
 }

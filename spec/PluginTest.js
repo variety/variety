@@ -29,7 +29,7 @@ describe('Plugins', () => {
   });
 
   it('should read additional plugin params', async () => {
-    const output = await test.runAnalysis({collection:'users', plugins: getPluginPath() + '|delimiter=;'}, true);
+    const output = await test.runAnalysis({collection:'users', plugins: `${getPluginPath()}|delimiter=;`}, true);
     const expectedWithSeparator = expectedOutput.replace(/\|/g, ';');
     assert.equal(output, expectedWithSeparator);
   });
