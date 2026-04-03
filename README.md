@@ -53,7 +53,18 @@ Results are stored for future use in a `varietyResults` database.
 
 ### See Progress When Analysis Takes a Long Time ###
 
-Tailing the log is great for this. MongoDB provides a "percent complete" measurement for you. These operations can take a long time on huge collections.
+Variety does not print its own progress bar or "percent complete" measurement.
+
+For long-running analyses, watch the MongoDB server logs instead. If MongoDB
+reports progress for the underlying work, it will appear in `mongod`'s logs,
+not in Variety's output.
+
+Where those logs live depends on how MongoDB is running: they may be in a log
+file, available through `journalctl`, or exposed by your container runtime.
+
+Some MongoDB versions and logging configurations do not emit a percentage for
+these operations. If you do not see one, Variety may still be running normally;
+it just means MongoDB is not exposing that measurement in your environment.
 
 ### Analyze Only Recent Documents ###
 
