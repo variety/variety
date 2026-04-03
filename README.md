@@ -326,7 +326,7 @@ Much thanks also, to Kyle Banker ([@Hwaet](https://x.com/#!/hwaet)) for writing 
 
 Know of one? Built one? Let us know!
 
-##### Stay Safe #####
+#### Stay Safe ####
 
 I have every reason to believe this tool will **not** corrupt your data or harm your computer. But if I were you, I would not use it in a production environment.
 
