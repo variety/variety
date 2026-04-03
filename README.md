@@ -38,18 +38,18 @@ So, let's see what we've got here:
     | someWeirdLegacyKey | String             |           1 |     20.0 |
     +------------------------------------------------------------------+
 
-_("test" is the database containing the collection we are analyzing.)_
+_(`test` is the database containing the collection we are analyzing.)_
 
 These examples use `mongosh`. If your environment still ships the legacy `mongo`
 shell instead, substitute that executable in the commands below.
 
-Hmm. Looks like everybody has a "name" and "_id". Most, but not all have a "bio".
+Hmm. Looks like everybody has a `name` and `_id`. Most, but not all have a `bio`.
 
-Interestingly, it looks like "pets" can be either an array or a string, but there are more arrays than strings. Will this cause any problems in the application, I wonder?
+Interestingly, it looks like `pets` can be either an array or a string, but there are more arrays than strings. Will this cause any problems in the application, I wonder?
 
 Seems like the first document created has a weird legacy key—those damn fools who built the prototype didn't clean up after themselves. If there were a thousand such early documents, I might cross-reference the codebase to confirm they are no longer used, and then delete them all. That way they'll not confuse any future developers.
 
-Results are stored for future use in a varietyResults database.
+Results are stored for future use in a `varietyResults` database.
 
 ### See Progress When Analysis Takes a Long Time ###
 
@@ -61,7 +61,7 @@ Perhaps you have a really large collection, and you can't wait a whole day for V
 
 Perhaps you want to ignore a collection's oldest documents, and only see what the collection's documents' structures have been looking like, as of late.
 
-One can apply a "limit" constraint, which analyzes only the newest documents in a collection ([unless sorting](https://github.com/variety/variety#analyze-documents-sorted-in-a-particular-order)), like so:
+One can apply a `limit` constraint, which analyzes only the newest documents in a collection ([unless sorting](https://github.com/variety/variety#analyze-documents-sorted-in-a-particular-order)), like so:
 
     $ mongosh test --eval "var collection = 'users', limit = 1" variety.js
 
@@ -75,7 +75,7 @@ Let's examine the results closely:
     | someBinData | BinData-old |           1 |    100.0 |
     +----------------------------------------------------+
 
-We are only examining the last document here ("limit = 1"). It belongs to Geneviève, and only contains the _id, name and bio fields. So it makes sense these are the only three keys.
+We are only examining the last document here (`limit = 1`). It belongs to Geneviève, and only contains the `_id`, `name` and `bio` fields. So it makes sense these are the only three keys.
 
 ### Analyze Documents to a Maximum Depth ###
 
@@ -120,7 +120,7 @@ As you can see, Variety only traversed three levels deep.
 
 Perhaps you have a large collection, or you only care about some subset of the documents.
 
-One can apply a "query" constraint, which takes a standard MongoDB query object, to filter the set of documents required before analysis.
+One can apply a `query` constraint, which takes a standard MongoDB query object, to filter the set of documents required before analysis.
 
     $ mongosh test --eval "var collection = 'users', query = {'caredAbout':true}" variety.js
 
@@ -128,13 +128,13 @@ One can apply a "query" constraint, which takes a standard MongoDB query object,
 
 Perhaps you want to analyze a subset of documents sorted in an order other than creation order, say, for example, sorted by when documents were updated.
 
-One can apply a "sort" constraint, which analyzes documents in the specified order like so:
+One can apply a `sort` constraint, which analyzes documents in the specified order like so:
 
     $ mongosh test --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
 
 ### Include Last Value ###
 
-You can add ```lastValue``` property to show values of the last document.
+One can also apply a `lastValue` constraint to show values of the last document.
 
     $ mongosh test --eval "var collection = 'orders', lastValue = true" variety.js
     
@@ -154,8 +154,8 @@ You can add ```lastValue``` property to show values of the last document.
     | uid             | BinData-UUID |           1 |    100.0 | 3b241101e2bb42558caf4136c566a962 |
     +--------------------------------------------------------------------------------------------+
 
-If use without ```sort``` it will fetch values of the last natural sorted document.
-Date is converted into timestamp, ObjectId into string and binary data as hex. Other types shown in square brackets.
+If use without `sort` it will fetch values of the last natural sorted document.
+`Date` is converted into `timestamp`, `ObjectId` into `string` and binary data as hex. Other types shown in square brackets.
 
 ### Render Output As JSON For Easy Ingestion and Parsing ###
 
@@ -169,6 +169,7 @@ Default format is ```ascii```. You can select the type of format with property `
     $ mongosh test --quiet --eval "var collection = 'users', outputFormat='json'" variety.js
 
 #### Quiet Option ####
+
 Both MongoDB and Variety output some additional information to standard output. If you want to remove this info, you can use ```--quiet``` option provided to the MongoDB shell executable.
 Variety can also read that option and mute unnecessary output. This is useful in connection with ```outputFormat=json```. You would then receive only JSON, without any other characters around it.
 
@@ -227,7 +228,7 @@ $ mongosh test --quiet --eval "var collection = 'users', persistResults=true, re
 ```
 
 ### Reserved Keys ###
-Variety expects keys to be well formed, not having any `.`s in them (MongoDB 2.4 allows dots in certain cases).  Also MongoDB uses the pseudo keys 'XX' and keys corresponding to the regex 'XX\d+XX.*' for use with arrays.  You can change the string XX in these patterns to whatever you like if there is a conflict in your database using the `arrayEscape` parameter.  
+Variety expects keys to be well formed, not having any `.`s in them (MongoDB 2.4 allows dots in certain cases).  Also MongoDB uses the pseudo keys `XX` and keys corresponding to the regex `XX\d+XX.*` for use with arrays.  You can change the string `XX` in these patterns to whatever you like if there is a conflict in your database using the `arrayEscape` parameter.  
 
     $ mongosh test --quiet --eval "var collection = 'users', arrayEscape = 'YY'" variety.js
 
@@ -252,7 +253,7 @@ A MongoDB collection does not enforce a predefined schema like a relational data
 
 ##### Dependencies #####
 
-Absolutely none, except MongoDB. Written in 100% JavaScript. _(mongod's "noscripting" may not be set to true, and 'strict mode' must be disabled.)_
+Absolutely none, except MongoDB. Written in 100% JavaScript. _(`mongod`'s "noscripting" may not be set to true, and 'strict mode' must be disabled.)_
 
 ##### Development, Hacking #####
 This project is NPM based and provides standard NPM functionality. As an additional (not required) dependency, [Docker](https://www.docker.com/) can be installed to test against different MongoDB versions.
