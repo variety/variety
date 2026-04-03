@@ -1,8 +1,8 @@
 // @ts-check
 'use strict';
 
-import { resolve, join } from 'path';
 import { MongoClient } from 'mongodb';
+import { fileURLToPath } from 'url';
 import execute from './MongoShell.js';
 import JsonValidator from './JsonValidator.js';
 
@@ -16,6 +16,7 @@ import JsonValidator from './JsonValidator.js';
 
 const mongodbPort = Number(process.env.MONGODB_PORT || 27017);
 const defaultUrl = `mongodb://localhost:${mongodbPort}/test`;
+const varietyPath = fileURLToPath(new URL('../../variety.js', import.meta.url));
 
 export default class Tester {
   /** @type {MongoClientType | undefined} */
@@ -79,7 +80,7 @@ export default class Tester {
   }
 
   getVarietyPath() {
-    return resolve(join(__dirname , '..', '..', 'variety.js'));
+    return varietyPath;
   }
 
   /**
