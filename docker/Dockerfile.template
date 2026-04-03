@@ -18,12 +18,12 @@ RUN curl --silent --show-error --location \
       --output /tmp/install_nvm.sh \
       "https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh" && \
     bash /tmp/install_nvm.sh > /dev/null && \
-    rm -f /tmp/install_nvm.sh
+    rm -f /tmp/install_nvm.sh && \
+    export NVM_DIR="$HOME/.nvm"  && \
+    \. "$NVM_DIR/nvm.sh"         && \
+    nvm install "${NODEJS_VERSION}"
 
 # Keep the npm bundled with the selected Node.js release. Newer npm majors
 # can drop support for older test lanes before Node.js itself does.
-RUN export NVM_DIR="$HOME/.nvm"  && \
-    \. "$NVM_DIR/nvm.sh"         && \
-    nvm install "${NODEJS_VERSION}"
 
 ENTRYPOINT ["/opt/variety/docker/init.sh"]
