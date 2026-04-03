@@ -31,7 +31,7 @@ describe('Continuous logging', async () => {
       .filter(line => line.match(pattern));
     assert.equal(filteredOutput.length, expectedLines.length);
     expectedLines.forEach(expectedLine => {
-      const found = filteredOutput.indexOf(expectedLine) > -1;
+      const found = filteredOutput.includes(expectedLine);
       assert.ok(found, `Expected line '${expectedLine}' not found in Variety output`);
     });
   });
