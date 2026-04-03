@@ -43,17 +43,18 @@
     "url": "https://github.com/variety/variety.git"
   },
   "scripts": {
-    "prepare":       "husky",
-    "lint":          "./node_modules/.bin/eslint .",
-    "lint:fix":      "./node_modules/.bin/eslint . --fix",
-    "lint:json":     "find . \\( -name '*.json' ! -name 'package-lock.json' \\) -not -path '*/node_modules/*' -not -path './.git/*' -print0 | xargs -0 ./node_modules/@prantlf/jsonlint/lib/cli.js -q && ./node_modules/@prantlf/jsonlint/lib/cli.js -q .babelrc",
+    "prepare": "husky",
+    "lint": "./node_modules/.bin/eslint .",
+    "lint:fix": "./node_modules/.bin/eslint . --fix",
+    "lint:json": "find . \\( -name '*.json' ! -name 'package-lock.json' \\) -not -path '*/node_modules/*' -not -path './.git/*' -print0 | xargs -0 ./node_modules/@prantlf/jsonlint/lib/cli.js -q && ./node_modules/@prantlf/jsonlint/lib/cli.js -q .babelrc",
     "lint:markdown": "./node_modules/.bin/markdownlint '**/*.md' '**/*.markdown' --ignore node_modules",
-    "lint:yaml":     "find . \\( -name '*.yml' -o -name '*.yaml' \\) -not -path '*/node_modules/*' -not -path './.git/*' -print0 | xargs -0 -n1 ./node_modules/.bin/js-yaml > /dev/null",
+    "lint:yaml": "find . \\( -name '*.yml' -o -name '*.yaml' \\) -not -path '*/node_modules/*' -not -path './.git/*' -print0 | xargs -0 -n1 ./node_modules/.bin/js-yaml > /dev/null",
     "lint:dockerfile": "RUNNER=$(command -v docker 2>/dev/null || command -v podman 2>/dev/null) && $RUNNER run --rm -i ghcr.io/hadolint/hadolint < docker/Dockerfile.template",
-    "lint:shell":      "RUNNER=$(command -v docker 2>/dev/null || command -v podman 2>/dev/null) && $RUNNER run --rm -v \"${PWD}:/mnt:z\" docker.io/koalaman/shellcheck:stable /mnt/bin/variety /mnt/docker/init.sh /mnt/spec/bin/test-on-docker.sh",
-    "test":          "npm run lint && npm run test:docker",
-    "test:docker":   "./spec/bin/test-on-docker.sh",
-    "test:mocha":    "./node_modules/.bin/mocha --require @babel/register --recursive --reporter spec --timeout 15000 spec"
+    "lint:shell": "RUNNER=$(command -v docker 2>/dev/null || command -v podman 2>/dev/null) && $RUNNER run --rm -v \"${PWD}:/mnt:z\" docker.io/koalaman/shellcheck:stable /mnt/bin/variety /mnt/docker/init.sh /mnt/spec/bin/test-on-docker.sh",
+    "typecheck": "./node_modules/.bin/tsc --project tsconfig.checkjs.json",
+    "test": "npm run lint && npm run test:docker",
+    "test:docker": "./spec/bin/test-on-docker.sh",
+    "test:mocha": "./node_modules/.bin/mocha --require @babel/register --recursive --reporter spec --timeout 15000 spec"
   },
   "overrides": {
     "serialize-javascript": "7.0.5"
@@ -65,6 +66,7 @@
     "@babel/register": "^7.28.6",
     "@eslint/js": "^9.39.4",
     "@prantlf/jsonlint": "^17.0.1",
+    "@types/node": "^25.5.0",
     "eslint": "^9.39.4",
     "globals": "^17.4.0",
     "husky": "^9.1.7",
@@ -72,6 +74,7 @@
     "markdownlint-cli": "^0.48.0",
     "mocha": "^11.7.5",
     "mongodb": "^7.1.1",
-    "promisify-child-process": "^5.0.1"
+    "promisify-child-process": "^5.0.1",
+    "typescript": "^6.0.2"
   }
 }

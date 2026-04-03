@@ -299,6 +299,7 @@ Pre-commit hooks are managed by [Husky](https://typierce.github.io/husky/) and i
 - `npm run lint:yaml` — js-yaml (YAML files)
 - `npm run lint:dockerfile` — hadolint (`docker/Dockerfile.template`)
 - `npm run lint:shell` — shellcheck (shell scripts)
+- `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for Node-side helper code under `spec/utils`
 
 The last two require a container runtime: [Docker](https://www.docker.com/) is used if available, with [Podman](https://podman.io/) as a fallback. At least one must be installed.
 

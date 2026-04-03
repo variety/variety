@@ -17,3 +17,6 @@ npm run lint:dockerfile
 
 echo "→ shellcheck (shell scripts)"
 npm run lint:shell
+
+echo "→ tsc checkJs (Node-side JS helpers)"
+npm run typecheck

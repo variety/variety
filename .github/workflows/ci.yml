@@ -28,6 +28,7 @@ jobs:
       - run: npm run lint:yaml
       - run: npm run lint:dockerfile
       - run: npm run lint:shell
+      - run: npm run typecheck
 
   test:
     name: Test (Node 22, MongoDB ${{ matrix.mongodb-version }})
