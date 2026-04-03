@@ -246,7 +246,7 @@ For more details see the [documentation of variety-cli project](https://github.c
 
 ##### "But my dad told me MongoDB is a schemaless database!" #####
 
-First of all, your father is a great guy. Moving on...
+First of all, your father is a great guy. Moving on…
 
 A MongoDB collection does not enforce a predefined schema like a relational database table. Still, documents in real-world collections nearly always have large sections for which the format of the data is the same. In other words, there is a schema to the majority of collections, it's just enforced by the _application_, rather than by the database system. And this schema is allowed to be a bit fuzzy, in the same way that a given table column might not be required in all rows, but to a much greater degree of flexibility. So we examine what percent of documents in the collection contain a key, and we get a feel for, among other things, how crucial that key is to the proper functioning of the application.
 
