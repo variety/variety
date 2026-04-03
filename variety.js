@@ -310,9 +310,9 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
           result[key][type] = value.toString();
         }else if (type in {'Number': true, 'NumberLong': true}) {
           result[key][type] = value.valueOf();
-        }else if(type == 'ObjectId'){
+        }else if(type === 'ObjectId'){
           result[key][type] = value.str;
-        }else if(type == 'Date'){
+        }else if(type === 'Date'){
           result[key][type] = new Date(value).getTime();
         }else if(type.startsWith('BinData')){
           result[key][type] = getBinDataHex(value);
