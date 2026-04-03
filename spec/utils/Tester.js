@@ -52,14 +52,14 @@ export default class Tester {
       throw new Error('Collection connection is not available.');
     }
 
-    await this.coll.deleteMany();
+    await this.coll.deleteMany({});
     await this.coll.insertMany(initialData);
     return connection;
   }
 
   async cleanUp() {
     if (this.coll) {
-      await this.coll.deleteMany();
+      await this.coll.deleteMany({});
     }
     if (this.connection) {
       await this.connection.close();
