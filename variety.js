@@ -36,6 +36,10 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
       return tojson(value);
     }
 
+    if (shellContext.EJSON && typeof shellContext.EJSON.stringify === 'function') {
+      return shellContext.EJSON.stringify(value);
+    }
+
     return JSON.stringify(value);
   };
 
