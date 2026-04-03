@@ -1,6 +1,5 @@
 'use strict';
 
-const babelParser = require('@babel/eslint-parser');
 const globals = require('globals');
 const js = require('@eslint/js');
 const tseslint = require('typescript-eslint');
@@ -56,11 +55,7 @@ module.exports = [
   {
     files: ['**/*.js'],
     languageOptions: {
-      parser: babelParser,
-      parserOptions: {
-        sourceType: 'module',
-        requireConfigFile: false,
-      },
+      sourceType: 'script',
       globals: {
         ...globals.node,
         ...globals.mocha,
@@ -74,6 +69,12 @@ module.exports = [
       },
     },
     rules: commonRules,
+  },
+  {
+    files: ['spec/**/*.js'],
+    languageOptions: {
+      sourceType: 'module',
+    },
   },
   {
     files: ['eslint.config.js', 'spec/**/*.js'],
