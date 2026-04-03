@@ -60,6 +60,6 @@ export default class Tester {
         str.push(`var ${key}=${value}`);
       }
     }
-    return execute(this.database, null, '"' + str.join(';') + '"', this.getVarietyPath(), quiet, mongodb_port);
+    return execute(this.databaseName, null, '"' + str.join(';') + '"', this.getVarietyPath(), quiet, mongodb_port);
   }
 }
