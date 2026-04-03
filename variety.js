@@ -94,18 +94,8 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 
   function countMatchingDocuments(collectionName, query, limit) {
     var coll = db.getCollection(collectionName);
-
-    if (typeof coll.countDocuments === 'function') {
-      var options = typeof limit === 'number' ? {limit: limit} : undefined;
-      return coll.countDocuments(query, options);
-    }
-
-    var cursor = coll.find(query);
-    if (typeof limit === 'number') {
-      cursor = cursor.limit(limit);
-    }
-
-    return cursor.count();
+    var options = typeof limit === 'number' ? {limit: limit} : undefined;
+    return coll.countDocuments(query, options);
   }
 
   if (countMatchingDocuments(collection, {}) === 0) {
