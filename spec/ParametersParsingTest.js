@@ -7,7 +7,7 @@ const test = new Tester('test', 'users');
 const parseParams = (output) => {
   return output
     .split('\n') // split by new line
-    .filter(line => line.indexOf('Using') === 0) // take only lines starting with Using
+    .filter(line => line.startsWith('Using')) // take only lines starting with Using
     .map(line => /^Using\s(\S+)\sof\s(.*)$/.exec(line)) // parse with regular expression
     .filter(match => match) // filter out non-matching lines
     .reduce((acc, match) => ({ ...acc, [match[1]]: JSON.parse(match[2]) }), {}); // reduce to params object
@@ -60,7 +60,7 @@ describe('Parameters parsing', () => {
       assert.fail(`Expected runAnalysis to throw an error for unknown collection "${unknownCollection}"`);
     } catch(err) {
       assert.ok(err.code > 0);
-      assert.ok(err.stdout.indexOf('The collection specified (--unknown--) in the database specified (test) does not exist or is empty.') > -1);
+      assert.ok(err.stdout.includes('The collection specified (--unknown--) in the database specified (test) does not exist or is empty.'));
     }
   });
 
