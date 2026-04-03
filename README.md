@@ -6,7 +6,7 @@ This lightweight tool helps you get a sense of your application's schema, as wel
 _“I happen to slowly be falling in love with Variety! It is actually one of the most useful tools to get a sense for a messy/unknown data set, and I have put it in a few of our exercises at Zipfian Academy.”_
 
 Jon Dinu
-_Co-founder of [Zipfian Academy](http://www.zipfianacademy.com/)_
+_Co-founder of [Zipfian Academy](https://www.zipfianacademy.com/)_
 
 ***
 
@@ -72,7 +72,7 @@ Perhaps you have a really large collection, and you can't wait a whole day for V
 
 Perhaps you want to ignore a collection's oldest documents, and only see what the collection's documents' structures have been looking like, as of late.
 
-One can apply a `limit` constraint, which analyzes only the newest documents in a collection ([unless sorting](https://github.com/variety/variety#analyze-documents-sorted-in-a-particular-order)), like so:
+One can apply a `limit` constraint, which analyzes only the newest documents in a collection ([unless sorting](#analyze-documents-sorted-in-a-particular-order)), like so:
 
     $ mongosh test --eval "var collection = 'users', limit = 1" variety.js
 
@@ -330,7 +330,7 @@ GitHub Actions runs the supported MongoDB matrix (`7.0`, `8.0`) on Node.js 22, p
 
 ##### Linting #####
 
-Pre-commit hooks are managed by [Husky](https://typierce.github.io/husky/) and installed automatically on `npm install`. Each commit runs all of the following, and is blocked if any fail:
+Pre-commit hooks are managed by [Husky](https://typicode.github.io/husky/) and installed automatically on `npm install`. Each commit runs all of the following, and is blocked if any fail:
 
 - `npm run lint` — ESLint (JavaScript)
 - `npm run lint:json` — `@prantlf/jsonlint` (JSON files and `.babelrc`)
@@ -356,9 +356,9 @@ I accept pull requests from forks. Very grateful to accept contributions from fo
 
 #### Special Thanks ####
 
-Additional special thanks to Gaëtan Voyer-Perraul ([@gatesvp](https://x.com/#!/@gatesvp)) and Kristina Chodorow ([@kchodorow](https://x.com/#!/kchodorow)) for answering other people's questions about how to do this on Stack Overflow, thereby providing me with the initial seed of code which grew into this tool.
+Additional special thanks to Gaëtan Voyer-Perraul ([@gatesvp](https://x.com/gatesvp)) and Kristina Chodorow ([@kchodorow](https://x.com/kchodorow)) for answering other people's questions about how to do this on Stack Overflow, thereby providing me with the initial seed of code which grew into this tool.
 
-Much thanks also, to Kyle Banker ([@Hwaet](https://x.com/#!/hwaet)) for writing an unusually good book on MongoDB, which has taught me everything I know about it so far.
+Much thanks also, to Kyle Banker ([@Hwaet](https://x.com/hwaet)) for writing an unusually good book on MongoDB, which has taught me everything I know about it so far.
 
 #### Tools Which Use Variety (Open Source) ####
 
@@ -368,4 +368,4 @@ Know of one? Built one? Let us know!
 
 I have every reason to believe this tool will **not** corrupt your data or harm your computer. But if I were you, I would not use it in a production environment.
 
-Released by James Cropcho, © 2012–2026, under the [MIT License](http://www.opensource.org/licenses/MIT).
+Released by James Cropcho, © 2012–2026, under the [MIT License](https://opensource.org/license/MIT).
