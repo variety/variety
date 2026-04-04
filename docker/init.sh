@@ -14,9 +14,9 @@ mongod --logpath /dev/null &
 
 cd "$VARIETY_DOCKERDIR" || exit
 
-# NVM is already sourced; redirect HOME so babel-register doesn't try to write
-# its cache to /data/db, which mongod owns and makes non-writable at runtime.
-# Keep it out of the mounted repo so mongosh logs do not pollute the worktree.
+# NVM is already sourced; redirect HOME so npm and mongosh keep their caches
+# and shell history out of /data/db, which mongod owns at runtime.
+# Keep it out of the mounted repo so shell logs do not pollute the worktree.
 export HOME=/tmp/variety-home
 mkdir -p "$HOME"
 

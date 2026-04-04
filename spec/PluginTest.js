@@ -1,6 +1,6 @@
 import assert from 'assert';
 import Tester from './utils/Tester.js';
-import { resolve, join } from 'path';
+import { fileURLToPath } from 'url';
 import sampleData from './assets/SampleData.js';
 
 const test = new Tester('test', 'users');
@@ -16,7 +16,7 @@ someBinData|BinData-generic|1|20
 someWeirdLegacyKey|String|1|20
 `.trim();
 
-const getPluginPath = () => resolve(join(__dirname , 'assets', 'csvplugin.js'));
+const getPluginPath = () => fileURLToPath(new URL('./assets/csvplugin.js', import.meta.url));
 
 describe('Plugins', () => {
 

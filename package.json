@@ -46,7 +46,7 @@
     "prepare": "husky",
     "lint": "./node_modules/.bin/eslint .",
     "lint:fix": "./node_modules/.bin/eslint . --fix",
-    "lint:json": "find . \\( -name '*.json' ! -name 'package-lock.json' \\) -not -path '*/node_modules/*' -not -path './.git/*' -print0 | xargs -0 ./node_modules/@prantlf/jsonlint/lib/cli.js -q && ./node_modules/@prantlf/jsonlint/lib/cli.js -q .babelrc",
+    "lint:json": "find . \\( -name '*.json' ! -name 'package-lock.json' \\) -not -path '*/node_modules/*' -not -path './.git/*' -print0 | xargs -0 ./node_modules/@prantlf/jsonlint/lib/cli.js -q",
     "lint:markdown": "./node_modules/.bin/markdownlint '**/*.md' '**/*.markdown' --ignore node_modules",
     "lint:yaml": "find . \\( -name '*.yml' -o -name '*.yaml' \\) -not -path '*/node_modules/*' -not -path './.git/*' -print0 | xargs -0 -n1 ./node_modules/.bin/js-yaml > /dev/null",
     "lint:dockerfile": "RUNNER=$(command -v docker 2>/dev/null || command -v podman 2>/dev/null) && $RUNNER run --rm -i ghcr.io/hadolint/hadolint < docker/Dockerfile.template",
@@ -54,15 +54,12 @@
     "typecheck": "./node_modules/.bin/tsc --project tsconfig.checkjs.json",
     "test": "npm run lint && npm run test:docker",
     "test:docker": "./spec/bin/test-on-docker.sh",
-    "test:mocha": "./node_modules/.bin/mocha --require @babel/register --recursive --reporter spec --timeout 15000 spec"
+    "test:mocha": "./node_modules/.bin/mocha --reporter spec --timeout 15000 \"spec/**/*Test.js\""
   },
   "overrides": {
     "serialize-javascript": "7.0.5"
   },
   "devDependencies": {
-    "@babel/core": "^7.29.0",
-    "@babel/preset-env": "^7.29.2",
-    "@babel/register": "^7.28.6",
     "@eslint/js": "^9.39.4",
     "@prantlf/jsonlint": "^17.0.1",
     "@types/mocha": "^10.0.10",
