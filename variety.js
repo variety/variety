@@ -81,21 +81,21 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     });
 
     if (emptyDbs.includes(db.getName())) {
-      throw `The database specified (${db.getName()}) is empty.\n` +
-          `Possible database options are: ${dbs.join(', ')}.`;
+      throw new Error(`The database specified (${db.getName()}) is empty.\n` +
+          `Possible database options are: ${dbs.join(', ')}.`);
     }
 
     if (!dbs.includes(db.getName())) {
-      throw `The database specified (${db.getName()}) does not exist.\n` +
-          `Possible database options are: ${dbs.join(', ')}.`;
+      throw new Error(`The database specified (${db.getName()}) does not exist.\n` +
+          `Possible database options are: ${dbs.join(', ')}.`);
     }
   }
 
   const collNames = db.getCollectionNames().join(', ');
   if (typeof collection === 'undefined') {
-    throw 'You have to supply a \'collection\' variable, à la --eval \'var collection = "animals"\'.\n' +
+    throw new Error('You have to supply a \'collection\' variable, à la --eval \'var collection = "animals"\'.\n' +
         `Possible collection options for database specified: ${collNames}.\n` +
-        'Please see https://github.com/variety/variety for details.';
+        'Please see https://github.com/variety/variety for details.');
   }
 
   const countMatchingDocuments = (collectionName, query, limit) => {
@@ -105,8 +105,8 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
   };
 
   if (countMatchingDocuments(collection, {}) === 0) {
-    throw `The collection specified (${collection}) in the database specified (${db.getName()}) does not exist or is empty.\n` +
-        `Possible collection options for database specified: ${collNames}.`;
+    throw new Error(`The collection specified (${collection}) in the database specified (${db.getName()}) does not exist or is empty.\n` +
+        `Possible collection options for database specified: ${collNames}.`);
   }
 
   const readConfig = (configProvider) => {
@@ -277,7 +277,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
   // the no-argument guard below relies on the function's own `arguments` object,
   // which arrow functions do not have.
   const varietyTypeOf = function(thing) {
-    if (!arguments.length) { throw 'varietyTypeOf() requires an argument'; }
+    if (!arguments.length) { throw new Error('varietyTypeOf() requires an argument'); }
 
     if (typeof thing === 'undefined') {
       return 'undefined';

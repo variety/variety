@@ -87,10 +87,9 @@ module.exports = [
     files: ['variety.js'],
     // variety.js targets ES6+ (MongoDB 4.4+ mongo shell and all mongosh versions).
     // prefer-object-has-own is intentionally excluded: Object.hasOwn() is not
-    // guaranteed in the legacy mongo shell. no-throw-literal is intentionally
-    // excluded: variety.js throws string literals whose shell output format has
-    // been stable for years; migrating to Error objects is a separate decision.
+    // guaranteed in the legacy mongo shell.
     rules: {
+      'no-throw-literal': 'error',
       'no-var': 'error',
       'object-shorthand': ['error', 'always'],
       'prefer-const': 'error',
