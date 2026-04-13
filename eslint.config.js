@@ -80,8 +80,6 @@ module.exports = [
   {
     files: ['eslint.config.js', 'spec/**/*.js'],
     ignores: ['spec/assets/**/*.js'],
-    // Keep shell-executed files on the conservative shared ruleset until
-    // the repo intentionally drops legacy mongo shell compatibility.
     rules: nodeModernizationRules,
   },
   ...tseslint.config({

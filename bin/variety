@@ -7,14 +7,11 @@ set -e
 # executes, e.g.:
 # mongosh test --eval "var collection = 'users', limit = 1" ./variety.js
 
-if command -v mongosh >/dev/null 2>&1; then
-  MONGO_SHELL=mongosh
-elif command -v mongo >/dev/null 2>&1; then
-  MONGO_SHELL=mongo
-else
-  echo 'Error: neither mongosh nor mongo found in PATH' >&2
+if ! command -v mongosh >/dev/null 2>&1; then
+  echo 'Error: mongosh not found in PATH' >&2
   exit 127
 fi
+MONGO_SHELL=mongosh
 
 VARIETYJS_DIR=${VARIETYJS_DIR:-.}
 VARIETY_SCRIPT="$VARIETYJS_DIR/variety.js"

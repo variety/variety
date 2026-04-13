@@ -40,8 +40,7 @@ So, let's see what we've got here:
 
 _(`test` is the database containing the collection we are analyzing.)_
 
-These examples use `mongosh`. If your environment still ships the legacy `mongo`
-shell instead, substitute that executable in the commands below.
+These examples use `mongosh`, which is required to run Variety.
 
 Hmm. Looks like everybody has a `name` and `_id`. Most, but not all have a `bio`.
 
@@ -281,7 +280,7 @@ Variety expects keys to be well formed, not having any `.`s in them (MongoDB 2.4
     $ mongosh test --quiet --eval "var collection = 'users', arrayEscape = 'YY'" variety.js
 
 ### Command Line Interface ###
-This package ships a small `bin/variety` wrapper (published as the package's `variety` executable) that chooses `mongosh` when available and falls back to the legacy `mongo` shell.
+This package ships a small `bin/variety` wrapper (published as the package's `variety` executable) that invokes `mongosh`.
 
 Example:
 ```
@@ -307,7 +306,7 @@ A MongoDB collection does not enforce a predefined schema like a relational data
 
 ##### Dependencies #####
 
-At runtime, Variety itself depends only on MongoDB plus a MongoDB shell (`mongosh` is preferred; the legacy `mongo` shell still works where available). Development and testing add local npm dev dependencies.
+At runtime, Variety itself depends only on MongoDB plus `mongosh`. Development and testing add local npm dev dependencies.
 
 ##### Development, Hacking #####
 This project is NPM based and provides standard NPM functionality. As an additional (not required) dependency, [Docker](https://www.docker.com/) or [Podman](https://podman.io/) can be installed to test against different MongoDB versions.
@@ -334,7 +333,7 @@ npm run test:docker
 The script downloads one of [the official MongoDB images](https://hub.docker.com/_/mongo/) (based on your provided version),
 starts the database, executes the test suite against it (inside the container) and stops the DB.
 
-The Docker harness prefers `mongosh` when it is available and falls back to the legacy `mongo` shell for older images.
+The Docker harness uses `mongosh`.
 
 Dockerized tests default to MongoDB 8.0 on Node.js 22. You can override `MONGODB_VERSION` and `NODEJS_VERSION` when you want to try another supported combination:
 
@@ -358,7 +357,7 @@ Pre-commit hooks are managed by [Husky](https://typicode.github.io/husky/) and i
 - `npm run lint:shell` — shellcheck (shell scripts)
 - `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for Node-side spec code under `spec`
 
-ESLint applies a shared baseline of formatting and safety rules across the repo. That shared baseline now also bans repo-specific legacy patterns such as `Function('return this')`, `indexOf(...)` presence checks, and unguarded `for...in` loops. Node-side JavaScript such as `eslint.config.js`, the test suite, and `spec/utils` also opts into a stricter modernization set (`const`, template literals, object shorthand, `Object.hasOwn`, and throwing `Error` objects). The `spec/utils` helper layer now also uses type-aware `typescript-eslint` rules backed by `tsconfig.checkjs.json`. Both ESLint and `npm run test:mocha` now rely on native Node parsing for repo code, with `spec/package.json` marking the test tree as ESM while the root package remains CommonJS. Shell-executed files such as `variety.js` and shell plugins intentionally stay on the shared baseline until the project explicitly drops legacy `mongo` shell compatibility.
+ESLint applies a shared baseline of formatting and safety rules across the repo. That shared baseline now also bans repo-specific legacy patterns such as `Function('return this')`, `indexOf(...)` presence checks, and unguarded `for...in` loops. Node-side JavaScript such as `eslint.config.js`, the test suite, and `spec/utils` also opts into a stricter modernization set (`const`, template literals, object shorthand, `Object.hasOwn`, and throwing `Error` objects). The `spec/utils` helper layer now also uses type-aware `typescript-eslint` rules backed by `tsconfig.checkjs.json`. Both ESLint and `npm run test:mocha` now rely on native Node parsing for repo code, with `spec/package.json` marking the test tree as ESM while the root package remains CommonJS. Shell-executed files such as `variety.js` and shell plugins currently stay on the shared baseline; a follow-on change can opt them into the modernization ruleset now that the legacy `mongo` shell is no longer supported.
 
 The container-based checks, `npm run lint:dockerfile` and `npm run lint:shell`, require a container runtime. [Docker](https://www.docker.com/) is used if available, with [Podman](https://podman.io/) as a fallback. At least one must be installed.
 
