@@ -51,6 +51,7 @@ const nodeModernizationRules = {
 };
 
 module.exports = [
+  { ignores: ['.claude/'] },
   js.configs.recommended,
   {
     files: ['**/*.js'],
