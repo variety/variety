@@ -1,0 +1,20 @@
+{
+  // MD001: Heading levels should only increment by one level at a time — disabled
+  "MD001": false,
+  // MD013: Line length limit — disabled
+  "MD013": false,
+  // MD014: Dollar signs used before commands without showing output — disabled
+  "MD014": false,
+  // MD022: Headings should be surrounded by blank lines — disabled
+  "MD022": false,
+  // MD031: Fenced code blocks should be surrounded by blank lines — disabled
+  "MD031": false,
+  // MD036: Emphasis used instead of a heading — disabled
+  "MD036": false,
+  // MD040: Fenced code blocks should have a language specified — disabled
+  "MD040": false,
+  // MD041: First line in a file should be a top-level heading — disabled
+  "MD041": false,
+  // MD046: Code block style consistency — disabled
+  "MD046": false
+}
