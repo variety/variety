@@ -1,7 +1,7 @@
 /**
  * @typedef {import('../utils/JsonValidator.js').VarietyResultRow} VarietyResultRow
- * @typedef {{ delimiter?: string }} CsvPluginContext
- * @typedef {{ delimiter?: string }} CsvPluginConfig
+ * @typedef {{ delimiter?: string | undefined }} CsvPluginContext
+ * @typedef {{ delimiter?: string | undefined }} CsvPluginConfig
  */
 
 /**
