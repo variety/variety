@@ -19,7 +19,7 @@ const expectedLines = [
 
 
 
-describe('Continuous logging', async () => {
+describe('Continuous logging', () => {
 
   beforeEach(() => test.init(sampleData));
   afterEach(() => test.cleanUp());

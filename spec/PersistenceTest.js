@@ -13,7 +13,7 @@ describe('Persistence of results', () => {
 
   it('should persist results into varietyResults DB', async () => {
     await test.runAnalysis({collection:'users', persistResults: true}, true);
-    const db = await test.getDb('varietyResults');
+    const db = test.getDb('varietyResults');
     /** @type {import('mongodb').Collection<VarietyResultRow>} */
     const resultsCollection = db.collection('usersKeys');
     const arr = await resultsCollection.find().toArray();
