@@ -356,7 +356,7 @@ Pre-commit hooks are managed by [Husky](https://typicode.github.io/husky/) and i
 - `npm run lint:yaml` — js-yaml (YAML files)
 - `npm run lint:dockerfile` — hadolint (`docker/Dockerfile.template`)
 - `npm run lint:shell` — shellcheck (shell scripts)
-- `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for Node-side spec code under `spec`
+- `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for `eslint.config.js` and Node-side spec code under `spec`
 
 ESLint applies a shared baseline of formatting and safety rules across the repo. That shared baseline now also bans repo-specific legacy patterns such as `Function('return this')`, `indexOf(...)` presence checks, and unguarded `for...in` loops. Node-side JavaScript such as `eslint.config.js`, the test suite, and `spec/utils` also opts into a stricter modernization set (`const`, template literals, object shorthand, `Object.hasOwn`, and throwing `Error` objects). The `spec/utils` helper layer now also uses type-aware `typescript-eslint` rules backed by `tsconfig.checkjs.json`. Both ESLint and `npm run test:mocha` now rely on native Node parsing for repo code, with `spec/package.json` marking the test tree as ESM while the root package remains CommonJS. Shell-executed files such as `variety.js` and shell plugins intentionally stay on the shared baseline until the project explicitly drops legacy `mongo` shell compatibility.
 
