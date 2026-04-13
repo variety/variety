@@ -18,7 +18,11 @@ const parseParams = (output) => {
     .filter((line) => line.startsWith('Using')) // take only lines starting with Using
     .map((line) => /^Using\s(\S+)\sof\s(.*)$/.exec(line)) // parse with regular expression
     .filter((match) => match !== null) // filter out non-matching lines
-    .reduce((acc, match) => ({ ...acc, [match[1]]: JSON.parse(match[2]) }), /** @type {ParsedParams} */ ({})); // reduce to params object
+    .reduce((acc, match) => {
+      const [, key, rawValue] = match;
+      const parsedValue = /** @type {unknown} */ (JSON.parse(rawValue));
+      return { ...acc, [key]: parsedValue };
+    }, /** @type {ParsedParams} */ ({})); // reduce to params object
 };
 
 describe('Parameters parsing', () => {

@@ -97,7 +97,9 @@ module.exports = [
     },
   },
   ...defineConfig({
-    files: ['spec/utils/**/*.js'],
+    files: ['spec/**/*.js'],
+    ignores: ['spec/assets/**/*.js'],
+    // Keep shell-executed fixtures out of the typed Node-side ruleset.
     extends: [tseslint.configs.recommendedTypeChecked],
     languageOptions: {
       parserOptions: {

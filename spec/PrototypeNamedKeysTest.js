@@ -1,10 +1,13 @@
 import Tester from './utils/Tester.js';
 
+/** @typedef {import('mongodb').Document} MongoDocument */
+
 const test = new Tester('test', 'users');
 
+/** @type {MongoDocument[]} */
 const sampleData = [
-  JSON.parse('{"name":"Alice","constructor":"blue","hasOwnProperty":true,"__proto__":"shadow"}'),
-  JSON.parse('{"name":"Bob","constructor":42,"toString":"hello"}')
+  /** @type {MongoDocument} */ (JSON.parse('{"name":"Alice","constructor":"blue","hasOwnProperty":true,"__proto__":"shadow"}')),
+  /** @type {MongoDocument} */ (JSON.parse('{"name":"Bob","constructor":42,"toString":"hello"}'))
 ];
 
 describe('prototype-named keys', () => {
