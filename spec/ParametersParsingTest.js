@@ -4,9 +4,57 @@ import Tester from './utils/Tester.js';
 import sampleData from './assets/SampleData.js';
 
 const test = new Tester('test', 'users');
-const mongodbPort = Number(process.env.MONGODB_PORT || 27017);
+const mongodbPort = Number(process.env['MONGODB_PORT'] || 27017);
 
-/** @typedef {Record<string, unknown>} ParsedParams */
+/**
+ * @typedef {{
+ *   collection?: unknown,
+ *   query?: unknown,
+ *   limit?: unknown,
+ *   maxDepth?: unknown,
+ *   sort?: unknown,
+ *   outputFormat?: unknown,
+ *   persistResults?: unknown,
+ *   resultsDatabase?: unknown,
+ *   resultsCollection?: unknown,
+ *   resultsUser?: unknown,
+ *   resultsPass?: unknown,
+ *   showArrayElements?: unknown,
+ *   compactArrayTypes?: unknown,
+ *   plugins?: unknown,
+ * }} ParsedParams
+ */
+
+/**
+ * @param {ParsedParams} params
+ * @param {string} key
+ * @param {unknown} parsedValue
+ * @returns {ParsedParams}
+ */
+const setParsedParam = (params, key, parsedValue) => {
+  switch (key) {
+  case 'collection':
+  case 'query':
+  case 'limit':
+  case 'maxDepth':
+  case 'sort':
+  case 'outputFormat':
+  case 'persistResults':
+  case 'resultsDatabase':
+  case 'resultsCollection':
+  case 'resultsUser':
+  case 'resultsPass':
+  case 'showArrayElements':
+  case 'compactArrayTypes':
+  case 'plugins':
+    params[key] = parsedValue;
+    break;
+  default:
+    break;
+  }
+
+  return params;
+};
 
 /**
  * @param {string} output
@@ -19,9 +67,13 @@ const parseParams = (output) => {
     .map((line) => /^Using\s(\S+)\sof\s(.*)$/.exec(line)) // parse with regular expression
     .filter((match) => match !== null) // filter out non-matching lines
     .reduce((acc, match) => {
-      const [, key, rawValue] = match;
+      const key = match[1];
+      const rawValue = match[2];
+      if (typeof key === 'undefined' || typeof rawValue === 'undefined') {
+        return acc;
+      }
       const parsedValue = /** @type {unknown} */ (JSON.parse(rawValue));
-      return { ...acc, [key]: parsedValue };
+      return setParsedParam(acc, key, parsedValue);
     }, /** @type {ParsedParams} */ ({})); // reduce to params object
 };
 

@@ -2,12 +2,16 @@
   "compilerOptions": {
     "allowJs": true,
     "checkJs": true,
+    "exactOptionalPropertyTypes": true,
     "lib": [
       "ESNext"
     ],
     "module": "Node16",
     "moduleResolution": "Node16",
+    "noImplicitReturns": true,
     "noEmit": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
     "strict": true,
     "target": "ES2022",
