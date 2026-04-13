@@ -3,6 +3,7 @@
 const globals = require('globals');
 const js = require('@eslint/js');
 const tseslint = require('typescript-eslint');
+const { defineConfig } = require('eslint/config');
 
 const commonRules = {
   'brace-style': [2, '1tbs', { 'allowSingleLine': true }],
@@ -84,7 +85,7 @@ module.exports = [
     // the repo intentionally drops legacy mongo shell compatibility.
     rules: nodeModernizationRules,
   },
-  ...tseslint.config({
+  ...defineConfig({
     files: ['spec/utils/**/*.js'],
     extends: [tseslint.configs.recommendedTypeChecked],
     languageOptions: {
