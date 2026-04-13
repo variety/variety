@@ -281,23 +281,28 @@ Variety expects keys to be well formed, not having any `.`s in them (MongoDB 2.4
     $ mongosh test --quiet --eval "var collection = 'users', arrayEscape = 'YY'" variety.js
 
 ### Command Line Interface ###
-This package ships a small `bin/variety` wrapper (published as the package's `variety` executable) that chooses `mongosh` when available and falls back to the legacy `mongo` shell.
+This NPM package ships a small `bin/variety` wrapper (published as the npm package's `variety` executable) that chooses `mongosh` when available and falls back to the legacy `mongo` shell.
 
-Example:
-```
+The wrapper is controlled by three environment variables:
+
+| Variable | Description |
+| --- | --- |
+| `DB` | MongoDB database name to pass to the shell |
+| `EVAL_CMDS` | JavaScript assignments forwarded via `--eval` (e.g. `var collection = 'users', limit = 100`) |
+| `VARIETYJS_DIR` | Directory containing `variety.js`; defaults to `.` |
+
+Examples:
+
+```bash
 DB=test EVAL_CMDS="var collection = 'users', outputFormat='json'" VARIETYJS_DIR=. bin/variety
 ```
 
-If you want a more fully featured argument-parsing CLI, you could also prefer the
-[variety-cli](https://github.com/variety/variety-cli) project. It simplifies usage of
-Variety and removes all the complexity of passing variables in the `--eval` argument and
-providing a path to the variety.js library.
+```bash
+DB=test EVAL_CMDS="var collection = 'users', maxDepth = 3, limit = 500" VARIETYJS_DIR=. bin/variety
+```
 
-Example of a simplified command-line usage with `variety-cli`:
-```
-variety test/users --outputFormat='json' --quiet
-```
-For more details see the [documentation of the variety-cli project](https://github.com/variety/variety-cli).
+Note: `variety-cli`, a formerly available companion project that offered higher-level argument
+parsing, has been archived and is no longer maintained.
 
 ##### "But my dad told me MongoDB is a schemaless database!" #####
 
@@ -358,7 +363,7 @@ Pre-commit hooks are managed by [Husky](https://typicode.github.io/husky/) and i
 - `npm run lint:shell` — shellcheck (shell scripts)
 - `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for `eslint.config.js` and Node-side spec code under `spec`
 
-ESLint applies a shared baseline of formatting and safety rules across the repo. That shared baseline now also bans repo-specific legacy patterns such as `Function('return this')`, `indexOf(...)` presence checks, and unguarded `for...in` loops. Node-side JavaScript such as `eslint.config.js`, the test suite, and `spec/utils` also opts into a stricter modernization set (`const`, template literals, object shorthand, `Object.hasOwn`, and throwing `Error` objects). The `spec` test tree now also uses type-aware `typescript-eslint` rules backed by `tsconfig.checkjs.json`, while shell-executed fixtures under `spec/assets` stay on the shared baseline. Both ESLint and `npm run test:mocha` now rely on native Node parsing for repo code, with `spec/package.json` marking the test tree as ESM while the root package remains CommonJS. Shell-executed files such as `variety.js` and shell plugins intentionally stay on the shared baseline until the project explicitly drops legacy `mongo` shell compatibility.
+ESLint applies a shared baseline of formatting and safety rules across the repo. That shared baseline now also bans repo-specific legacy patterns such as `Function('return this')`, `indexOf(...)` presence checks, and unguarded `for...in` loops. Node-side JavaScript such as `eslint.config.js`, the test suite, and `spec/utils` also opts into a stricter modernization set (`const`, template literals, object shorthand, `Object.hasOwn`, and throwing `Error` objects). The `spec` test tree now also uses type-aware `typescript-eslint` rules backed by `tsconfig.checkjs.json`, while shell-executed fixtures under `spec/assets` stay on the shared baseline. Both ESLint and `npm run test:mocha` now rely on native Node parsing for repo code, with `spec/package.json` marking the test tree as ESM while the root package remains CommonJS. `variety.js` itself opts into a subset of those rules (`no-var`, `prefer-const`, `prefer-template`, `object-shorthand`, and `no-throw-literal`) — the rules that are safe for the ES6+ JavaScript supported by the legacy `mongo` shell since MongoDB 4.4. `prefer-object-has-own` is intentionally excluded: `Object.hasOwn()` is not guaranteed in the legacy `mongo` shell, and all `hasOwnProperty.call()` usages have been replaced by `Object.keys()` / `in` anyway.
 
 The container-based checks, `npm run lint:dockerfile` and `npm run lint:shell`, require a container runtime. [Docker](https://www.docker.com/) is used if available, with [Podman](https://podman.io/) as a fallback. At least one must be installed.
 

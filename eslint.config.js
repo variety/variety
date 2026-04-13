@@ -81,9 +81,20 @@ module.exports = [
   {
     files: ['eslint.config.js', 'spec/**/*.js'],
     ignores: ['spec/assets/**/*.js'],
-    // Keep shell-executed files on the conservative shared ruleset until
-    // the repo intentionally drops legacy mongo shell compatibility.
     rules: nodeModernizationRules,
+  },
+  {
+    files: ['variety.js'],
+    // Rules safe for the ES6+ compatibility floor declared at the top of variety.js.
+    // prefer-object-has-own is excluded because Object.hasOwn() (ES2022) is absent
+    // from the legacy mongo shell; see the compatibility comment in variety.js.
+    rules: {
+      'no-throw-literal': 'error',
+      'no-var': 'error',
+      'object-shorthand': ['error', 'always'],
+      'prefer-const': 'error',
+      'prefer-template': 'error',
+    },
   },
   ...defineConfig({
     files: ['spec/**/*.js'],
