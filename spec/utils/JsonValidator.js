@@ -30,7 +30,7 @@ export default class JsonValidator {
    * @param {number} percentContaining
    * @param {Record<string, number>} types
    * @param {unknown} [lastValue]
-  */
+   */
   validate(key, totalOccurrences, percentContaining, types, lastValue) {
     const row = this.results.find((item) => item._id.key === key);
     if(typeof row === 'undefined') {

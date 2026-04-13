@@ -1,6 +1,6 @@
 {
   "name": "variety",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "A MongoDB schema analyzer",
   "keywords": [
     "MongoDB",
@@ -73,6 +73,6 @@
     "mongodb": "^7.1.1",
     "promisify-child-process": "^5.0.1",
     "typescript": "^6.0.2",
-    "typescript-eslint": "^8.58.0"
+    "typescript-eslint": "^8.58.1"
   }
 }

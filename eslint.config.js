@@ -3,6 +3,7 @@
 const globals = require('globals');
 const js = require('@eslint/js');
 const tseslint = require('typescript-eslint');
+const { defineConfig } = require('eslint/config');
 
 const commonRules = {
   'brace-style': [2, '1tbs', { 'allowSingleLine': true }],
@@ -51,6 +52,7 @@ const nodeModernizationRules = {
 };
 
 module.exports = [
+  { ignores: ['.claude/'] },
   js.configs.recommended,
   {
     files: ['**/*.js'],
@@ -83,7 +85,7 @@ module.exports = [
     // the repo intentionally drops legacy mongo shell compatibility.
     rules: nodeModernizationRules,
   },
-  ...tseslint.config({
+  ...defineConfig({
     files: ['spec/**/*.js'],
     ignores: ['spec/assets/**/*.js'],
     // Keep shell-executed fixtures out of the typed Node-side ruleset.

@@ -56,3 +56,27 @@ describe('showArrayElements option', () => {
   });
 
 });
+
+// Nested-array sample: Alice has a homogeneous matrix (all Number rows),
+// Bob has a mixed matrix (one Number row, one String row).
+const nestedSampleData = [
+  { name: 'Alice', matrix: [[1, 2], [3, 4]] },
+  { name: 'Bob',   matrix: [[5, 6], ['a', 'b']] }
+];
+
+describe('compactArrayTypes with nested arrays', () => {
+
+  beforeEach(() => test.init(nestedSampleData));
+  afterEach(() => test.cleanUp());
+
+  it('should label nested array element types recursively', async () => {
+    const results = await test.runJsonAnalysis({collection: 'users', compactArrayTypes: true}, true);
+    results.validateResultsCount(3);
+    results.validate('_id',    2, 100.0, {ObjectId: 2});
+    results.validate('name',   2, 100.0, {String: 2});
+    // Alice's matrix rows are all Number → Array(Array(Number))
+    // Bob's matrix rows are Number and String → Array(Array(Number)|Array(String))
+    results.validate('matrix', 2, 100.0, {'Array(Array(Number))': 1, 'Array(Array(Number)|Array(String))': 1});
+  });
+
+});
