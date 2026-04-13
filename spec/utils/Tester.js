@@ -14,7 +14,7 @@ import JsonValidator from './JsonValidator.js';
  * @typedef {import('./JsonValidator.js').VarietyResultRow} VarietyResultRow
  */
 
-const mongodbPort = Number(process.env.MONGODB_PORT || 27017);
+const mongodbPort = Number(process.env['MONGODB_PORT'] || 27017);
 const defaultUrl = `mongodb://localhost:${mongodbPort}/test`;
 const varietyPath = fileURLToPath(new URL('../../variety.js', import.meta.url));
 
