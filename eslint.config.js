@@ -85,9 +85,9 @@ module.exports = [
   },
   {
     files: ['variety.js'],
-    // variety.js targets ES6+ (MongoDB 4.4+ mongo shell and all mongosh versions).
-    // prefer-object-has-own is intentionally excluded: Object.hasOwn() is not
-    // guaranteed in the legacy mongo shell.
+    // Rules safe for the ES6+ compatibility floor declared at the top of variety.js.
+    // prefer-object-has-own is excluded because Object.hasOwn() (ES2022) is absent
+    // from the legacy mongo shell; see the compatibility comment in variety.js.
     rules: {
       'no-throw-literal': 'error',
       'no-var': 'error',

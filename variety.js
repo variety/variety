@@ -9,6 +9,14 @@ Please see https://github.com/variety/variety for details.
 
 Released by James Cropcho, © 2012–2026, under the MIT License. */
 
+// JavaScript compatibility floor: this file runs inside a MongoDB shell —
+// either mongosh (all versions, modern V8) or the legacy `mongo` shell
+// (SpiderMonkey-based, shipped through MongoDB 5.x). The lowest common
+// denominator is the ES6+ feature set available in the legacy shell since
+// MongoDB 4.4: let/const, arrow functions, template literals, rest/spread,
+// for…of, Object.keys()/Object.entries(), and class. Later additions such
+// as Object.hasOwn() (ES2022) are absent and must not be used here.
+// See eslint.config.js for the enforced rule set.
 (function (shellContext) {
   'use strict'; // wraps everything for which we can use strict mode ―JC
 
