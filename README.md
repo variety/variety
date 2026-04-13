@@ -281,23 +281,28 @@ Variety expects keys to be well formed, not having any `.`s in them (MongoDB 2.4
     $ mongosh test --quiet --eval "var collection = 'users', arrayEscape = 'YY'" variety.js
 
 ### Command Line Interface ###
-This package ships a small `bin/variety` wrapper (published as the package's `variety` executable) that chooses `mongosh` when available and falls back to the legacy `mongo` shell.
+This NPM package ships a small `bin/variety` wrapper (published as the npm package's `variety` executable) that chooses `mongosh` when available and falls back to the legacy `mongo` shell.
 
-Example:
-```
+The wrapper is controlled by three environment variables:
+
+| Variable | Description |
+| --- | --- |
+| `DB` | MongoDB database name to pass to the shell |
+| `EVAL_CMDS` | JavaScript assignments forwarded via `--eval` (e.g. `var collection = 'users', limit = 100`) |
+| `VARIETYJS_DIR` | Directory containing `variety.js`; defaults to `.` |
+
+Examples:
+
+```bash
 DB=test EVAL_CMDS="var collection = 'users', outputFormat='json'" VARIETYJS_DIR=. bin/variety
 ```
 
-If you want a more fully featured argument-parsing CLI, you could also prefer the
-[variety-cli](https://github.com/variety/variety-cli) project. It simplifies usage of
-Variety and removes all the complexity of passing variables in the `--eval` argument and
-providing a path to the variety.js library.
+```bash
+DB=test EVAL_CMDS="var collection = 'users', maxDepth = 3, limit = 500" VARIETYJS_DIR=. bin/variety
+```
 
-Example of a simplified command-line usage with `variety-cli`:
-```
-variety test/users --outputFormat='json' --quiet
-```
-For more details see the [documentation of the variety-cli project](https://github.com/variety/variety-cli).
+Note: `variety-cli`, a formerly available companion project that offered higher-level argument
+parsing, has been archived and is no longer maintained.
 
 ##### "But my dad told me MongoDB is a schemaless database!" #####
 
