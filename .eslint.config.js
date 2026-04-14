@@ -79,7 +79,7 @@ module.exports = [
     },
   },
   {
-    files: ['eslint.config.js', 'spec/**/*.js'],
+    files: ['.eslint.config.js', 'spec/**/*.js'],
     ignores: ['spec/assets/**/*.js'],
     rules: nodeModernizationRules,
   },
@@ -103,7 +103,7 @@ module.exports = [
     extends: [tseslint.configs.recommendedTypeChecked],
     languageOptions: {
       parserOptions: {
-        project: './tsconfig.checkjs.json',
+        project: './.tsconfig.checkjs.json',
         tsconfigRootDir: __dirname,
       },
     },

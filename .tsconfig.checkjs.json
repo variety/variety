@@ -21,7 +21,7 @@
     ]
   },
   "include": [
-    "eslint.config.js",
+    ".eslint.config.js",
     "spec/**/*.js",
     "spec/**/*.d.ts"
   ]

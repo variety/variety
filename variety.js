@@ -16,7 +16,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 // MongoDB 4.4: let/const, arrow functions, template literals, rest/spread,
 // for…of, Object.keys()/Object.entries(), and class. Later additions such
 // as Object.hasOwn() (ES2022) are absent and must not be used here.
-// See eslint.config.js for the enforced rule set.
+// See .eslint.config.js for the enforced rule set.
 
 // -----------------------------------------------------------------------------
 // This file is organized in two sections, in preparation for an eventual split
