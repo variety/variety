@@ -17,27 +17,36 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 // for…of, Object.keys()/Object.entries(), and class. Later additions such
 // as Object.hasOwn() (ES2022) are absent and must not be used here.
 // See eslint.config.js for the enforced rule set.
+
+// -----------------------------------------------------------------------------
+// This file is organized in two sections, in preparation for an eventual split
+// into separate files:
+//
+//   1. IMPLEMENTATION SECTION — pure, transport-agnostic analysis logic.
+//      Functions take their dependencies (config, and where needed a `log`
+//      function or a `deps` bag holding shell primitives) as explicit
+//      parameters. The section hands a bundle of functions to the interface
+//      section via `shellContext.__varietyImpl`.
+//
+//   2. INTERFACE SECTION — everything that touches shell globals: reading
+//      input (`collection`, `plugins`, `__quiet`, `slaveOk`, etc.), the
+//      config-echo logging, plugin loading via `load()`, input validation,
+//      and constructing the dependency bag passed to `impl.run()`.
+//
+// The handoff property is deleted at the end so the pair is idempotent and
+// does not pollute the shell's global namespace after execution.
+// -----------------------------------------------------------------------------
+
+
+// =============================================================================
+// IMPLEMENTATION SECTION
+// =============================================================================
 (function (shellContext) {
-  'use strict'; // wraps everything for which we can use strict mode ―JC
+  'use strict';
 
   shellContext = typeof globalThis !== 'undefined' ? globalThis : shellContext;
 
-  const shellIsQuiet = () => {
-    if (typeof __quiet !== 'undefined' && __quiet) {
-      return true;
-    }
-
-    return typeof process !== 'undefined' &&
-      process &&
-      process.argv &&
-      process.argv.includes('--quiet');
-  };
-
-  const log = (message) => {
-    if (!shellIsQuiet()) {
-      print(message);
-    }
-  };
+  const createKeyMap = () => Object.create(null);
 
   const shellToJson = (value) => {
     if (typeof tojson === 'function') {
@@ -50,151 +59,6 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 
     return JSON.stringify(value);
   };
-
-  const shellPrintJson = (value) => {
-    print(JSON.stringify(value, null, 2));
-  };
-
-  const createKeyMap = () => Object.create(null);
-
-  const getDatabase = (name) => {
-    if (typeof db.getSisterDB === 'function') {
-      return db.getSisterDB(name);
-    }
-
-    return db.getMongo().getDB(name);
-  };
-
-  log('Variety: A MongoDB Schema Analyzer');
-  log('Version 1.5.2, released 30 September 2025');
-
-  const dbs = [];
-  const emptyDbs = [];
-
-  if (typeof slaveOk !== 'undefined') {
-    if (slaveOk === true) {
-      db.getMongo().setSlaveOk();
-    }
-  }
-
-  const knownDatabases = db.adminCommand('listDatabases').databases;
-  if (typeof knownDatabases !== 'undefined') { // not authorized user receives error response (json) without databases key
-    knownDatabases.forEach((d) => {
-      const collectionNames = getDatabase(d.name).getCollectionNames();
-      if (collectionNames.length > 0) {
-        dbs.push(d.name);
-      } else {
-        emptyDbs.push(d.name);
-      }
-    });
-
-    if (emptyDbs.includes(db.getName())) {
-      throw new Error(`The database specified (${db.getName()}) is empty.\n` +
-          `Possible database options are: ${dbs.join(', ')}.`);
-    }
-
-    if (!dbs.includes(db.getName())) {
-      throw new Error(`The database specified (${db.getName()}) does not exist.\n` +
-          `Possible database options are: ${dbs.join(', ')}.`);
-    }
-  }
-
-  const collNames = db.getCollectionNames().join(', ');
-  if (typeof collection === 'undefined') {
-    throw new Error('You have to supply a \'collection\' variable, à la --eval \'var collection = "animals"\'.\n' +
-        `Possible collection options for database specified: ${collNames}.\n` +
-        'Please see https://github.com/variety/variety for details.');
-  }
-
-  const countMatchingDocuments = (collectionName, query, limit) => {
-    const coll = db.getCollection(collectionName);
-    const options = (typeof limit === 'number' && limit > 0) ? { limit } : undefined;
-    return coll.countDocuments(query, options);
-  };
-
-  if (countMatchingDocuments(collection, {}) === 0) {
-    throw new Error(`The collection specified (${collection}) in the database specified (${db.getName()}) does not exist or is empty.\n` +
-        `Possible collection options for database specified: ${collNames}.`);
-  }
-
-  const readConfig = (configProvider) => {
-    const config = {};
-    const read = (name, defaultValue) => {
-      const value = typeof configProvider[name] !== 'undefined' ? configProvider[name] : defaultValue;
-      config[name] = value;
-      log(`Using ${name} of ${shellToJson(value)}`);
-    };
-    read('collection', null);
-    read('query', {});
-    read('limit', countMatchingDocuments(config.collection, config.query));
-    read('maxDepth', 99);
-    read('sort', {_id: -1});
-    read('outputFormat', 'ascii');
-    read('persistResults', false);
-    read('resultsDatabase', 'varietyResults');
-    read('resultsCollection', `${collection}Keys`);
-    read('resultsUser', null);
-    read('resultsPass', null);
-    read('logKeysContinuously', false);
-    read('excludeSubkeys', []);
-    read('arrayEscape', 'XX');
-    read('showArrayElements', false);
-    read('compactArrayTypes', false);
-    read('lastValue', false);
-
-    // Translate excludeSubkeys into a set-like object for compatibility.
-    config.excludeSubkeys = config.excludeSubkeys.reduce((result, item) => {
-      result[`${item}.`] = true;
-      return result;
-    }, createKeyMap());
-
-    return config;
-  };
-
-  const config = readConfig(shellContext);
-
-  const createPluginsRunner = (context) => {
-    const parsePath = (val) => val.slice(-3) !== '.js' ? `${val}.js` : val;
-    const parseConfig = (val) => {
-      const cfg = {};
-      val.split('&').reduce((acc, entry) => {
-        const parts = entry.split('=');
-        acc[parts[0]] = parts[1];
-        return acc;
-      }, cfg);
-      return cfg;
-    };
-
-    const plugins = typeof context.plugins !== 'undefined'
-      ? context.plugins.split(',')
-        .map((p) => p.trim())
-        .map((definition) => {
-          const path = parsePath(definition.split('|')[0]);
-          const cfg = parseConfig(definition.split('|')[1] || '');
-          context.module = {exports: {}};
-          load(path);
-          const plugin = context.module.exports;
-          delete context.module;
-          plugin.path = path;
-          if (typeof plugin.init === 'function') {
-            plugin.init(cfg);
-          }
-          return plugin;
-        })
-      : [];
-
-    log(`Using plugins of ${shellToJson(plugins.map((plugin) => plugin.path))}`);
-
-    return {
-      execute(methodName, ...args) {
-        const applicablePlugins = plugins.filter((plugin) => typeof plugin[methodName] === 'function');
-        return applicablePlugins.map((plugin) => plugin[methodName](...args));
-      }
-    };
-  };
-
-  const pluginsRunner = createPluginsRunner(shellContext);
-  pluginsRunner.execute('onConfig', config);
 
   const getBinDataSubtype = (binData) => {
     if (!binData) { return undefined; }
@@ -395,7 +259,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     return result;
   };
 
-  const mergeDocument = (config, docResult, interimResults) => {
+  const mergeDocument = (config, docResult, interimResults, log) => {
     for (const key of Object.keys(docResult)) {
       if (key in interimResults) {
         const existing = interimResults[key];
@@ -453,22 +317,10 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
   };
 
   // Merge the keys and types of current object into accumulator object.
-  const reduceDocuments = (config, accumulator, object) => {
+  const reduceDocuments = (config, accumulator, object, log) => {
     const docResult = analyseDocument(config, serializeDoc(config, object));
-    mergeDocument(config, docResult, accumulator);
+    mergeDocument(config, docResult, accumulator, log);
     return accumulator;
-  };
-
-  // By default, keys ending in an array index (e.g. "tags.XX") are suppressed,
-  // since the parent key already captures the Array type. Set showArrayElements:true
-  // to include them — useful for verifying element-type consistency within arrays.
-  const arrayRegex = new RegExp(`\\.${config.arrayEscape}$`, 'g');
-  const filter = (item) => config.showArrayElements || !item._id.key.match(arrayRegex);
-
-  // Sort desc by totalOccurrences, or by key asc if occurrences are equal.
-  const comparator = (a, b) => {
-    const countsDiff = b.totalOccurrences - a.totalOccurrences;
-    return countsDiff !== 0 ? countsDiff : a._id.key.localeCompare(b._id.key);
   };
 
   const reduceCursor = (cursor, callback, initialValue) => {
@@ -478,32 +330,6 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     });
     return result;
   };
-
-  // limit(0) meant "no limit" in MongoDB ≤7 but is rejected by MongoDB 8+; guard against it.
-  let cursor = db.getCollection(config.collection).find(config.query).sort(config.sort);
-  if (config.limit > 0) { cursor = cursor.limit(config.limit); }
-  const interimResults = reduceCursor(cursor, (acc, obj) => reduceDocuments(config, acc, obj), createKeyMap());
-  const varietyResults = convertResults(config, interimResults, countMatchingDocuments(config.collection, config.query, config.limit))
-    .filter(filter)
-    .sort(comparator);
-
-  if (config.persistResults) {
-    const resultsCollectionName = config.resultsCollection;
-    const resultsDB = !config.resultsDatabase.includes('/')
-      // Local database; don't reconnect.
-      ? db.getMongo().getDB(config.resultsDatabase)
-      // Remote database, establish new connection.
-      : connect(config.resultsDatabase);
-
-    if (config.resultsUser !== null && config.resultsPass !== null) {
-      resultsDB.auth(config.resultsUser, config.resultsPass);
-    }
-
-    // Replace results collection.
-    log(`replacing results collection: ${resultsCollectionName}`);
-    resultsDB.getCollection(resultsCollectionName).drop();
-    resultsDB.getCollection(resultsCollectionName).insert(varietyResults);
-  }
 
   const createAsciiTable = (config, results) => {
     const headers = ['key', 'types', 'occurrences', 'percents'];
@@ -517,7 +343,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
       return res !== null ? res[1].length : 1;
     };
 
-    const maxDigits = varietyResults
+    const maxDigits = results
       .map((value) => significantDigits(value.percentContaining))
       .reduce((acc, val) => Math.max(acc, val), 1);
 
@@ -544,13 +370,270 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     return [border].concat(formattedTable).concat(border).join('\n');
   };
 
-  const pluginsOutput = pluginsRunner.execute('formatResults', varietyResults);
-  if (pluginsOutput.length > 0) {
-    pluginsOutput.forEach((output) => print(output));
-  } else if (config.outputFormat === 'json') {
-    shellPrintJson(varietyResults); // valid formatted json output, compressed variant is printjsononeline()
-  } else {
-    print(createAsciiTable(config, varietyResults)); // output nice ascii table with results
+  // By default, keys ending in an array index (e.g. "tags.XX") are suppressed,
+  // since the parent key already captures the Array type. Set showArrayElements:true
+  // to include them — useful for verifying element-type consistency within arrays.
+  const buildResultFilter = (config) => {
+    const arrayRegex = new RegExp(`\\.${config.arrayEscape}$`, 'g');
+    return (item) => config.showArrayElements || !item._id.key.match(arrayRegex);
+  };
+
+  // Sort desc by totalOccurrences, or by key asc if occurrences are equal.
+  const compareResults = (a, b) => {
+    const countsDiff = b.totalOccurrences - a.totalOccurrences;
+    return countsDiff !== 0 ? countsDiff : a._id.key.localeCompare(b._id.key);
+  };
+
+  // Orchestrates a Variety analysis from a parsed config and constructed
+  // pluginsRunner, pulling every shell primitive it needs from `deps`.
+  const run = (config, pluginsRunner, deps) => {
+    const {db, connect, log, print, shellPrintJson, countMatchingDocuments} = deps;
+
+    // limit(0) meant "no limit" in MongoDB ≤7 but is rejected by MongoDB 8+; guard against it.
+    let cursor = db.getCollection(config.collection).find(config.query).sort(config.sort);
+    if (config.limit > 0) { cursor = cursor.limit(config.limit); }
+    const interimResults = reduceCursor(
+      cursor,
+      (acc, obj) => reduceDocuments(config, acc, obj, log),
+      createKeyMap()
+    );
+    const varietyResults = convertResults(
+      config,
+      interimResults,
+      countMatchingDocuments(config.collection, config.query, config.limit)
+    )
+      .filter(buildResultFilter(config))
+      .sort(compareResults);
+
+    if (config.persistResults) {
+      const resultsCollectionName = config.resultsCollection;
+      const resultsDB = !config.resultsDatabase.includes('/')
+        // Local database; don't reconnect.
+        ? db.getMongo().getDB(config.resultsDatabase)
+        // Remote database, establish new connection.
+        : connect(config.resultsDatabase);
+
+      if (config.resultsUser !== null && config.resultsPass !== null) {
+        resultsDB.auth(config.resultsUser, config.resultsPass);
+      }
+
+      // Replace results collection.
+      log(`replacing results collection: ${resultsCollectionName}`);
+      resultsDB.getCollection(resultsCollectionName).drop();
+      resultsDB.getCollection(resultsCollectionName).insert(varietyResults);
+    }
+
+    const pluginsOutput = pluginsRunner.execute('formatResults', varietyResults);
+    if (pluginsOutput.length > 0) {
+      pluginsOutput.forEach((output) => print(output));
+    } else if (config.outputFormat === 'json') {
+      shellPrintJson(varietyResults); // valid formatted json output, compressed variant is printjsononeline()
+    } else {
+      print(createAsciiTable(config, varietyResults)); // output nice ascii table with results
+    }
+  };
+
+  shellContext.__varietyImpl = {
+    createKeyMap,
+    shellToJson,
+    getBinDataSubtype,
+    getBinDataHex,
+    getRawBsonTypeName,
+    normalizeBsonTypeName,
+    getSpecialTypeName,
+    varietyTypeOf,
+    serializeDoc,
+    analyseDocument,
+    mergeDocument,
+    convertResults,
+    reduceDocuments,
+    reduceCursor,
+    createAsciiTable,
+    run,
+  };
+}(this));
+
+
+// =============================================================================
+// INTERFACE SECTION
+// =============================================================================
+(function (shellContext) {
+  'use strict'; // wraps everything for which we can use strict mode ―JC
+
+  shellContext = typeof globalThis !== 'undefined' ? globalThis : shellContext;
+
+  const impl = shellContext.__varietyImpl;
+
+  const shellIsQuiet = () => {
+    if (typeof __quiet !== 'undefined' && __quiet) {
+      return true;
+    }
+
+    return typeof process !== 'undefined' &&
+      process &&
+      process.argv &&
+      process.argv.includes('--quiet');
+  };
+
+  const log = (message) => {
+    if (!shellIsQuiet()) {
+      print(message);
+    }
+  };
+
+  const shellPrintJson = (value) => {
+    print(JSON.stringify(value, null, 2));
+  };
+
+  const getDatabase = (name) => {
+    if (typeof db.getSisterDB === 'function') {
+      return db.getSisterDB(name);
+    }
+
+    return db.getMongo().getDB(name);
+  };
+
+  const countMatchingDocuments = (collectionName, query, limit) => {
+    const coll = db.getCollection(collectionName);
+    const options = (typeof limit === 'number' && limit > 0) ? {limit} : undefined;
+    return coll.countDocuments(query, options);
+  };
+
+  log('Variety: A MongoDB Schema Analyzer');
+  log('Version 1.5.2, released 30 September 2025');
+
+  const dbs = [];
+  const emptyDbs = [];
+
+  if (typeof slaveOk !== 'undefined') {
+    if (slaveOk === true) {
+      db.getMongo().setSlaveOk();
+    }
   }
 
+  const knownDatabases = db.adminCommand('listDatabases').databases;
+  if (typeof knownDatabases !== 'undefined') { // not authorized user receives error response (json) without databases key
+    knownDatabases.forEach((d) => {
+      const collectionNames = getDatabase(d.name).getCollectionNames();
+      if (collectionNames.length > 0) {
+        dbs.push(d.name);
+      } else {
+        emptyDbs.push(d.name);
+      }
+    });
+
+    if (emptyDbs.includes(db.getName())) {
+      throw new Error(`The database specified (${db.getName()}) is empty.\n` +
+          `Possible database options are: ${dbs.join(', ')}.`);
+    }
+
+    if (!dbs.includes(db.getName())) {
+      throw new Error(`The database specified (${db.getName()}) does not exist.\n` +
+          `Possible database options are: ${dbs.join(', ')}.`);
+    }
+  }
+
+  const collNames = db.getCollectionNames().join(', ');
+  if (typeof collection === 'undefined') {
+    throw new Error('You have to supply a \'collection\' variable, à la --eval \'var collection = "animals"\'.\n' +
+        `Possible collection options for database specified: ${collNames}.\n` +
+        'Please see https://github.com/variety/variety for details.');
+  }
+
+  if (countMatchingDocuments(collection, {}) === 0) {
+    throw new Error(`The collection specified (${collection}) in the database specified (${db.getName()}) does not exist or is empty.\n` +
+        `Possible collection options for database specified: ${collNames}.`);
+  }
+
+  const readConfig = (configProvider) => {
+    const config = {};
+    const read = (name, defaultValue) => {
+      const value = typeof configProvider[name] !== 'undefined' ? configProvider[name] : defaultValue;
+      config[name] = value;
+      log(`Using ${name} of ${impl.shellToJson(value)}`);
+    };
+    read('collection', null);
+    read('query', {});
+    read('limit', countMatchingDocuments(config.collection, config.query));
+    read('maxDepth', 99);
+    read('sort', {_id: -1});
+    read('outputFormat', 'ascii');
+    read('persistResults', false);
+    read('resultsDatabase', 'varietyResults');
+    read('resultsCollection', `${collection}Keys`);
+    read('resultsUser', null);
+    read('resultsPass', null);
+    read('logKeysContinuously', false);
+    read('excludeSubkeys', []);
+    read('arrayEscape', 'XX');
+    read('showArrayElements', false);
+    read('compactArrayTypes', false);
+    read('lastValue', false);
+
+    // Translate excludeSubkeys into a set-like object for compatibility.
+    config.excludeSubkeys = config.excludeSubkeys.reduce((result, item) => {
+      result[`${item}.`] = true;
+      return result;
+    }, impl.createKeyMap());
+
+    return config;
+  };
+
+  const config = readConfig(shellContext);
+
+  const createPluginsRunner = (context) => {
+    const parsePath = (val) => val.slice(-3) !== '.js' ? `${val}.js` : val;
+    const parseConfig = (val) => {
+      const cfg = {};
+      val.split('&').reduce((acc, entry) => {
+        const parts = entry.split('=');
+        acc[parts[0]] = parts[1];
+        return acc;
+      }, cfg);
+      return cfg;
+    };
+
+    const plugins = typeof context.plugins !== 'undefined'
+      ? context.plugins.split(',')
+        .map((p) => p.trim())
+        .map((definition) => {
+          const path = parsePath(definition.split('|')[0]);
+          const cfg = parseConfig(definition.split('|')[1] || '');
+          context.module = {exports: {}};
+          load(path);
+          const plugin = context.module.exports;
+          delete context.module;
+          plugin.path = path;
+          if (typeof plugin.init === 'function') {
+            plugin.init(cfg);
+          }
+          return plugin;
+        })
+      : [];
+
+    log(`Using plugins of ${impl.shellToJson(plugins.map((plugin) => plugin.path))}`);
+
+    return {
+      execute(methodName, ...args) {
+        const applicablePlugins = plugins.filter((plugin) => typeof plugin[methodName] === 'function');
+        return applicablePlugins.map((plugin) => plugin[methodName](...args));
+      }
+    };
+  };
+
+  const pluginsRunner = createPluginsRunner(shellContext);
+  pluginsRunner.execute('onConfig', config);
+
+  impl.run(config, pluginsRunner, {
+    db,
+    connect: typeof connect !== 'undefined' ? connect : undefined,
+    log,
+    print,
+    shellPrintJson,
+    countMatchingDocuments,
+  });
+
+  // Clean up the implementation handoff so repeated loads remain idempotent
+  // and no ad hoc internals leak onto globalThis after execution.
+  delete shellContext.__varietyImpl;
 }(this)); // end strict mode
