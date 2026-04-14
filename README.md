@@ -1,4 +1,4 @@
-# Meet Variety, a Schema Analyzer for MongoDB ###
+# Meet Variety, a Schema Analyzer for MongoDB
 This lightweight tool helps you get a sense of your application's schema, as well as any outliers to that schema. Particularly useful when you inherit a codebase with a data dump and want to quickly learn how the data's structured. Also useful for finding rare keys.
 
 ***
@@ -12,7 +12,7 @@ _Co-founder of [Zipfian Academy](https://www.zipfianacademy.com/)_
 
 Also featured on the [official MongoDB blog](https://web.archive.org/web/20231002225312/http://www.mongodb.com:80/blog/post/meet-variety-a-schema-analyzer-for-mongodb).
 
-### An Easy Example ###
+## An Easy Example
 
 We'll make a collection:
 
@@ -51,7 +51,7 @@ Seems like the first document created has a weird legacy key—those damn fools 
 
 By default, Variety prints results to standard output. If you want to store them in MongoDB for later use, see [Save Results in MongoDB For Future Use](#save-results-in-mongodb-for-future-use).
 
-### See Progress When Analysis Takes a Long Time ###
+## See Progress When Analysis Takes a Long Time
 
 Variety does not print its own progress bar or "percent complete" measurement.
 
@@ -66,7 +66,7 @@ Some MongoDB versions and logging configurations do not emit a percentage for
 these operations. If you do not see one, Variety may still be running normally;
 it just means MongoDB is not exposing that measurement in your environment.
 
-### Analyze Only Recent Documents ###
+## Analyze Only Recent Documents
 
 Perhaps you have a really large collection, and you can't wait a whole day for Variety's results.
 
@@ -88,7 +88,7 @@ Let's examine the results closely:
 
 We are only examining the newest document here (`limit = 1`, using Variety's default `_id: -1` sort). It belongs to Jim, and only contains the `_id`, `name`, and `someBinData` fields. So it makes sense these are the only three keys.
 
-### Analyze Documents to a Maximum Depth ###
+## Analyze Documents to a Maximum Depth
 
 Perhaps you have a potentially very deep nested object structure, and you don't want to see more than a few levels deep in the analysis.
 
@@ -127,7 +127,7 @@ The default will traverse all the way to the bottom of that structure:
 
 As you can see, Variety only traversed three levels deep.
 
-### Analyze a Subset of Documents ###
+## Analyze a Subset of Documents
 
 Perhaps you have a large collection, or you only care about some subset of the documents.
 
@@ -135,7 +135,7 @@ One can apply a `query` constraint, which takes a standard MongoDB query object,
 
     $ mongosh test --eval "var collection = 'users', query = {'caredAbout':true}" variety.js
 
-### Analyze Documents Sorted In a Particular Order ###
+## Analyze Documents Sorted In a Particular Order
 
 Perhaps you want to analyze a subset of documents sorted in an order other than creation order, say, for example, sorted by when documents were updated.
 
@@ -143,7 +143,7 @@ One can apply a `sort` constraint, which analyzes documents in the specified ord
 
     $ mongosh test --eval "var collection = 'users', sort = { updated_at : -1 }" variety.js
 
-### Include Last Value ###
+## Include Last Value
 
 One can also apply a `lastValue` constraint to capture one representative value for each key.
 
@@ -169,7 +169,7 @@ Variety captures each `lastValue` from the first matching document it sees in th
 `Date` is converted into `timestamp`, `ObjectId` into `string`, and binary data into hex. Other types are shown in square brackets.
 Variety reports BSON wrapper types such as `Decimal128`, `Timestamp`, `Code`, `BSONRegExp`, `MinKey`, `MaxKey`, and `DBRef` by their BSON type names in the `types` column.
 
-### Render Output As JSON For Easy Ingestion and Parsing ###
+## Render Output As JSON For Easy Ingestion and Parsing
 
 Variety supports two built-in output formats:
 
@@ -180,19 +180,19 @@ Default format is `ascii`. You can select the format with the `outputFormat` pro
 
     $ mongosh test --quiet --eval "var collection = 'users', outputFormat='json'" variety.js
 
-#### Quiet Option ####
+### Quiet Option
 
 Both MongoDB and Variety output some additional information to standard output. If you want to remove this info, you can use the `--quiet` option provided by the MongoDB shell executable.
 Variety can also read that option and mute unnecessary output. This is useful in connection with `outputFormat=json`. You would then receive only JSON, without any other characters around it.
 
     $ mongosh test --quiet --eval "var collection = 'users', outputFormat='json', sort = { updated_at : -1 }" variety.js
 
-#### Log Keys and Types As They Arrive Option ####
+### Log Keys and Types As They Arrive Option
 Sometimes you want to see the keys and types come in as it happens.  Maybe you have a large dataset and want accurate results, but you also are impatient and want to see something now.  Or maybe you have a large mangled dataset with crazy keys (that probably shouldn't be keys) and Variety is going out of memory.  This option will show you the keys and types as they come in and help you identify problems with your dataset without needing the Variety script to finish.  
 
     $ mongosh test --eval "var collection = 'users', sort = { updated_at : -1 }, logKeysContinuously = true" variety.js
 
-#### Exclude Subkeys ####
+### Exclude Subkeys
 Sometimes you inherit a database full of junk.  Maybe the previous developer put data in the database keys, which causes Variety to go out of memory when run.  After you've run the `logKeysContinuously` to figure out which subkeys may be a problem, you can use this option to run Variety without those subkeys.  
 
     db.users.insert({name:"Walter", someNestedObject:{a:{b:{c:{d:{e:1}}}}}, otherNestedObject:{a:{b:{c:{d:{e:1}}}}}});
@@ -215,7 +215,7 @@ Sometimes you inherit a database full of junk.  Maybe the previous developer put
     | otherNestedObject.a.b.c.d.e | Number   |           1 |    100.0 |
     +-----------------------------------------------------------------+
 
-#### Show Array Elements ####
+### Show Array Elements
 
 By default, Variety suppresses keys that end with an array index (e.g. `tags.XX`), because the parent key already captures the `Array` type. If you want to see the types of the values _inside_ primitive arrays — useful for verifying element-type consistency — set `showArrayElements` to `true`:
 
@@ -239,7 +239,7 @@ Without `showArrayElements`, only the `tags` key (type `Array`) appears. With it
 
 This reveals that `tags` contains mixed element types across the collection.
 
-#### Compact Array Types ####
+### Compact Array Types
 
 If you want the parent array key itself to carry a more informative summary than plain `Array`, set `compactArrayTypes` to `true`:
 
@@ -251,13 +251,13 @@ This option is complementary to `showArrayElements`: `compactArrayTypes` makes t
 
 _Thanks to [@oufeng](https://github.com/oufeng) for suggesting this feature ([#166](https://github.com/variety/variety/issues/166))._
 
-#### Secondary Reads ####
+### Secondary Reads
 Analyzing a large collection on a busy replica set primary could take a lot longer than if you read from a secondary. To do so, we have to tell MongoDB it's okay to perform secondary reads
 by setting the `slaveOk` property to `true`:
 
     $ mongosh secondary.replicaset.member:31337/somedb --eval "var collection = 'users', slaveOk = true" variety.js
 
-### Save Results in MongoDB For Future Use ###
+## Save Results in MongoDB For Future Use
 By default, Variety prints results only to standard output and does not store them in MongoDB itself. If you want to persist them automatically in MongoDB for later usage, you can set the `persistResults` parameter.
 Variety then stores result documents in the `varietyResults` database, and the collection name is derived from the source collection's name.
 If the source collection's name is `users`, Variety stores results in the `usersKeys` collection under the `varietyResults` database.
@@ -275,12 +275,12 @@ To persist to an alternate MongoDB database, you may specify the following param
 $ mongosh test --quiet --eval "var collection = 'users', persistResults=true, resultsDatabase='db.example.com/variety'" variety.js
 ```
 
-### Reserved Keys ###
+## Reserved Keys
 Variety expects keys to be well formed, not having any `.`s in them (MongoDB 2.4 allows dots in certain cases).  Also MongoDB uses the pseudo keys `XX` and keys corresponding to the regex `XX\d+XX.*` for use with arrays.  You can change the string `XX` in these patterns to whatever you like if there is a conflict in your database using the `arrayEscape` parameter.  
 
     $ mongosh test --quiet --eval "var collection = 'users', arrayEscape = 'YY'" variety.js
 
-### Command Line Interface ###
+## Command Line Interface
 This NPM package ships a small `bin/variety` wrapper (published as the npm package's `variety` executable) that chooses `mongosh` when available and falls back to the legacy `mongo` shell.
 
 The wrapper is controlled by three environment variables:
@@ -304,17 +304,17 @@ DB=test EVAL_CMDS="var collection = 'users', maxDepth = 3, limit = 500" VARIETYJ
 Note: `variety-cli`, a formerly available companion project that offered higher-level argument
 parsing, has been archived and is no longer maintained.
 
-##### "But my dad told me MongoDB is a schemaless database!" #####
+## "But my dad told me MongoDB is a schemaless database!"
 
 First of all, your father is a great guy. Moving on…
 
 A MongoDB collection does not enforce a predefined schema like a relational database table. Still, documents in real-world collections nearly always have large sections for which the format of the data is the same. In other words, there is a schema to the majority of collections, it's just enforced by the _application_, rather than by the database system. And this schema is allowed to be a bit fuzzy, in the same way that a given table column might not be required in all rows, but to a much greater degree of flexibility. So we examine what percent of documents in the collection contain a key, and we get a feel for, among other things, how crucial that key is to the proper functioning of the application.
 
-##### Dependencies #####
+## Dependencies
 
 At runtime, Variety itself depends only on MongoDB plus a MongoDB shell (`mongosh` is preferred; the legacy `mongo` shell still works where available). Development and testing add local npm dev dependencies.
 
-##### Development, Hacking #####
+## Development, Hacking
 This project is NPM based and provides standard NPM functionality. As an additional (not required) dependency, [Docker](https://www.docker.com/) or [Podman](https://podman.io/) can be installed to test against different MongoDB versions.
 
 To install all dev dependencies call as usual:
@@ -322,7 +322,7 @@ To install all dev dependencies call as usual:
 npm install
 ```
 
-###### Repo Layout and the `variety.js` Build ######
+### Repo Layout and the `variety.js` Build
 
 `variety.js` at the repo root is a generated file, assembled from two sources:
 
@@ -368,7 +368,7 @@ MONGODB_VERSION=8.0 NODEJS_VERSION=24 npm run test:docker
 
 GitHub Actions runs a MongoDB matrix on Node.js 22: `5.0` (which ships only the legacy `mongo` shell, exercising that code path), `7.0`, and `8.0` (both of which ship only `mongosh`). A single Node.js 24 smoke test also runs against MongoDB 8.0. MongoDB 6.0+ no longer ships the legacy `mongo` shell, so `5.0` is the newest version available for `mongo`-shell coverage.
 
-##### Linting #####
+## Linting
 
 Pre-commit hooks are managed by [Husky](https://typicode.github.io/husky/) and installed automatically on `npm install`. Each commit runs all of the following, and is blocked if any fail:
 
@@ -385,29 +385,29 @@ ESLint applies a shared baseline of formatting and safety rules across the repo.
 
 The container-based checks, `npm run lint:dockerfile` and `npm run lint:shell`, require a container runtime. [Docker](https://www.docker.com/) is used if available, with [Podman](https://podman.io/) as a fallback. At least one must be installed.
 
-#### Reporting Issues / Contributing ####
+## Reporting Issues / Contributing
 
 Please report any bugs and feature requests on the Github issue tracker. I will read all reports!
 
 I accept pull requests from forks. Very grateful to accept contributions from folks.
 
-#### Core Maintainers ####
+## Core Maintainers
 
 - Tomáš Dvořák ([LinkedIn](https://www.linkedin.com/in/dvoraktomas/))
 - Eve Freeman ([Github](https://github.com/freeeve))
 - James Cropcho (original creator of Variety) ([Twitter/X](https://x.com/Cropcho))
 
-#### Special Thanks ####
+## Special Thanks
 
 Additional special thanks to Gaëtan Voyer-Perraul ([@gatesvp](https://x.com/gatesvp)) and Kristina Chodorow ([@kchodorow](https://x.com/kchodorow)) for answering other people's questions about how to do this on Stack Overflow, thereby providing me with the initial seed of code which grew into this tool.
 
 Much thanks also, to Kyle Banker ([@Hwaet](https://x.com/hwaet)) for writing an unusually good book on MongoDB, which has taught me everything I know about it so far.
 
-#### Tools Which Use Variety (Open Source) ####
+## Tools Which Use Variety (Open Source)
 
 Know of one? Built one? Let us know!
 
-#### Stay Safe ####
+## Stay Safe
 
 I have every reason to believe this tool will **not** corrupt your data or harm your computer. But if I were you, I would not use it in a production environment.
 
