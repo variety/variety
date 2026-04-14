@@ -36,7 +36,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mongodb-version: ['7.0', '8.0']
+        mongodb-version: ['5.0', '7.0', '8.0']
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6

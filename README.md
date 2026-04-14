@@ -349,7 +349,7 @@ MONGODB_VERSION=8.0 npm run test:docker
 MONGODB_VERSION=8.0 NODEJS_VERSION=24 npm run test:docker
 ```
 
-GitHub Actions runs the supported MongoDB matrix (`7.0`, `8.0`) on Node.js 22, plus a single Node.js 24 smoke test against MongoDB 8.0. MongoDB 6.0+ no longer ships the legacy `mongo` shell, and MongoDB 7.0+ rejects the old `mongod --nojournal` flag, so the test harness now targets `mongosh` and modern `mongod` defaults.
+GitHub Actions runs a MongoDB matrix on Node.js 22: `5.0` (which ships only the legacy `mongo` shell, exercising that code path), `7.0`, and `8.0` (both of which ship only `mongosh`). A single Node.js 24 smoke test also runs against MongoDB 8.0. MongoDB 6.0+ no longer ships the legacy `mongo` shell, so `5.0` is the newest version available for `mongo`-shell coverage.
 
 ##### Linting #####
 
