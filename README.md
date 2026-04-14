@@ -345,7 +345,7 @@ The built `variety.js` is committed to the repository so that `mongosh variety.j
 npm run test:mocha
 ```
 
-The test suite under `spec/` runs as native ESM through its own `spec/package.json`, while the repository root intentionally stays CommonJS so the CLI entrypoint and config files keep their current behavior.
+The test suite under `spec/` runs as native ESM through its own `spec/package.json`, while the repository root intentionally stays CommonJS so the CLI entrypoint and config files keep their current behavior. That Mocha lane also includes a focused `bin/variety` wrapper spec that stubs `mongosh` and `mongo`, so wrapper argument handling can be validated without a live MongoDB shell install.
 
 If you have Docker or Podman installed and don't want to test against your own MongoDB instance,
 you can execute tests against dockerized MongoDB:
