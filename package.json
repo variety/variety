@@ -44,6 +44,8 @@
   },
   "scripts": {
     "prepare": "husky",
+    "build": "node build.js",
+    "verify:build": "node build.js --check",
     "lint": "./node_modules/.bin/eslint --config .eslint.config.js .",
     "lint:fix": "./node_modules/.bin/eslint --config .eslint.config.js . --fix",
     "lint:json": "find . \\( -name '*.json' ! -name 'package-lock.json' \\) -not -path '*/node_modules/*' -not -path './.git/*' -print0 | xargs -0 ./node_modules/@prantlf/jsonlint/lib/cli.js -q",

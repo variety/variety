@@ -322,6 +322,23 @@ To install all dev dependencies call as usual:
 npm install
 ```
 
+###### Repo Layout and the `variety.js` Build ######
+
+`variety.js` at the repo root is a generated file, assembled from two sources:
+
+- `src/impl.js` — pure, transport-agnostic analysis logic.
+- `src/interface.js` — the shell-facing layer that reads shell globals
+  (`collection`, `plugins`, `slaveOk`, etc.), loads plugins, and hands
+  dependencies to `impl.run()`.
+
+`build.js` concatenates those two files under a generated-file banner. Edit the sources in `src/`, then run:
+
+```
+npm run build
+```
+
+The built `variety.js` is committed to the repository so that `mongosh variety.js` works from a fresh clone without a build step. CI runs `npm run verify:build`, which re-assembles the file in memory and fails the build if the committed `variety.js` drifts from its sources. If you see that check fail, run `npm run build` and commit the updated `variety.js`.
+
 `npm test` runs ESLint plus the default Docker-backed integration test lane. If you already have MongoDB listening on `localhost:27017` and want to run only the mocha suite directly, use:
 
 ```
@@ -355,15 +372,16 @@ GitHub Actions runs a MongoDB matrix on Node.js 22: `5.0` (which ships only the 
 
 Pre-commit hooks are managed by [Husky](https://typicode.github.io/husky/) and installed automatically on `npm install`. Each commit runs all of the following, and is blocked if any fail:
 
+- `npm run verify:build` — verifies `variety.js` matches what `build.js` would produce from `src/`
 - `npm run lint` — ESLint (JavaScript)
 - `npm run lint:json` — `@prantlf/jsonlint` (JSON files)
 - `npm run lint:markdown` — markdownlint (Markdown files)
 - `npm run lint:yaml` — js-yaml (YAML files)
 - `npm run lint:dockerfile` — hadolint (`docker/Dockerfile.template`)
 - `npm run lint:shell` — shellcheck (shell scripts)
-- `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for `.eslint.config.js` and Node-side spec code under `spec`
+- `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for `.eslint.config.js`, `build.js`, and Node-side spec code under `spec`
 
-ESLint applies a shared baseline of formatting and safety rules across the repo. That shared baseline now also bans repo-specific legacy patterns such as `Function('return this')`, `indexOf(...)` presence checks, and unguarded `for...in` loops. Node-side JavaScript such as `.eslint.config.js`, the test suite, and `spec/utils` also opts into a stricter modernization set (`const`, template literals, object shorthand, `Object.hasOwn`, and throwing `Error` objects). The `spec` test tree now also uses type-aware `typescript-eslint` rules backed by `.tsconfig.checkjs.json`, while shell-executed fixtures under `spec/assets` stay on the shared baseline. That `checkJs` pass also enables stricter TypeScript flags such as `noImplicitReturns`, `noUncheckedIndexedAccess`, `noPropertyAccessFromIndexSignature`, and `exactOptionalPropertyTypes`. Both ESLint and `npm run test:mocha` now rely on native Node parsing for repo code, with `spec/package.json` marking the test tree as ESM while the root package remains CommonJS. `variety.js` itself opts into a subset of those rules (`no-var`, `prefer-const`, `prefer-template`, `object-shorthand`, and `no-throw-literal`) — the rules that are safe for the ES6+ JavaScript supported by the legacy `mongo` shell since MongoDB 4.4. `prefer-object-has-own` is intentionally excluded: `Object.hasOwn()` is not guaranteed in the legacy `mongo` shell, and all `hasOwnProperty.call()` usages have been replaced by `Object.keys()` / `in` anyway.
+ESLint applies a shared baseline of formatting and safety rules across the repo. That shared baseline now also bans repo-specific legacy patterns such as `Function('return this')`, `indexOf(...)` presence checks, and unguarded `for...in` loops. Node-side JavaScript such as `.eslint.config.js`, the test suite, and `spec/utils` also opts into a stricter modernization set (`const`, template literals, object shorthand, `Object.hasOwn`, and throwing `Error` objects). The `spec` test tree now also uses type-aware `typescript-eslint` rules backed by `.tsconfig.checkjs.json`, while shell-executed fixtures under `spec/assets` stay on the shared baseline. That `checkJs` pass also enables stricter TypeScript flags such as `noImplicitReturns`, `noUncheckedIndexedAccess`, `noPropertyAccessFromIndexSignature`, and `exactOptionalPropertyTypes`. Both ESLint and `npm run test:mocha` now rely on native Node parsing for repo code, with `spec/package.json` marking the test tree as ESM while the root package remains CommonJS. `variety.js` (and its sources under `src/`) opts into a subset of those rules (`no-var`, `prefer-const`, `prefer-template`, `object-shorthand`, and `no-throw-literal`) — the rules that are safe for the ES6+ JavaScript supported by the legacy `mongo` shell since MongoDB 4.4. `prefer-object-has-own` is intentionally excluded: `Object.hasOwn()` is not guaranteed in the legacy `mongo` shell, and all `hasOwnProperty.call()` usages have been replaced by `Object.keys()` / `in` anyway.
 
 The container-based checks, `npm run lint:dockerfile` and `npm run lint:shell`, require a container runtime. [Docker](https://www.docker.com/) is used if available, with [Podman](https://podman.io/) as a fallback. At least one must be installed.
 
