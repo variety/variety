@@ -106,7 +106,7 @@ export default class Tester {
   runAnalysis(options, quiet) {
     /** @type {string[]} */
     const str = [];
-    if(options) {
+    if (options) {
       for (const key of Object.keys(options)) {
         const value = JSON.stringify(options[key]).replace(/"/g, '\'').replace(/\$/g, '\\$');
         str.push(`var ${key}=${value}`);
