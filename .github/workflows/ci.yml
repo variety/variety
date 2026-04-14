@@ -22,6 +22,7 @@ jobs:
       - run: npm install
         env:
           HUSKY: '0'
+      - run: npm run verify:build
       - run: npm run lint
       - run: npm run lint:json
       - run: npm run lint:markdown

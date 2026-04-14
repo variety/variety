@@ -1,5 +1,8 @@
 #!/bin/sh
 
+echo "→ build check (variety.js vs src/)"
+npm run verify:build
+
 echo "→ ESLint (JavaScript)"
 npm run lint
 
