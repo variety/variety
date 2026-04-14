@@ -284,8 +284,8 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
   // varietyTypeOf must remain a regular function (not an arrow function) because
   // the no-argument guard below relies on the function's own `arguments` object,
   // which arrow functions do not have.
-  const varietyTypeOf = function(thing) {
-    if (!arguments.length) { throw new Error('varietyTypeOf() requires an argument'); }
+  const varietyTypeOf = function(config, thing) {
+    if (arguments.length < 2) { throw new Error('varietyTypeOf() requires an argument'); }
 
     if (typeof thing === 'undefined') {
       return 'undefined';
@@ -306,7 +306,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 
         const seenElementTypes = Object.create(null);
         thing.forEach((item) => {
-          seenElementTypes[varietyTypeOf(item)] = true;
+          seenElementTypes[varietyTypeOf(config, item)] = true;
         });
 
         return `Array(${Object.keys(seenElementTypes).sort().join('|')})`;
@@ -335,16 +335,16 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 
   // Flattens object keys to 1D. e.g. {'key1':1, 'key2':{'key3':2}} becomes {'key1':1, 'key2.key3':2}.
   // We assume no '.' characters in the keys, which is an OK assumption for MongoDB.
-  const serializeDoc = (doc, maxDepth, excludeSubkeys) => {
+  const serializeDoc = (config, doc) => {
     const result = createKeyMap();
 
     // Recurse only into plain objects and arrays; BSON wrappers should stay scalar.
-    const isHash = (v) => Array.isArray(v) || varietyTypeOf(v) === 'Object';
+    const isHash = (v) => Array.isArray(v) || varietyTypeOf(config, v) === 'Object';
 
     const arrayRegex = new RegExp(`\\.${config.arrayEscape}\\d+${config.arrayEscape}\\.`, 'g');
 
     const serialize = (document, parentKey, depth) => {
-      if (parentKey.replace(arrayRegex, '.') in excludeSubkeys) {
+      if (parentKey.replace(arrayRegex, '.') in config.excludeSubkeys) {
         return;
       }
       for (const key of Object.keys(document)) {
@@ -360,12 +360,12 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
         }
       }
     };
-    serialize(doc, '', maxDepth);
+    serialize(doc, '', config.maxDepth);
     return result;
   };
 
   // Convert document to key-value map, where value is always an object with types as keys.
-  const analyseDocument = (document) => {
+  const analyseDocument = (config, document) => {
     const result = createKeyMap();
     const arrayRegex = new RegExp(`\\.${config.arrayEscape}\\d+${config.arrayEscape}`, 'g');
     for (const rawKey of Object.keys(document)) {
@@ -374,7 +374,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
       if (typeof result[key] === 'undefined') {
         result[key] = {};
       }
-      const type = varietyTypeOf(value);
+      const type = varietyTypeOf(config, value);
       result[key][type] = null;
 
       if (config.lastValue) {
@@ -395,7 +395,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     return result;
   };
 
-  const mergeDocument = (docResult, interimResults) => {
+  const mergeDocument = (config, docResult, interimResults) => {
     for (const key of Object.keys(docResult)) {
       if (key in interimResults) {
         const existing = interimResults[key];
@@ -431,7 +431,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     }
   };
 
-  const convertResults = (interimResults, documentsCount) => {
+  const convertResults = (config, interimResults, documentsCount) => {
     const varietyResults = [];
     for (const key of Object.keys(interimResults)) {
       const entry = interimResults[key];
@@ -453,9 +453,9 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
   };
 
   // Merge the keys and types of current object into accumulator object.
-  const reduceDocuments = (accumulator, object) => {
-    const docResult = analyseDocument(serializeDoc(object, config.maxDepth, config.excludeSubkeys));
-    mergeDocument(docResult, accumulator);
+  const reduceDocuments = (config, accumulator, object) => {
+    const docResult = analyseDocument(config, serializeDoc(config, object));
+    mergeDocument(config, docResult, accumulator);
     return accumulator;
   };
 
@@ -482,8 +482,8 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
   // limit(0) meant "no limit" in MongoDB ≤7 but is rejected by MongoDB 8+; guard against it.
   let cursor = db.getCollection(config.collection).find(config.query).sort(config.sort);
   if (config.limit > 0) { cursor = cursor.limit(config.limit); }
-  const interimResults = reduceCursor(cursor, reduceDocuments, createKeyMap());
-  const varietyResults = convertResults(interimResults, countMatchingDocuments(config.collection, config.query, config.limit))
+  const interimResults = reduceCursor(cursor, (acc, obj) => reduceDocuments(config, acc, obj), createKeyMap());
+  const varietyResults = convertResults(config, interimResults, countMatchingDocuments(config.collection, config.query, config.limit))
     .filter(filter)
     .sort(comparator);
 
@@ -505,7 +505,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     resultsDB.getCollection(resultsCollectionName).insert(varietyResults);
   }
 
-  const createAsciiTable = (results) => {
+  const createAsciiTable = (config, results) => {
     const headers = ['key', 'types', 'occurrences', 'percents'];
     if (config.lastValue) {
       headers.push('lastValue');
@@ -550,7 +550,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
   } else if (config.outputFormat === 'json') {
     shellPrintJson(varietyResults); // valid formatted json output, compressed variant is printjsononeline()
   } else {
-    print(createAsciiTable(varietyResults)); // output nice ascii table with results
+    print(createAsciiTable(config, varietyResults)); // output nice ascii table with results
   }
 
 }(this)); // end strict mode
