@@ -55,7 +55,7 @@ module.exports = [
   { ignores: ['.claude/'] },
   js.configs.recommended,
   {
-    files: ['**/*.js'],
+    files: ['**/*.js', 'bin/variety'],
     languageOptions: {
       sourceType: 'script',
       globals: {
@@ -79,7 +79,7 @@ module.exports = [
     },
   },
   {
-    files: ['.eslint.config.js', 'build.js', 'spec/**/*.js'],
+    files: ['.eslint.config.js', 'bin/variety', 'build.js', 'lib/**/*.js', 'spec/**/*.js'],
     ignores: ['spec/assets/**/*.js'],
     rules: nodeModernizationRules,
   },
