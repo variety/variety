@@ -8,9 +8,9 @@ import { fileURLToPath } from 'url';
 const require = createRequire(import.meta.url);
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-const cliOptionsModule = /** @type {typeof import('../../lib/cli-options.js')} */ (require('../../lib/cli-options.js'));
+const cliOptionsModule = /** @type {typeof import('../../cli/options.js')} */ (require('../../cli/options.js'));
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-const mongoShellModule = /** @type {typeof import('../../lib/mongo-shell.js')} */ (require('../../lib/mongo-shell.js'));
+const mongoShellModule = /** @type {typeof import('../../cli/mongo-shell-launcher.js')} */ (require('../../cli/mongo-shell-launcher.js'));
 
 const {
   CliUsageError,

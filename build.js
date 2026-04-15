@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-// Assembles variety.js by concatenating src/impl.js and src/interface.js
+// Assembles variety.js by concatenating core/analyzer.js and shell/mongo-shell-adapter.js
 // underneath a generated-file banner. The built variety.js is committed to
 // the repository so `mongosh variety.js` works from a fresh clone without
 // running a build step first; CI runs this script and fails if the
@@ -24,7 +24,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 // -----------------------------------------------------------------------------
 // GENERATED FILE — do not edit directly.
 //
-// Assembled by build.js from src/impl.js and src/interface.js. To change
+// Assembled by build.js from core/analyzer.js and shell/mongo-shell-adapter.js. To change
 // behavior, edit those source files and run \`npm run build\`. The build
 // output is committed so \`mongosh variety.js\` works from a fresh clone
 // without a build step; CI verifies the committed file matches its sources.
@@ -42,13 +42,13 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 // -----------------------------------------------------------------------------
 // This file is organized in two sections, sourced from two separate files:
 //
-//   1. IMPLEMENTATION SECTION (src/impl.js) — pure, transport-agnostic
+//   1. IMPLEMENTATION SECTION (core/analyzer.js) — pure, transport-agnostic
 //      analysis logic. Functions take their dependencies (config, and where
 //      needed a \`log\` function or a \`deps\` bag holding shell primitives)
 //      as explicit parameters. The section hands a bundle of functions to
 //      the interface section via \`shellContext.__varietyImpl\`.
 //
-//   2. INTERFACE SECTION (src/interface.js) — everything that touches shell
+//   2. INTERFACE SECTION (shell/mongo-shell-adapter.js) — everything that touches shell
 //      globals: reading input (\`collection\`, \`plugins\`, \`__quiet\`,
 //      \`slaveOk\`, etc.), the config-echo logging, plugin loading via
 //      \`load()\`, input validation, and constructing the dependency bag
@@ -60,8 +60,8 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 `;
 
 const root = __dirname;
-const impl = fs.readFileSync(path.join(root, 'src', 'impl.js'), 'utf8');
-const iface = fs.readFileSync(path.join(root, 'src', 'interface.js'), 'utf8');
+const impl = fs.readFileSync(path.join(root, 'core', 'analyzer.js'), 'utf8');
+const iface = fs.readFileSync(path.join(root, 'shell', 'mongo-shell-adapter.js'), 'utf8');
 
 // HEADER ends with a single \n; each source file ends with a single \n. We
 // want two blank lines (three \n total) between each region in the output.
@@ -74,7 +74,7 @@ if (args.includes('--check')) {
   const existing = fs.readFileSync(outPath, 'utf8');
   if (existing !== output) {
     process.stderr.write(
-      'variety.js is out of date relative to src/impl.js and src/interface.js.\n' +
+      'variety.js is out of date relative to core/analyzer.js and shell/mongo-shell-adapter.js.\n' +
       'Run `npm run build` and commit the updated variety.js.\n'
     );
     process.exit(1);

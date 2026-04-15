@@ -8,8 +8,8 @@ const rawPackageMetadata = /** @type {unknown} */ (
   JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'))
 );
 const packageMetadata = /** @type {PackageMetadata} */ (rawPackageMetadata);
-const cliOptions = /** @type {typeof import('./cli-options.js')} */ (require('./cli-options'));
-const mongoShell = /** @type {typeof import('./mongo-shell.js')} */ (require('./mongo-shell'));
+const cliOptions = /** @type {typeof import('./options.js')} */ (require('./options'));
+const mongoShell = /** @type {typeof import('./mongo-shell-launcher.js')} */ (require('./mongo-shell-launcher'));
 const { CliUsageError, createExecutionPlan, formatUsage } = cliOptions;
 const { CliRuntimeError, buildShellInvocation, runShellInvocation } = mongoShell;
 

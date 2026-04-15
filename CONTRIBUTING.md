@@ -16,16 +16,27 @@ As an additional (not required) dependency, [Docker](https://www.docker.com/) or
 
 `variety.js` at the repo root is a generated file, assembled from two sources:
 
-- `src/impl.js` — pure, transport-agnostic analysis logic.
-- `src/interface.js` — the shell-facing layer that reads shell globals
-  (`collection`, `plugins`, `slaveOk`, etc.), loads plugins, and hands
-  dependencies to `impl.run()`.
+- `core/analyzer.js` — pure, transport-agnostic analysis logic. No runtime
+  dependencies on shell globals, Node I/O, or any other layer. This is the
+  future `@variety/core` package boundary.
+- `shell/mongo-shell-adapter.js` — the shell-facing layer that reads shell
+  globals (`collection`, `plugins`, `slaveOk`, etc.), loads plugins, and
+  hands dependencies to `impl.run()`. The only place in the build that
+  touches `db`, `print`, and `load`. Depends on `core`; this is the future
+  `@variety/shell` package boundary.
 - `bin/variety` — the published Node entrypoint that implements the main
   CLI surface.
-- `lib/cli*.js`, `lib/mongo-shell.js` — Node-side CLI parsing, compatibility
-  handling, and Mongo shell invocation helpers.
+- `cli/main.js`, `cli/options.js`, `cli/mongo-shell-launcher.js` — Node-side
+  CLI parsing, compatibility handling, and Mongo shell invocation helpers.
+  The only place that touches Node `process`, `fs`, and `spawnSync`. Depends
+  on `core`; this is the future `@variety/cli` package boundary.
 
-`build.js` concatenates those two files under a generated-file banner. Edit the sources in `src/`, then run:
+**Dependency directions:** `core` has no runtime deps on any other layer.
+`shell` depends on `core`. `cli` depends on `core`. `build.js` composes
+`core` + `shell` → `variety.js`.
+
+`build.js` concatenates those two source files under a generated-file banner.
+Edit the sources in `core/` or `shell/`, then run:
 
 ```
 npm run build
@@ -73,14 +84,14 @@ Variety keeps its repository checks split into a few layers so it is clear which
 
 Pre-commit hooks are managed by [Husky](https://typicode.github.io/husky/) and installed automatically on `npm install`. Each commit runs all of the following, and is blocked if any fail:
 
-- `npm run verify:build` — verifies `variety.js` matches what `build.js` would produce from `src/`
+- `npm run verify:build` — verifies `variety.js` matches what `build.js` would produce from `core/` and `shell/`
 - `npm run lint` — ESLint (JavaScript)
 - `npm run lint:json` — `@prantlf/jsonlint` (JSON files)
 - `npm run lint:markdown` — markdownlint (Markdown files)
 - `npm run lint:yaml` — js-yaml (YAML files)
 - `npm run lint:dockerfile` — hadolint (`docker/Dockerfile.template`)
 - `npm run lint:shell` — shellcheck (shell scripts)
-- `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for `bin/variety`, `lib/**/*.js`, `.eslint.config.js`, `build.js`, and Node-side test code under `test`
+- `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for `bin/variety`, `cli/**/*.js`, `.eslint.config.js`, `build.js`, and Node-side test code under `test`
 
 ### ESLint Rulesets
 
@@ -90,17 +101,17 @@ Pre-commit hooks are managed by [Husky](https://typicode.github.io/husky/) and i
 
 #### Node-side Modernization
 
-Node-side JavaScript such as `bin/variety`, `lib/**/*.js`, `.eslint.config.js`, `build.js`, and the test suite under `test/` (excluding shell-executed fixtures under `test/fixtures/`) opts into a stricter modernization set: `const`, template literals, object shorthand, `Object.hasOwn`, and throwing `Error` objects.
+Node-side JavaScript such as `bin/variety`, `cli/**/*.js`, `.eslint.config.js`, `build.js`, and the test suite under `test/` (excluding shell-executed fixtures under `test/fixtures/`) opts into a stricter modernization set: `const`, template literals, object shorthand, `Object.hasOwn`, and throwing `Error` objects.
 
 #### Legacy Shell Compatibility
 
-`variety.js` and its sources under `src/` use the subset of those rules that is safe for the ES6+ JavaScript supported by the legacy `mongo` shell since MongoDB 4.4: `no-var`, `prefer-const`, `prefer-template`, `object-shorthand`, and `no-throw-literal`. `prefer-object-has-own` is intentionally excluded there because `Object.hasOwn()` is not guaranteed in that runtime, and all `hasOwnProperty.call()` usages have been replaced by `Object.keys()` / `in`.
+`variety.js` and its sources under `core/` and `shell/` use the subset of those rules that is safe for the ES6+ JavaScript supported by the legacy `mongo` shell since MongoDB 4.4: `no-var`, `prefer-const`, `prefer-template`, `object-shorthand`, and `no-throw-literal`. `prefer-object-has-own` is intentionally excluded there because `Object.hasOwn()` is not guaranteed in that runtime, and all `hasOwnProperty.call()` usages have been replaced by `Object.keys()` / `in`.
 
 ### Typed Checks For Node-side Code
 
 #### Checked Files
 
-`npm run typecheck` runs TypeScript `checkJs` over the published Node CLI surface (`bin/variety` plus `lib/**/*.js`), `.eslint.config.js`, `build.js`, and the Node-side test code via `.tsconfig.checkjs.json`. The `test` tree also uses type-aware `typescript-eslint` rules, while shell-executed fixtures under `test/fixtures` stay on the shared baseline.
+`npm run typecheck` runs TypeScript `checkJs` over the published Node CLI surface (`bin/variety` plus `cli/**/*.js`), `.eslint.config.js`, `build.js`, and the Node-side test code via `.tsconfig.checkjs.json`. The `test` tree also uses type-aware `typescript-eslint` rules, while shell-executed fixtures under `test/fixtures` stay on the shared baseline.
 
 #### Extra Strictness
 
