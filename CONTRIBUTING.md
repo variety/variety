@@ -22,8 +22,8 @@ As an additional (not required) dependency, [Docker](https://www.docker.com/) or
 - `shell/mongo-shell-adapter.js` — the shell-facing layer that reads shell
   globals (`collection`, `plugins`, `slaveOk`, etc.), loads plugins, and
   hands dependencies to `impl.run()`. The only place in the build that
-  touches `db`, `print`, and `load`. Depends on `core`; this is the future
-  `@variety/shell` package boundary.
+  touches `db`, `print`, and `load`. Depends on `core`; compiled into
+  `variety.js` by `build.js` (not a separately published package).
 - `bin/variety` — the published Node entrypoint that implements the main
   CLI surface.
 - `cli/main.js`, `cli/options.js`, `cli/mongo-shell-launcher.js` — Node-side
