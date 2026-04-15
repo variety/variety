@@ -281,28 +281,55 @@ Variety expects keys to be well formed, not having any `.`s in them (MongoDB 2.4
     $ mongosh test --quiet --eval "var collection = 'users', arrayEscape = 'YY'" variety.js
 
 ## Command Line Interface
-This NPM package ships a small `bin/variety` wrapper (published as the npm package's `variety` executable) that chooses `mongosh` when available and falls back to the legacy `mongo` shell.
+This NPM package publishes a built-in `variety` executable that resolves the bundled `variety.js`, prefers `mongosh` when available, and falls back to the legacy `mongo` shell.
 
-The wrapper is controlled by three environment variables:
+The primary interface is:
+
+```bash
+variety DB/COLLECTION [options]
+```
+
+Examples:
+
+```bash
+variety test/users
+```
+
+```bash
+variety test/users --outputFormat json --quiet
+```
+
+```bash
+variety logs/webserver --limit 100 --maxDepth 3 --sort '{"created":-1}'
+```
+
+```bash
+variety test/users --query '{"bio":{"$exists":true}}' --host localhost --port 27017
+```
+
+Structured flags such as `--query` and `--sort` accept strict JSON. Connection flags such as `--host`, `--port`, `--username`, `--password`, `--authenticationDatabase`, and `--quiet` are passed through to the Mongo shell. `--eval` remains available as an escape hatch when you need to append raw JavaScript assignments.
+
+When you invoke `variety` with no CLI arguments, the documented compatibility environment variables remain supported:
 
 | Variable | Description |
 | --- | --- |
 | `DB` | MongoDB database name to pass to the shell |
 | `EVAL_CMDS` | JavaScript assignments forwarded via `--eval` (e.g. `var collection = 'users', limit = 100`) |
-| `VARIETYJS_DIR` | Directory containing `variety.js`; defaults to `.` |
+| `VARIETYJS_DIR` | Directory containing `variety.js`; when omitted, the CLI uses the bundled script |
 
 Examples:
 
 ```bash
-DB=test EVAL_CMDS="var collection = 'users', outputFormat='json'" VARIETYJS_DIR=. bin/variety
+DB=test EVAL_CMDS="var collection = 'users', outputFormat='json'" variety
 ```
 
 ```bash
-DB=test EVAL_CMDS="var collection = 'users', maxDepth = 3, limit = 500" VARIETYJS_DIR=. bin/variety
+DB=test EVAL_CMDS="var collection = 'users', maxDepth = 3, limit = 500" variety
 ```
 
-Note: `variety-cli`, a formerly available companion project that offered higher-level argument
-parsing, has been archived and is no longer maintained.
+Direct `mongosh ... variety.js` usage remains supported and is still useful when you want the most transparent low-level invocation for debugging or advanced shell work.
+
+Note: `variety-cli`, a formerly available companion project that offered higher-level argument parsing, has been archived and is no longer maintained.
 
 ## "But my dad told me MongoDB is a schemaless database!"
 
@@ -312,7 +339,7 @@ A MongoDB collection does not enforce a predefined schema like a relational data
 
 ## Dependencies
 
-At runtime, Variety itself depends only on MongoDB plus a MongoDB shell (`mongosh` is preferred; the legacy `mongo` shell still works where available).
+The packaged `variety` executable runs on Node.js and a MongoDB shell (`mongosh` is preferred; the legacy `mongo` shell still works where available). If you run Variety directly as `mongosh ... variety.js`, the shell path still depends only on MongoDB plus a MongoDB shell.
 
 ## Contributing
 

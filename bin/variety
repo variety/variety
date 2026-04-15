@@ -1,47 +1,6 @@
-#! /usr/bin/env bash
-set -e
+#!/usr/bin/env node
+'use strict';
 
-### SAMPLE USAGE:
-#
-# DB=test EVAL_CMDS="var collection = 'users', limit = 1" VARIETYJS_DIR=. bin/variety
-# executes, e.g.:
-# mongosh test --eval "var collection = 'users', limit = 1" ./variety.js
+const { main } = require('../lib/cli');
 
-if command -v mongosh >/dev/null 2>&1; then
-  MONGO_SHELL=mongosh
-elif command -v mongo >/dev/null 2>&1; then
-  MONGO_SHELL=mongo
-else
-  echo 'Error: neither mongosh nor mongo found in PATH' >&2
-  exit 127
-fi
-
-VARIETYJS_DIR=${VARIETYJS_DIR:-.}
-VARIETY_SCRIPT="$VARIETYJS_DIR/variety.js"
-
-if [ "${#EVAL_CMDS}" -ge 2 ]; then
-  first_char=${EVAL_CMDS%"${EVAL_CMDS#?}"}
-  last_char=${EVAL_CMDS#"${EVAL_CMDS%?}"}
-  if { [ "$first_char" = '"' ] && [ "$last_char" = '"' ]; } || \
-     { [ "$first_char" = "'" ] && [ "$last_char" = "'" ]; }; then
-    EVAL_CMDS=${EVAL_CMDS#?}
-    EVAL_CMDS=${EVAL_CMDS%?}
-  fi
-fi
-
-CMD=("$MONGO_SHELL")
-
-if [ -n "$DB" ]; then
-  CMD+=("$DB")
-fi
-
-if [ -n "$EVAL_CMDS" ]; then
-  CMD+=(--eval "$EVAL_CMDS")
-fi
-
-CMD+=("$VARIETY_SCRIPT")
-
-echo
-printf '%q ' "${CMD[@]}"
-echo
-"${CMD[@]}"
+process.exitCode = main(process.argv.slice(2), process.env, process.stdout, process.stderr);
