@@ -1,6 +1,65 @@
 # Contributing to Variety
 
-This document covers the repository's linting layers and how to report issues or send patches. For architecture, repo layout, and the `variety.js` build, see [README.md](README.md).
+This document covers setup, repo layout, testing, linting, and how to report issues or send patches. For user-facing usage and features, see [README.md](README.md).
+
+## Setup
+
+This project is NPM based and provides standard NPM functionality. Development and testing add local npm dev dependencies, which you install as usual:
+
+```
+npm install
+```
+
+As an additional (not required) dependency, [Docker](https://www.docker.com/) or [Podman](https://podman.io/) can be installed to test against different MongoDB versions.
+
+## Repo Layout and the `variety.js` Build
+
+`variety.js` at the repo root is a generated file, assembled from two sources:
+
+- `src/impl.js` — pure, transport-agnostic analysis logic.
+- `src/interface.js` — the shell-facing layer that reads shell globals
+  (`collection`, `plugins`, `slaveOk`, etc.), loads plugins, and hands
+  dependencies to `impl.run()`.
+
+`build.js` concatenates those two files under a generated-file banner. Edit the sources in `src/`, then run:
+
+```
+npm run build
+```
+
+The built `variety.js` is committed to the repository so that `mongosh variety.js` works from a fresh clone without a build step. CI runs `npm run verify:build`, which re-assembles the file in memory and fails the build if the committed `variety.js` drifts from its sources. If you see that check fail, run `npm run build` and commit the updated `variety.js`.
+
+## Testing
+
+`npm test` runs ESLint plus the default Docker-backed integration test lane. If you already have MongoDB listening on `localhost:27017` and want to run only the mocha suite directly, use:
+
+```
+npm run test:mocha
+```
+
+The test suite under `spec/` runs as native ESM through its own `spec/package.json`, while the repository root intentionally stays CommonJS so the CLI entrypoint and config files keep their current behavior. That Mocha lane also includes a focused `bin/variety` wrapper spec that stubs `mongosh` and `mongo`, so wrapper argument handling can be validated without a live MongoDB shell install.
+
+If you have Docker or Podman installed and don't want to test against your own MongoDB instance,
+you can execute tests against dockerized MongoDB:
+
+```
+npm run test:docker
+```
+
+The script downloads one of [the official MongoDB images](https://hub.docker.com/_/mongo/) (based on your provided version),
+starts the database, executes the test suite against it (inside the container) and stops the DB.
+
+The Docker harness prefers `mongosh` when it is available and falls back to the legacy `mongo` shell for older images.
+
+Dockerized tests default to MongoDB 8.0 on Node.js 22. You can override `MONGODB_VERSION` and `NODEJS_VERSION` when you want to try another supported combination:
+
+```
+MONGODB_VERSION=7.0 npm run test:docker
+MONGODB_VERSION=8.0 npm run test:docker
+MONGODB_VERSION=8.0 NODEJS_VERSION=24 npm run test:docker
+```
+
+GitHub Actions runs a MongoDB matrix on Node.js 22: `5.0` (which ships only the legacy `mongo` shell, exercising that code path), `7.0`, and `8.0` (both of which ship only `mongosh`). A single Node.js 24 smoke test also runs against MongoDB 8.0. MongoDB 6.0+ no longer ships the legacy `mongo` shell, so `5.0` is the newest version available for `mongo`-shell coverage.
 
 ## Linting
 
