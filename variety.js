@@ -12,7 +12,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 // -----------------------------------------------------------------------------
 // GENERATED FILE — do not edit directly.
 //
-// Assembled by build.js from src/impl.js and src/interface.js. To change
+// Assembled by build.js from core/analyzer.js and shell/mongo-shell-adapter.js. To change
 // behavior, edit those source files and run `npm run build`. The build
 // output is committed so `mongosh variety.js` works from a fresh clone
 // without a build step; CI verifies the committed file matches its sources.
@@ -30,13 +30,13 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 // -----------------------------------------------------------------------------
 // This file is organized in two sections, sourced from two separate files:
 //
-//   1. IMPLEMENTATION SECTION (src/impl.js) — pure, transport-agnostic
+//   1. IMPLEMENTATION SECTION (core/analyzer.js) — pure, transport-agnostic
 //      analysis logic. Functions take their dependencies (config, and where
 //      needed a `log` function or a `deps` bag holding shell primitives)
 //      as explicit parameters. The section hands a bundle of functions to
 //      the interface section via `shellContext.__varietyImpl`.
 //
-//   2. INTERFACE SECTION (src/interface.js) — everything that touches shell
+//   2. INTERFACE SECTION (shell/mongo-shell-adapter.js) — everything that touches shell
 //      globals: reading input (`collection`, `plugins`, `__quiet`,
 //      `slaveOk`, etc.), the config-echo logging, plugin loading via
 //      `load()`, input validation, and constructing the dependency bag

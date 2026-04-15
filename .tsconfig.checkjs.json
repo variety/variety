@@ -22,7 +22,7 @@
   },
   "include": [
     "bin/variety",
-    "lib/**/*.js",
+    "cli/**/*.js",
     ".eslint.config.js",
     "build.js",
     "test/**/*.js",

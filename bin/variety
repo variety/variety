@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
 
-const { main } = require('../lib/cli');
+const { main } = require('../cli/main');
 
 process.exitCode = main(process.argv.slice(2), process.env, process.stdout, process.stderr);
