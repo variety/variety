@@ -25,7 +25,7 @@
     "lib/**/*.js",
     ".eslint.config.js",
     "build.js",
-    "spec/**/*.js",
-    "spec/**/*.d.ts"
+    "test/**/*.js",
+    "test/**/*.d.ts"
   ]
 }

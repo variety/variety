@@ -1,4 +1,4 @@
-import Tester from './utils/Tester.js';
+import Tester from '../utils/Tester.js';
 
 /** @typedef {import('mongodb').Document} MongoDocument */
 

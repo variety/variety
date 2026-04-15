@@ -41,7 +41,7 @@ The built `variety.js` is committed to the repository so that `mongosh variety.j
 npm run test:mocha
 ```
 
-The test suite under `spec/` runs as native ESM through its own `spec/package.json`, while the repository root intentionally stays CommonJS so the CLI entrypoint and config files keep their current behavior. That Mocha lane also includes focused CLI specs that execute `bin/variety` and stub `mongosh` / `mongo`, so the command-line translation layer can be validated without a live MongoDB shell install.
+The test suite under `test/` runs as native ESM through its own `test/package.json`, while the repository root intentionally stays CommonJS so the CLI entrypoint and config files keep their current behavior. Tests are grouped by concern — `test/analysis/`, `test/cli/`, `test/persistence/`, and `test/plugins/` — with shared helpers under `test/utils/` and static inputs under `test/fixtures/`. That Mocha lane also includes focused CLI tests that execute `bin/variety` and stub `mongosh` / `mongo`, so the command-line translation layer can be validated without a live MongoDB shell install.
 
 If you have Docker or Podman installed and don't want to test against your own MongoDB instance,
 you can execute tests against dockerized MongoDB:
@@ -80,7 +80,7 @@ Pre-commit hooks are managed by [Husky](https://typicode.github.io/husky/) and i
 - `npm run lint:yaml` — js-yaml (YAML files)
 - `npm run lint:dockerfile` — hadolint (`docker/Dockerfile.template`)
 - `npm run lint:shell` — shellcheck (shell scripts)
-- `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for `bin/variety`, `lib/**/*.js`, `.eslint.config.js`, `build.js`, and Node-side spec code under `spec`
+- `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for `bin/variety`, `lib/**/*.js`, `.eslint.config.js`, `build.js`, and Node-side test code under `test`
 
 ### ESLint Rulesets
 
@@ -90,7 +90,7 @@ Pre-commit hooks are managed by [Husky](https://typicode.github.io/husky/) and i
 
 #### Node-side Modernization
 
-Node-side JavaScript such as `bin/variety`, `lib/**/*.js`, `.eslint.config.js`, `build.js`, and the test suite under `spec/` (excluding shell-executed fixtures under `spec/assets/`) opts into a stricter modernization set: `const`, template literals, object shorthand, `Object.hasOwn`, and throwing `Error` objects.
+Node-side JavaScript such as `bin/variety`, `lib/**/*.js`, `.eslint.config.js`, `build.js`, and the test suite under `test/` (excluding shell-executed fixtures under `test/fixtures/`) opts into a stricter modernization set: `const`, template literals, object shorthand, `Object.hasOwn`, and throwing `Error` objects.
 
 #### Legacy Shell Compatibility
 
@@ -100,15 +100,15 @@ Node-side JavaScript such as `bin/variety`, `lib/**/*.js`, `.eslint.config.js`, 
 
 #### Checked Files
 
-`npm run typecheck` runs TypeScript `checkJs` over the published Node CLI surface (`bin/variety` plus `lib/**/*.js`), `.eslint.config.js`, `build.js`, and the Node-side spec code via `.tsconfig.checkjs.json`. The `spec` tree also uses type-aware `typescript-eslint` rules, while shell-executed fixtures under `spec/assets` stay on the shared baseline.
+`npm run typecheck` runs TypeScript `checkJs` over the published Node CLI surface (`bin/variety` plus `lib/**/*.js`), `.eslint.config.js`, `build.js`, and the Node-side test code via `.tsconfig.checkjs.json`. The `test` tree also uses type-aware `typescript-eslint` rules, while shell-executed fixtures under `test/fixtures` stay on the shared baseline.
 
 #### Extra Strictness
 
-That pass enables stricter flags such as `noImplicitReturns`, `noUncheckedIndexedAccess`, `noPropertyAccessFromIndexSignature`, and `exactOptionalPropertyTypes`. Both ESLint and `npm run test:mocha` now rely on native Node parsing for repo code, with `spec/package.json` marking the test tree as ESM while the repository root remains CommonJS so the CLI entrypoint and config files keep their current behavior.
+That pass enables stricter flags such as `noImplicitReturns`, `noUncheckedIndexedAccess`, `noPropertyAccessFromIndexSignature`, and `exactOptionalPropertyTypes`. Both ESLint and `npm run test:mocha` now rely on native Node parsing for repo code, with `test/package.json` marking the test tree as ESM while the repository root remains CommonJS so the CLI entrypoint and config files keep their current behavior.
 
 ### Container-backed Linters
 
-`npm run lint:dockerfile` and `npm run lint:shell` run inside containers. [Docker](https://www.docker.com/) is used if available, with [Podman](https://podman.io/) as a fallback. At least one must be installed. `npm run lint:shell` now covers the remaining shell scripts (`docker/init.sh` and `spec/bin/test-on-docker.sh`), while the published `bin/variety` entrypoint is linted as Node-side JavaScript.
+`npm run lint:dockerfile` and `npm run lint:shell` run inside containers. [Docker](https://www.docker.com/) is used if available, with [Podman](https://podman.io/) as a fallback. At least one must be installed. `npm run lint:shell` now covers the remaining shell scripts (`docker/init.sh` and `test/bin/test-on-docker.sh`), while the published `bin/variety` entrypoint is linted as Node-side JavaScript.
 
 ## Reporting Issues / Contributing
 

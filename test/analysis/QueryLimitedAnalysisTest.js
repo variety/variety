@@ -1,5 +1,5 @@
-import Tester from './utils/Tester.js';
-import sampleData from './assets/SampleData.js';
+import Tester from '../utils/Tester.js';
+import sampleData from '../fixtures/SampleData.js';
 const test = new Tester('test', 'users');
 
 describe('Query-limited analysis', () => {

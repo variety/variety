@@ -1,4 +1,4 @@
-import Tester from './utils/Tester.js';
+import Tester from '../utils/Tester.js';
 const test = new Tester('test', 'users');
 
 // Two documents: one with homogeneous arrays, one with a mixed-type array.

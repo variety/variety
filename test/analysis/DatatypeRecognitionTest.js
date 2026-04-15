@@ -13,7 +13,7 @@ import {
   Timestamp,
   UUID
 } from 'mongodb';
-import Tester from './utils/Tester.js';
+import Tester from '../utils/Tester.js';
 const test = new Tester('test', 'users');
 
 const crazyObject = {

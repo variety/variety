@@ -1,9 +1,9 @@
 import assert from 'assert';
-import Tester from './utils/Tester.js';
+import Tester from '../utils/Tester.js';
 const test = new Tester('test', 'users');
 
-import sampleData from './assets/SampleData.js';
-import expectedAscii  from './assets/ExpectedAscii.js';
+import sampleData from '../fixtures/SampleData.js';
+import expectedAscii  from '../fixtures/ExpectedAscii.js';
 
 describe('Basic Analysis', () => {
 

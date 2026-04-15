@@ -53,11 +53,11 @@
     "lint:markdown": "./node_modules/.bin/markdownlint '**/*.md' '**/*.markdown' --ignore node_modules",
     "lint:yaml": "find . \\( -name '*.yml' -o -name '*.yaml' \\) -not -path '*/node_modules/*' -not -path './.git/*' -print0 | xargs -0 -n1 ./node_modules/.bin/js-yaml > /dev/null",
     "lint:dockerfile": "RUNNER=$(command -v docker 2>/dev/null || command -v podman 2>/dev/null) && $RUNNER run --rm -i ghcr.io/hadolint/hadolint < docker/Dockerfile.template",
-    "lint:shell": "RUNNER=$(command -v docker 2>/dev/null || command -v podman 2>/dev/null) && $RUNNER run --rm -v \"${PWD}:/mnt:z\" docker.io/koalaman/shellcheck:stable /mnt/docker/init.sh /mnt/spec/bin/test-on-docker.sh",
+    "lint:shell": "RUNNER=$(command -v docker 2>/dev/null || command -v podman 2>/dev/null) && $RUNNER run --rm -v \"${PWD}:/mnt:z\" docker.io/koalaman/shellcheck:stable /mnt/docker/init.sh /mnt/test/bin/test-on-docker.sh",
     "typecheck": "./node_modules/.bin/tsc --project .tsconfig.checkjs.json",
     "test": "npm run lint && npm run test:docker",
-    "test:docker": "./spec/bin/test-on-docker.sh",
-    "test:mocha": "./node_modules/.bin/mocha --reporter spec --timeout 15000 \"spec/**/*Test.js\""
+    "test:docker": "./test/bin/test-on-docker.sh",
+    "test:mocha": "./node_modules/.bin/mocha --reporter spec --timeout 15000 \"test/**/*Test.js\""
   },
   "overrides": {
     "serialize-javascript": "7.0.5"

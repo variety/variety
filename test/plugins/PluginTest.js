@@ -1,7 +1,7 @@
 import assert from 'assert';
-import Tester from './utils/Tester.js';
+import Tester from '../utils/Tester.js';
 import { fileURLToPath } from 'url';
-import sampleData from './assets/SampleData.js';
+import sampleData from '../fixtures/SampleData.js';
 
 const test = new Tester('test', 'users');
 
@@ -16,7 +16,7 @@ someBinData|BinData-generic|1|20
 someWeirdLegacyKey|String|1|20
 `.trim();
 
-const getPluginPath = () => fileURLToPath(new URL('./assets/CsvPlugin.js', import.meta.url));
+const getPluginPath = () => fileURLToPath(new URL('../fixtures/CsvPlugin.js', import.meta.url));
 
 describe('Plugins', () => {
 
