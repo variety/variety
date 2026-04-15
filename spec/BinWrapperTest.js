@@ -182,6 +182,7 @@ describe('bin/variety wrapper', () => {
   it('falls back to mongo and honors VARIETYJS_DIR', async () => {
     const varietyDir = '/tmp/custom-variety-dir';
     const { invocation } = await runBinVariety({
+      includeSystemPath: false,
       shells: ['mongo'],
       env: {
         VARIETYJS_DIR: varietyDir,
