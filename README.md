@@ -281,7 +281,7 @@ Variety expects keys to be well formed, not having any `.`s in them (MongoDB 2.4
     $ mongosh test --quiet --eval "var collection = 'users', arrayEscape = 'YY'" variety.js
 
 ## Command Line Interface
-This NPM package publishes a first-party `variety` executable that resolves the bundled `variety.js`, prefers `mongosh` when available, and falls back to the legacy `mongo` shell.
+This NPM package publishes a built-in `variety` executable that resolves the bundled `variety.js`, prefers `mongosh` when available, and falls back to the legacy `mongo` shell.
 
 The primary interface is:
 

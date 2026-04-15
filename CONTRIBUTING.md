@@ -20,7 +20,7 @@ As an additional (not required) dependency, [Docker](https://www.docker.com/) or
 - `src/interface.js` — the shell-facing layer that reads shell globals
   (`collection`, `plugins`, `slaveOk`, etc.), loads plugins, and hands
   dependencies to `impl.run()`.
-- `bin/variety` — the published Node entrypoint that implements the first-party
+- `bin/variety` — the published Node entrypoint that implements the main
   CLI surface.
 - `lib/cli*.js`, `lib/mongo-shell.js` — Node-side CLI parsing, compatibility
   handling, and Mongo shell invocation helpers.
