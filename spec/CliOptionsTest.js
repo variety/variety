@@ -6,50 +6,11 @@ import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 
 const require = createRequire(import.meta.url);
-/**
- * @typedef {{
- *   CliUsageError: typeof Error,
- *   createExecutionPlan: (argv: string[], env: NodeJS.ProcessEnv) => {
- *     database?: string,
- *     evalCode?: string,
- *     mode: string,
- *     scriptPath?: string,
- *     shellOptions?: Record<string, unknown>,
- *   },
- *   formatUsage: () => string,
- *   stripMatchingOuterQuotes: (value: string) => string,
- * }} CliOptionsModule
- */
-
-/**
- * @typedef {{
- *   buildShellInvocation: (
- *     plan: {
- *       database: string,
- *       evalCode: string,
- *       scriptPath: string,
- *       shellOptions: {
- *         authenticationDatabase: string,
- *         host: string,
- *         password: string,
- *         port: number,
- *         quiet: boolean,
- *         username: string,
- *       },
- *     },
- *     env: NodeJS.ProcessEnv
- *   ) => { command: string, args: string[] },
- * }} MongoShellModule
- */
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-const cliOptionsModule = /** @type {CliOptionsModule} */ (
-  /** @type {unknown} */ (require('../lib/cli-options.js'))
-);
+const cliOptionsModule = /** @type {typeof import('../lib/cli-options.js')} */ (require('../lib/cli-options.js'));
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-const mongoShellModule = /** @type {MongoShellModule} */ (
-  /** @type {unknown} */ (require('../lib/mongo-shell.js'))
-);
+const mongoShellModule = /** @type {typeof import('../lib/mongo-shell.js')} */ (require('../lib/mongo-shell.js'));
 
 const {
   CliUsageError,
@@ -80,6 +41,29 @@ describe('CLI option parsing', () => {
       scriptPath: path.join(repoRoot, 'variety.js'),
       shellOptions: {},
     });
+  });
+
+  it('keeps zero-valued analysis options while requiring a positive port', () => {
+    const plan = createExecutionPlan([
+      'sales/orders',
+      '--limit', '0',
+      '--maxDepth', '0',
+    ], {});
+
+    assert.deepEqual(plan, {
+      database: 'sales',
+      evalCode: 'var collection = "orders"; var limit = 0; var maxDepth = 0',
+      mode: 'cli',
+      scriptPath: path.join(repoRoot, 'variety.js'),
+      shellOptions: {},
+    });
+
+    assert.throws(
+      () => {
+        createExecutionPlan(['sales/orders', '--port', '0'], {});
+      },
+      /--port must be a positive integer/
+    );
   });
 
   it('keeps the documented env-var compatibility mode available', () => {

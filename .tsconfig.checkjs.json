@@ -21,6 +21,8 @@
     ]
   },
   "include": [
+    "bin/variety",
+    "lib/**/*.js",
     ".eslint.config.js",
     "build.js",
     "spec/**/*.js",

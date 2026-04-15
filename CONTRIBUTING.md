@@ -80,7 +80,7 @@ Pre-commit hooks are managed by [Husky](https://typicode.github.io/husky/) and i
 - `npm run lint:yaml` — js-yaml (YAML files)
 - `npm run lint:dockerfile` — hadolint (`docker/Dockerfile.template`)
 - `npm run lint:shell` — shellcheck (shell scripts)
-- `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for `.eslint.config.js`, `build.js`, and Node-side spec code under `spec`
+- `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for `bin/variety`, `lib/**/*.js`, `.eslint.config.js`, `build.js`, and Node-side spec code under `spec`
 
 ### ESLint Rulesets
 
@@ -100,7 +100,7 @@ Node-side JavaScript such as `bin/variety`, `lib/**/*.js`, `.eslint.config.js`, 
 
 #### Checked Files
 
-`npm run typecheck` runs TypeScript `checkJs` over `.eslint.config.js`, `build.js`, and the Node-side spec code via `.tsconfig.checkjs.json`. The `spec` tree also uses type-aware `typescript-eslint` rules, while shell-executed fixtures under `spec/assets` stay on the shared baseline.
+`npm run typecheck` runs TypeScript `checkJs` over the published Node CLI surface (`bin/variety` plus `lib/**/*.js`), `.eslint.config.js`, `build.js`, and the Node-side spec code via `.tsconfig.checkjs.json`. The `spec` tree also uses type-aware `typescript-eslint` rules, while shell-executed fixtures under `spec/assets` stay on the shared baseline.
 
 #### Extra Strictness
 
