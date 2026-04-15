@@ -73,14 +73,14 @@ module.exports = [
     rules: commonRules,
   },
   {
-    files: ['spec/**/*.js'],
+    files: ['test/**/*.js'],
     languageOptions: {
       sourceType: 'module',
     },
   },
   {
-    files: ['.eslint.config.js', 'bin/variety', 'build.js', 'lib/**/*.js', 'spec/**/*.js'],
-    ignores: ['spec/assets/**/*.js'],
+    files: ['.eslint.config.js', 'bin/variety', 'build.js', 'lib/**/*.js', 'test/**/*.js'],
+    ignores: ['test/fixtures/**/*.js'],
     rules: nodeModernizationRules,
   },
   {
@@ -100,8 +100,8 @@ module.exports = [
     },
   },
   ...defineConfig({
-    files: ['spec/**/*.js'],
-    ignores: ['spec/assets/**/*.js'],
+    files: ['test/**/*.js'],
+    ignores: ['test/fixtures/**/*.js'],
     // Keep shell-executed fixtures out of the typed Node-side ruleset.
     extends: [tseslint.configs.recommendedTypeChecked],
     languageOptions: {

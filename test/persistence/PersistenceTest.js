@@ -1,8 +1,8 @@
 import assert from 'assert';
-import Tester from './utils/Tester.js';
-import sampleData from './assets/SampleData.js';
+import Tester from '../utils/Tester.js';
+import sampleData from '../fixtures/SampleData.js';
 
-/** @typedef {import('./utils/JsonValidator.js').VarietyResultRow} VarietyResultRow */
+/** @typedef {import('../utils/JsonValidator.js').VarietyResultRow} VarietyResultRow */
 
 const test = new Tester('test', 'users');
 

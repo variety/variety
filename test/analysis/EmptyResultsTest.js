@@ -3,7 +3,7 @@
 // rather than crashing with "reduce of empty array with no initial value".
 
 import assert from 'assert';
-import Tester from './utils/Tester.js';
+import Tester from '../utils/Tester.js';
 
 const test = new Tester('test', 'users');
 

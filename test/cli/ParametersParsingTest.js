@@ -1,7 +1,7 @@
 import assert from 'assert';
-import execute from './utils/MongoShell.js';
-import Tester from './utils/Tester.js';
-import sampleData from './assets/SampleData.js';
+import execute from '../utils/MongoShell.js';
+import Tester from '../utils/Tester.js';
+import sampleData from '../fixtures/SampleData.js';
 
 const test = new Tester('test', 'users');
 const mongodbPort = Number(process.env['MONGODB_PORT'] || 27017);

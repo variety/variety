@@ -8,9 +8,9 @@ import { fileURLToPath } from 'url';
 const require = createRequire(import.meta.url);
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-const cliOptionsModule = /** @type {typeof import('../lib/cli-options.js')} */ (require('../lib/cli-options.js'));
+const cliOptionsModule = /** @type {typeof import('../../lib/cli-options.js')} */ (require('../../lib/cli-options.js'));
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-const mongoShellModule = /** @type {typeof import('../lib/mongo-shell.js')} */ (require('../lib/mongo-shell.js'));
+const mongoShellModule = /** @type {typeof import('../../lib/mongo-shell.js')} */ (require('../../lib/mongo-shell.js'));
 
 const {
   CliUsageError,
@@ -20,7 +20,7 @@ const {
 } = cliOptionsModule;
 const { buildShellInvocation } = mongoShellModule;
 
-const repoRoot = fileURLToPath(new URL('..', import.meta.url));
+const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
 
 describe('CLI option parsing', () => {
   it('builds a CLI execution plan with bundled variety.js by default', () => {
