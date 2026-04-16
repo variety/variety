@@ -382,6 +382,39 @@ Direct `mongosh ... variety.js` usage remains supported and is still useful when
 
 Note: `variety-cli`, a formerly available companion project that offered higher-level argument parsing, has been archived and is no longer maintained.
 
+### Calling Variety From Node.js
+
+Variety can be automated from a Node.js application by spawning the packaged
+`variety` executable, but it is not an in-process Node.js library API. For
+machine-readable output, run the CLI with `--outputFormat json --quiet` and
+parse stdout:
+
+```js
+const { execFile } = require("node:child_process");
+const { promisify } = require("node:util");
+
+const execFileAsync = promisify(execFile);
+
+async function analyzeCollection() {
+  const { stdout } = await execFileAsync("variety", [
+    "test/users",
+    "--outputFormat",
+    "json",
+    "--quiet",
+  ]);
+
+  return JSON.parse(stdout);
+}
+```
+
+Be careful exposing this pattern from a web endpoint. Keep database credentials
+server-side, validate collection names and options, and pass arguments as an
+array instead of constructing a shell command from request input. If an endpoint
+only needs the available field names, the MongoDB Node.js driver may be a better
+fit than shelling out to Variety for each request.
+
+Hat tip: [@ashishtilara](https://github.com/ashishtilara) ([issue #125](https://github.com/variety/variety/issues/125)). Follow-up: [issue #263](https://github.com/variety/variety/issues/263)
+
 ## "But my dad told me MongoDB is a schemaless database!"
 
 First of all, your father is a great guy. Moving on…
