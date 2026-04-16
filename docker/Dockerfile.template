@@ -6,7 +6,7 @@ FROM docker.io/library/mongo:${MONGODB_VERSION}
 RUN rm -f /etc/apt/sources.list.d/mongodb*.list
 
 # hadolint ignore=DL3008
-RUN apt-get update  -qq && \
+RUN (apt-get update -qq || (sleep 15 && apt-get update -qq)) && \
     apt-get install -qq --assume-yes --no-install-recommends --no-install-suggests \
         curl \
       > /dev/null && \
