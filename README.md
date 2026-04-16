@@ -3,10 +3,16 @@ This lightweight tool helps you get a sense of your application's schema, as wel
 
 ***
 
-_“I happen to slowly be falling in love with Variety! It is actually one of the most useful tools to get a sense for a messy/unknown data set, and I have put it in a few of our exercises at Zipfian Academy.”_
+_”I happen to slowly be falling in love with Variety! It is actually one of the most useful tools to get a sense for a messy/unknown data set, and I have put it in a few of our exercises at Zipfian Academy.”_
 
 Jon Dinu
 _Co-founder of [Zipfian Academy](https://www.zipfianacademy.com/)_
+
+***
+
+_”This code saved me at least an hour of work, so least i could do was spend a minute to [say thanks](https://github.com/variety/variety/issues/107#issue-129803853). Thank you.”_
+
+[@a-c-m](https://github.com/a-c-m)
 
 ***
 
