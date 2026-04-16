@@ -23,6 +23,7 @@
   "include": [
     "bin/variety",
     "cli/**/*.js",
+    "mongo-shell/launcher.js",
     ".eslint.config.js",
     "build.js",
     "test/**/*.js",

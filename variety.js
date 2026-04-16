@@ -14,7 +14,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 //
 // Assembled by build.js from:
 //   core/formatters/ascii.js, core/formatters/json.js,
-//   core/analyzer.js, shell/mongo-shell-adapter.js.
+//   core/analyzer.js, mongo-shell/adapter.js.
 // To change behavior, edit those source files and run `npm run build`. The
 // build output is committed so `mongosh variety.js` works from a fresh clone
 // without a build step; CI verifies the committed file matches its sources.
@@ -43,7 +43,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 //      as explicit parameters. The section hands a bundle of functions to
 //      the interface section via `shellContext.__varietyImpl`.
 //
-//   3. INTERFACE SECTION (shell/mongo-shell-adapter.js) — everything that touches
+//   3. INTERFACE SECTION (mongo-shell/adapter.js) — everything that touches
 //      shell globals: reading input (`collection`, `plugins`, `__quiet`,
 //      `slaveOk`, etc.), the config-echo logging, plugin loading via
 //      `load()`, input validation, and constructing the dependency bag
