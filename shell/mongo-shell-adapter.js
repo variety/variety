@@ -25,10 +25,6 @@
     }
   };
 
-  const shellPrintJson = (value) => {
-    print(JSON.stringify(value, null, 2));
-  };
-
   const getDatabase = (name) => {
     if (typeof db.getSisterDB === 'function') {
       return db.getSisterDB(name);
@@ -173,11 +169,11 @@
     connect: typeof connect !== 'undefined' ? connect : undefined,
     log,
     print,
-    shellPrintJson,
     countMatchingDocuments,
   });
 
-  // Clean up the implementation handoff so repeated loads remain idempotent
+  // Clean up the implementation handoffs so repeated loads remain idempotent
   // and no ad hoc internals leak onto globalThis after execution.
   delete shellContext.__varietyImpl;
+  delete shellContext.__varietyFormatters;
 }(this)); // end strict mode

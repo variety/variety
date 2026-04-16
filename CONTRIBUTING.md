@@ -14,16 +14,23 @@ As an additional (not required) dependency, [Docker](https://www.docker.com/) or
 
 ## Repo Layout and the `variety.js` Build
 
-`variety.js` at the repo root is a generated file, assembled from two sources:
+`variety.js` at the repo root is a generated file, assembled from four sources in this order:
 
+- `core/formatters/ascii.js` — built-in ASCII table formatter. Self-contained
+  IIFE; registers an `ascii` factory on `shellContext.__varietyFormatters`.
+- `core/formatters/json.js` — built-in JSON formatter. Self-contained IIFE;
+  registers a `json` factory on `shellContext.__varietyFormatters`.
 - `core/analyzer.js` — pure, transport-agnostic analysis logic. No runtime
-  dependencies on shell globals, Node I/O, or any other layer. This is the
+  dependencies on shell globals, Node I/O, or any other layer. Reads
+  `shellContext.__varietyFormatters` to dispatch output. This is the
   future `@variety/core` package boundary.
 - `shell/mongo-shell-adapter.js` — the shell-facing layer that reads shell
   globals (`collection`, `plugins`, `slaveOk`, etc.), loads plugins, and
   hands dependencies to `impl.run()`. The only place in the build that
-  touches `db`, `print`, and `load`. Depends on `core`; compiled into
-  `variety.js` by `build.js` (not a separately published package).
+  touches `db`, `print`, and `load`. Cleans up both `__varietyImpl` and
+  `__varietyFormatters` after execution so repeated loads are idempotent.
+  Depends on `core`; compiled into `variety.js` by `build.js` (not a
+  separately published package).
 - `bin/variety` — the published Node entrypoint that implements the main
   CLI surface.
 - `cli/main.js`, `cli/options.js`, `cli/mongo-shell-launcher.js` — Node-side
@@ -31,11 +38,12 @@ As an additional (not required) dependency, [Docker](https://www.docker.com/) or
   The only place that touches Node `process`, `fs`, and `spawnSync`. Depends
   on `core`; this is the future `@variety/cli` package boundary.
 
-**Dependency directions:** `core` has no runtime deps on any other layer.
-`shell` depends on `core`. `cli` depends on `core`. `build.js` composes
-`core` + `shell` → `variety.js`.
+**Dependency directions:** `core/formatters/` has no runtime deps on any other
+layer. `core` depends on `core/formatters/`. `shell` depends on `core`. `cli`
+depends on `core`. `build.js` composes `core/formatters/` + `core` + `shell`
+→ `variety.js`.
 
-`build.js` concatenates those two source files under a generated-file banner.
+`build.js` concatenates those source files under a generated-file banner.
 Edit the sources in `core/` or `shell/`, then run:
 
 ```
@@ -52,7 +60,7 @@ The built `variety.js` is committed to the repository so that `mongosh variety.j
 npm run test:mocha
 ```
 
-The test suite under `test/` runs as native ESM through its own `test/package.json`, while the repository root intentionally stays CommonJS so the CLI entrypoint and config files keep their current behavior. Tests are grouped by concern — `test/analysis/`, `test/cli/`, `test/persistence/`, and `test/plugins/` — with shared helpers under `test/utils/` and static inputs under `test/fixtures/`. That Mocha lane also includes focused CLI tests that execute `bin/variety` and stub `mongosh` / `mongo`, so the command-line translation layer can be validated without a live MongoDB shell install.
+The test suite under `test/` runs as native ESM through its own `test/package.json`, while the repository root intentionally stays CommonJS so the CLI entrypoint and config files keep their current behavior. Tests are grouped by concern — `test/analysis/`, `test/cli/`, `test/formatters/`, `test/persistence/`, and `test/plugins/` — with shared helpers under `test/utils/` and static inputs under `test/fixtures/`. That Mocha lane also includes focused CLI tests that execute `bin/variety` and stub `mongosh` / `mongo`, so the command-line translation layer can be validated without a live MongoDB shell install.
 
 If you have Docker or Podman installed and don't want to test against your own MongoDB instance,
 you can execute tests against dockerized MongoDB:
@@ -84,7 +92,7 @@ Variety keeps its repository checks split into a few layers so it is clear which
 
 Pre-commit hooks are managed by [Husky](https://typicode.github.io/husky/) and installed automatically on `npm install`. Each commit runs all of the following, and is blocked if any fail:
 
-- `npm run verify:build` — verifies `variety.js` matches what `build.js` would produce from `core/` and `shell/`
+- `npm run verify:build` — verifies `variety.js` matches what `build.js` would produce from `core/formatters/`, `core/`, and `shell/`
 - `npm run lint` — ESLint (JavaScript)
 - `npm run lint:json` — `@prantlf/jsonlint` (JSON files)
 - `npm run lint:markdown` — markdownlint (Markdown files)
@@ -120,6 +128,65 @@ That pass enables stricter flags such as `noImplicitReturns`, `noUncheckedIndexe
 ### Container-backed Linters
 
 `npm run lint:dockerfile` and `npm run lint:shell` run inside containers. [Docker](https://www.docker.com/) is used if available, with [Podman](https://podman.io/) as a fallback. At least one must be installed. `npm run lint:shell` now covers the remaining shell scripts (`docker/init.sh` and `test/bin/test-on-docker.sh`), while the published `bin/variety` entrypoint is linted as Node-side JavaScript.
+
+## Writing a Plugin
+
+A plugin is a CommonJS module (`.js` file) that exports a plain object. Variety calls any hooks it finds on that object; omit the ones you don't need.
+
+### Hooks
+
+| Hook | Signature | Notes |
+| --- | --- | --- |
+| `init` | `init(pluginConfig)` | Called once after the plugin is loaded. `pluginConfig` is a key/value object parsed from the `\|key=value` suffix in the `plugins` option. |
+| `onConfig` | `onConfig(config)` | Called once after Variety's full config is resolved. Use this to read analysis settings. |
+| `formatResults` | `formatResults(results)` → `string` | Called after analysis. The returned string is printed instead of the built-in formatter. Omit this hook to keep the default output format. |
+
+### Minimal example
+
+```js
+// my-plugin.js
+module.exports = {
+  formatResults(results) {
+    return results.map((r) => `${r._id.key}: ${r.percentContaining}%`).join('\n');
+  },
+};
+```
+
+Run it:
+
+```bash
+mongosh test --quiet --eval "var collection='users', plugins='./my-plugin.js'" variety.js
+```
+
+### Example with configuration
+
+```js
+// csv-plugin.js
+let delimiter = ',';
+
+module.exports = {
+  init(cfg) {
+    if (cfg.delimiter) { delimiter = cfg.delimiter; }
+  },
+  formatResults(results) {
+    const headers = ['key', 'types', 'occurrences', 'percents'];
+    const rows = results.map((r) =>
+      [r._id.key, Object.keys(r.value.types).join('+'), r.totalOccurrences, r.percentContaining].join(delimiter)
+    );
+    return [headers.join(delimiter), ...rows].join('\n');
+  },
+};
+```
+
+Pass config via the `|` separator:
+
+```bash
+mongosh test --quiet --eval "var collection='users', plugins='./csv-plugin.js|delimiter=;'" variety.js
+```
+
+### Testing a plugin
+
+Integration tests for plugins live in `test/plugins/`. Copy the structure of `test/plugins/PluginTest.js` and put your fixture file under `test/fixtures/`. The `Tester` helper's `runAnalysis({ plugins: getPluginPath() })` method is the easiest way to wire everything up.
 
 ## Reporting Issues / Contributing
 
