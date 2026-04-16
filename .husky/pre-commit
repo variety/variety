@@ -1,5 +1,17 @@
 #!/bin/sh
 
+# If every staged change is a modification (not add/delete) to an existing .md
+# file, skip the non-Markdown checks — they have nothing to verify.
+staged=$(git diff --cached --name-status)
+non_md=$(printf '%s\n' "$staged" | awk 'NF && ($1 != "M" || $2 !~ /\.md$/)')
+
+if [ -n "$staged" ] && [ -z "$non_md" ]; then
+  echo "→ Only existing Markdown files modified — skipping non-Markdown checks"
+  echo "→ markdownlint (Markdown)"
+  npm run lint:markdown
+  exit 0
+fi
+
 echo "→ build check (variety.js vs src/)"
 npm run verify:build
 
