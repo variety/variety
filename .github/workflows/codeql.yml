@@ -15,8 +15,45 @@ permissions:
   security-events: write
 
 jobs:
+  changes:
+    name: Detect changes
+    # Only meaningful for push/PR — scheduled and manual runs always analyze
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      only-markdown: ${{ steps.check.outputs.only-markdown }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Check if only existing markdown files were modified
+        id: check
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE="${{ github.event.before }}"
+          fi
+          # First push to a branch has no meaningful base
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+            echo "only-markdown=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed=$(git diff --name-status "$BASE" "${{ github.sha }}")
+          if [ -z "$changed" ]; then
+            echo "only-markdown=false" >> "$GITHUB_OUTPUT"
+          elif printf '%s\n' "$changed" | awk 'NF && ($1 != "M" || $2 !~ /\.md$/) { exit 1 }'; then
+            echo "only-markdown=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "only-markdown=false" >> "$GITHUB_OUTPUT"
+          fi
+
   analyze:
     name: Analyze (${{ matrix.language }})
+    needs: [changes]
+    # always() lets this run even when `changes` was skipped (schedule/dispatch).
+    # When skipped, only-markdown is empty → != 'true' → analyze proceeds.
+    if: always() && needs.changes.outputs.only-markdown != 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

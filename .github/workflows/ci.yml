@@ -10,8 +10,40 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      only-markdown: ${{ steps.check.outputs.only-markdown }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Check if only existing markdown files were modified
+        id: check
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE="${{ github.event.before }}"
+          fi
+          # First push to a branch has no meaningful base
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+            echo "only-markdown=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed=$(git diff --name-status "$BASE" "${{ github.sha }}")
+          if [ -z "$changed" ]; then
+            echo "only-markdown=false" >> "$GITHUB_OUTPUT"
+          elif printf '%s\n' "$changed" | awk 'NF && ($1 != "M" || $2 !~ /\.md$/) { exit 1 }'; then
+            echo "only-markdown=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "only-markdown=false" >> "$GITHUB_OUTPUT"
+          fi
+
   lint:
     name: Lint (Node 22)
+    needs: changes
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -23,16 +55,25 @@ jobs:
         env:
           HUSKY: '0'
       - run: npm run verify:build
+        if: needs.changes.outputs.only-markdown != 'true'
       - run: npm run lint
+        if: needs.changes.outputs.only-markdown != 'true'
       - run: npm run lint:json
+        if: needs.changes.outputs.only-markdown != 'true'
       - run: npm run lint:markdown
       - run: npm run lint:yaml
+        if: needs.changes.outputs.only-markdown != 'true'
       - run: npm run lint:dockerfile
+        if: needs.changes.outputs.only-markdown != 'true'
       - run: npm run lint:shell
+        if: needs.changes.outputs.only-markdown != 'true'
       - run: npm run typecheck
+        if: needs.changes.outputs.only-markdown != 'true'
 
   test:
     name: Test (Node 22, MongoDB ${{ matrix.mongodb-version }})
+    needs: changes
+    if: needs.changes.outputs.only-markdown != 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -55,6 +96,8 @@ jobs:
 
   test-smoke:
     name: Smoke Test (Node 24, MongoDB 8.0)
+    needs: changes
+    if: needs.changes.outputs.only-markdown != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6

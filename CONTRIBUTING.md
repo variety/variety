@@ -94,7 +94,11 @@ Variety keeps its repository checks split into a few layers so it is clear which
 
 ### Pre-commit Hooks
 
-Pre-commit hooks are managed by [Husky](https://typicode.github.io/husky/) and installed automatically on `npm install`. Each commit runs all of the following, and is blocked if any fail:
+Pre-commit hooks are managed by [Husky](https://typicode.github.io/husky/) and installed automatically on `npm install`. Each commit is blocked if any applicable check fails.
+
+If every staged change is a modification to an existing `.md` file (no new or deleted files), only `npm run lint:markdown` runs — all other checks are skipped as they have nothing to verify.
+
+Otherwise all of the following run:
 
 - `npm run verify:build` — verifies `variety.js` matches what `build.js` would produce from `core/formatters/`, `core/`, and `mongo-shell/adapter.js`
 - `npm run lint` — ESLint (JavaScript)
