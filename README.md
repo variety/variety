@@ -141,6 +141,18 @@ One can apply a `query` constraint, which takes a standard MongoDB query object,
 
     $ mongosh test --eval "var collection = 'users', query = {'caredAbout':true}" variety.js
 
+MongoDB shell constructors such as `ObjectId(...)` can be used inside that
+evaluated query:
+
+    $ mongosh myDb --eval "var collection = 'myCollection', query = {company: ObjectId('5a6b446d46246c5b6eaaa4a4')}" variety.js
+
+The first-party `variety DB/COLLECTION` CLI keeps `--query` limited to strict
+JSON, so use `--eval` when a filter needs shell-side values:
+
+    $ variety myDb/myCollection --quiet --outputFormat json --eval "var query = {company: ObjectId('5a6b446d46246c5b6eaaa4a4')}"
+
+Extended JSON support for `--query` is being discussed in [issue #267](https://github.com/variety/variety/issues/267). Hat tip: [@mariusbancos](https://github.com/mariusbancos) ([#146](https://github.com/variety/variety/issues/146)).
+
 ## Analyze Documents Sorted In a Particular Order
 
 Perhaps you want to analyze a subset of documents sorted in an order other than creation order, say, for example, sorted by when documents were updated.
