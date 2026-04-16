@@ -538,14 +538,6 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     }
   };
 
-  const getDatabase = (name) => {
-    if (typeof db.getSisterDB === 'function') {
-      return db.getSisterDB(name);
-    }
-
-    return db.getMongo().getDB(name);
-  };
-
   const countMatchingDocuments = (collectionName, query, limit) => {
     const coll = db.getCollection(collectionName);
     const options = (typeof limit === 'number' && limit > 0) ? {limit} : undefined;
@@ -555,38 +547,38 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
   log('Variety: A MongoDB Schema Analyzer');
   log('Version 1.5.2, released 30 September 2025');
 
-  const dbs = [];
-  const emptyDbs = [];
-
   if (typeof slaveOk !== 'undefined') {
     if (slaveOk === true) {
       db.getMongo().setSlaveOk();
     }
   }
 
+  const selectedDatabaseName = db.getName();
   const knownDatabases = db.adminCommand('listDatabases').databases;
+  const knownDatabaseNames = [];
   if (typeof knownDatabases !== 'undefined') { // not authorized user receives error response (json) without databases key
-    knownDatabases.forEach((d) => {
-      const collectionNames = getDatabase(d.name).getCollectionNames();
-      if (collectionNames.length > 0) {
-        dbs.push(d.name);
-      } else {
-        emptyDbs.push(d.name);
+    // Keep validation scoped to the selected database. Issue #145
+    // (@pkgajulapalli) hit a startup failure while enumerating collections for
+    // an unrelated database.
+    knownDatabases.forEach((database) => {
+      if (typeof database.name === 'string' && database.name.length > 0) {
+        knownDatabaseNames.push(database.name);
       }
     });
 
-    if (emptyDbs.includes(db.getName())) {
-      throw new Error(`The database specified (${db.getName()}) is empty.\n` +
-          `Possible database options are: ${dbs.join(', ')}.`);
-    }
-
-    if (!dbs.includes(db.getName())) {
-      throw new Error(`The database specified (${db.getName()}) does not exist.\n` +
-          `Possible database options are: ${dbs.join(', ')}.`);
+    if (!knownDatabaseNames.includes(selectedDatabaseName)) {
+      throw new Error(`The database specified (${selectedDatabaseName}) does not exist.\n` +
+          `Possible database options are: ${knownDatabaseNames.join(', ')}.`);
     }
   }
 
-  const collNames = db.getCollectionNames().join(', ');
+  const collectionNames = db.getCollectionNames();
+  const collNames = collectionNames.join(', ');
+  if (collectionNames.length === 0) {
+    throw new Error(`The database specified (${selectedDatabaseName}) is empty.\n` +
+        `Possible database options are: ${knownDatabaseNames.join(', ')}.`);
+  }
+
   if (typeof collection === 'undefined') {
     throw new Error('You have to supply a \'collection\' variable, à la --eval \'var collection = "animals"\'.\n' +
         `Possible collection options for database specified: ${collNames}.\n` +
