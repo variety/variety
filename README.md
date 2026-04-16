@@ -370,6 +370,27 @@ variety logs/webserver --limit 100 --maxDepth 3 --sort '{"created":-1}'
 variety test/users --query '{"bio":{"$exists":true}}' --host localhost --port 27017
 ```
 
+### Authenticated Remote Databases
+
+For a remote MongoDB instance that requires authentication, pass the connection
+details through the built-in CLI:
+
+```bash
+variety app/users --host db.example.com --port 27017 --username report_reader --password secret --authenticationDatabase admin --quiet
+```
+
+The equivalent direct Mongo shell invocation uses the remote database in the
+shell target and sets the collection through `--eval`:
+
+```bash
+mongosh "mongodb://db.example.com:27017/app" --username "report_reader" --password "secret" --authenticationDatabase "admin" --quiet --eval "var collection = 'users'" variety.js
+```
+
+First-class MongoDB URI support in the built-in CLI is being discussed in
+[issue #270](https://github.com/variety/variety/issues/270). Hat tip:
+[@YNX940214](https://github.com/YNX940214)
+([#152](https://github.com/variety/variety/issues/152)).
+
 Structured flags such as `--query` and `--sort` accept strict JSON. Connection flags such as `--host`, `--port`, `--username`, `--password`, `--authenticationDatabase`, and `--quiet` are passed through to the Mongo shell. `--eval` remains available as an escape hatch when you need to append raw JavaScript assignments.
 
 When you invoke `variety` with no CLI arguments, the documented compatibility environment variables remain supported:
