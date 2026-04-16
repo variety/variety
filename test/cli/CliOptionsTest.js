@@ -10,7 +10,7 @@ const require = createRequire(import.meta.url);
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const cliOptionsModule = /** @type {typeof import('../../cli/options.js')} */ (require('../../cli/options.js'));
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-const mongoShellModule = /** @type {typeof import('../../cli/mongo-shell-launcher.js')} */ (require('../../cli/mongo-shell-launcher.js'));
+const mongoShellModule = /** @type {typeof import('../../mongo-shell/launcher.js')} */ (require('../../mongo-shell/launcher.js'));
 
 const {
   CliUsageError,

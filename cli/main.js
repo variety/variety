@@ -9,7 +9,7 @@ const rawPackageMetadata = /** @type {unknown} */ (
 );
 const packageMetadata = /** @type {PackageMetadata} */ (rawPackageMetadata);
 const cliOptions = /** @type {typeof import('./options.js')} */ (require('./options'));
-const mongoShell = /** @type {typeof import('./mongo-shell-launcher.js')} */ (require('./mongo-shell-launcher'));
+const mongoShell = /** @type {typeof import('../mongo-shell/launcher.js')} */ (require('../mongo-shell/launcher'));
 const { CliUsageError, createExecutionPlan, formatUsage } = cliOptions;
 const { CliRuntimeError, buildShellInvocation, runShellInvocation } = mongoShell;
 

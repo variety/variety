@@ -24,7 +24,7 @@ As an additional (not required) dependency, [Docker](https://www.docker.com/) or
   dependencies on shell globals, Node I/O, or any other layer. Reads
   `shellContext.__varietyFormatters` to dispatch output. This is the
   future `@variety/core` package boundary.
-- `shell/mongo-shell-adapter.js` — the shell-facing layer that reads shell
+- `mongo-shell/adapter.js` — the shell-facing layer that reads shell
   globals (`collection`, `plugins`, `slaveOk`, etc.), loads plugins, and
   hands dependencies to `impl.run()`. The only place in the build that
   touches `db`, `print`, and `load`. Cleans up both `__varietyImpl` and
@@ -33,18 +33,22 @@ As an additional (not required) dependency, [Docker](https://www.docker.com/) or
   separately published package).
 - `bin/variety` — the published Node entrypoint that implements the main
   CLI surface.
-- `cli/main.js`, `cli/options.js`, `cli/mongo-shell-launcher.js` — Node-side
-  CLI parsing, compatibility handling, and Mongo shell invocation helpers.
-  The only place that touches Node `process`, `fs`, and `spawnSync`. Depends
-  on `core`; this is the future `@variety/cli` package boundary.
+- `mongo-shell/launcher.js` — Node-side Mongo shell invocation helpers.
+  The only place that touches Node `spawnSync` for spawning `mongosh`/`mongo`.
+  Future interfaces (MCP, etc.) can import from `mongo-shell/` without
+  reaching into `cli/`.
+- `cli/main.js`, `cli/options.js` — Node-side CLI parsing and compatibility
+  handling. Depends on `core` and `mongo-shell/`; this is the future
+  `@variety/cli` package boundary.
 
 **Dependency directions:** `core/formatters/` has no runtime deps on any other
-layer. `core` depends on `core/formatters/`. `shell` depends on `core`. `cli`
-depends on `core`. `build.js` composes `core/formatters/` + `core` + `shell`
-→ `variety.js`.
+layer. `core` depends on `core/formatters/`. `mongo-shell/adapter.js` depends on
+`core`. `mongo-shell/launcher.js` is Node-only (no `core` dep). `cli` depends on
+`core` and `mongo-shell/`. `build.js` composes `core/formatters/` + `core` +
+`mongo-shell/adapter.js` → `variety.js`.
 
 `build.js` concatenates those source files under a generated-file banner.
-Edit the sources in `core/` or `shell/`, then run:
+Edit the sources in `core/` or `mongo-shell/adapter.js`, then run:
 
 ```
 npm run build
@@ -92,7 +96,7 @@ Variety keeps its repository checks split into a few layers so it is clear which
 
 Pre-commit hooks are managed by [Husky](https://typicode.github.io/husky/) and installed automatically on `npm install`. Each commit runs all of the following, and is blocked if any fail:
 
-- `npm run verify:build` — verifies `variety.js` matches what `build.js` would produce from `core/formatters/`, `core/`, and `shell/`
+- `npm run verify:build` — verifies `variety.js` matches what `build.js` would produce from `core/formatters/`, `core/`, and `mongo-shell/adapter.js`
 - `npm run lint` — ESLint (JavaScript)
 - `npm run lint:json` — `@prantlf/jsonlint` (JSON files)
 - `npm run lint:markdown` — markdownlint (Markdown files)
@@ -109,17 +113,17 @@ Pre-commit hooks are managed by [Husky](https://typicode.github.io/husky/) and i
 
 #### Node-side Modernization
 
-Node-side JavaScript such as `bin/variety`, `cli/**/*.js`, `.eslint.config.js`, `build.js`, and the test suite under `test/` (excluding shell-executed fixtures under `test/fixtures/`) opts into a stricter modernization set: `const`, template literals, object shorthand, `Object.hasOwn`, and throwing `Error` objects.
+Node-side JavaScript such as `bin/variety`, `cli/**/*.js`, `mongo-shell/launcher.js`, `.eslint.config.js`, `build.js`, and the test suite under `test/` (excluding shell-executed fixtures under `test/fixtures/`) opts into a stricter modernization set: `const`, template literals, object shorthand, `Object.hasOwn`, and throwing `Error` objects.
 
 #### Legacy Shell Compatibility
 
-`variety.js` and its sources under `core/` and `shell/` use the subset of those rules that is safe for the ES6+ JavaScript supported by the legacy `mongo` shell since MongoDB 4.4: `no-var`, `prefer-const`, `prefer-template`, `object-shorthand`, and `no-throw-literal`. `prefer-object-has-own` is intentionally excluded there because `Object.hasOwn()` is not guaranteed in that runtime, and all `hasOwnProperty.call()` usages have been replaced by `Object.keys()` / `in`.
+`variety.js` and its sources under `core/` and `mongo-shell/adapter.js` use the subset of those rules that is safe for the ES6+ JavaScript supported by the legacy `mongo` shell since MongoDB 4.4: `no-var`, `prefer-const`, `prefer-template`, `object-shorthand`, and `no-throw-literal`. `prefer-object-has-own` is intentionally excluded there because `Object.hasOwn()` is not guaranteed in that runtime, and all `hasOwnProperty.call()` usages have been replaced by `Object.keys()` / `in`.
 
 ### Typed Checks For Node-side Code
 
 #### Checked Files
 
-`npm run typecheck` runs TypeScript `checkJs` over the published Node CLI surface (`bin/variety` plus `cli/**/*.js`), `.eslint.config.js`, `build.js`, and the Node-side test code via `.tsconfig.checkjs.json`. The `test` tree also uses type-aware `typescript-eslint` rules, while shell-executed fixtures under `test/fixtures` stay on the shared baseline.
+`npm run typecheck` runs TypeScript `checkJs` over the published Node CLI surface (`bin/variety` plus `cli/**/*.js` and `mongo-shell/launcher.js`), `.eslint.config.js`, `build.js`, and the Node-side test code via `.tsconfig.checkjs.json`. The `test` tree also uses type-aware `typescript-eslint` rules, while shell-executed fixtures under `test/fixtures` stay on the shared baseline.
 
 #### Extra Strictness
 
