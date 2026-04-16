@@ -68,7 +68,7 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^25.6.0",
     "eslint": "^10.2.0",
-    "globals": "^17.4.0",
+    "globals": "^17.5.0",
     "husky": "^9.1.7",
     "js-yaml": "^4.1.1",
     "markdownlint-cli": "^0.48.0",
