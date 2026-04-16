@@ -380,6 +380,32 @@ DB=test EVAL_CMDS="var collection = 'users', maxDepth = 3, limit = 500" variety
 
 Direct `mongosh ... variety.js` usage remains supported and is still useful when you want the most transparent low-level invocation for debugging or advanced shell work.
 
+### Loading Variety From an Interactive Mongo Shell
+
+If you are already inside `mongosh` or the legacy `mongo` shell, define the
+same globals you would normally pass with `--eval`, then load `variety.js`:
+
+```js
+var collection = "users";
+load("/path/to/variety.js");
+```
+
+The `load()` call executes Variety immediately; there is no separate function
+to call after the script loads. Set any additional options before `load()`:
+
+```js
+var collection = "users";
+var outputFormat = "json";
+var limit = 100;
+load("/path/to/variety.js");
+```
+
+This low-level form is useful for exploratory shell sessions or debugging. For
+regular terminal use, prefer the packaged `variety DB/COLLECTION [options]`
+command.
+
+Hat tip: [@abrin](https://github.com/abrin) ([issue #131](https://github.com/variety/variety/issues/131)). Follow-up: [issue #264](https://github.com/variety/variety/issues/264)
+
 Note: `variety-cli`, a formerly available companion project that offered higher-level argument parsing, has been archived and is no longer maintained.
 
 ### Calling Variety From Node.js
