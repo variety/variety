@@ -406,8 +406,6 @@ command.
 
 Hat tip: [@abrin](https://github.com/abrin) ([issue #131](https://github.com/variety/variety/issues/131)). Follow-up: [issue #264](https://github.com/variety/variety/issues/264)
 
-Note: `variety-cli`, a formerly available companion project that offered higher-level argument parsing, has been archived and is no longer maintained.
-
 ### Calling Variety From Node.js
 
 Variety can be automated from a Node.js application by spawning the packaged
@@ -440,6 +438,8 @@ only needs the available field names, the MongoDB Node.js driver may be a better
 fit than shelling out to Variety for each request.
 
 Hat tip: [@ashishtilara](https://github.com/ashishtilara) ([issue #125](https://github.com/variety/variety/issues/125)). Follow-up: [issue #263](https://github.com/variety/variety/issues/263)
+
+Note: `variety-cli`, a formerly available companion project that offered higher-level argument parsing, has been archived and is no longer maintained.
 
 ## "But my dad told me MongoDB is a schemaless database!"
 
