@@ -12,9 +12,11 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 // -----------------------------------------------------------------------------
 // GENERATED FILE — do not edit directly.
 //
-// Assembled by build.js from core/analyzer.js and shell/mongo-shell-adapter.js. To change
-// behavior, edit those source files and run `npm run build`. The build
-// output is committed so `mongosh variety.js` works from a fresh clone
+// Assembled by build.js from:
+//   core/formatters/ascii.js, core/formatters/json.js,
+//   core/analyzer.js, shell/mongo-shell-adapter.js.
+// To change behavior, edit those source files and run `npm run build`. The
+// build output is committed so `mongosh variety.js` works from a fresh clone
 // without a build step; CI verifies the committed file matches its sources.
 // -----------------------------------------------------------------------------
 
@@ -28,23 +30,108 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 // See .eslint.config.js for the enforced rule set.
 
 // -----------------------------------------------------------------------------
-// This file is organized in two sections, sourced from two separate files:
+// This file is organized in four sections, sourced from four separate files:
 //
-//   1. IMPLEMENTATION SECTION (core/analyzer.js) — pure, transport-agnostic
+//   1. FORMATTER SECTION (core/formatters/ascii.js, core/formatters/json.js) —
+//      built-in output formatters. Each is a self-contained IIFE that registers
+//      a factory function on `shellContext.__varietyFormatters`. Third-party
+//      formatters can be supplied as plugins instead (see README).
+//
+//   2. IMPLEMENTATION SECTION (core/analyzer.js) — pure, transport-agnostic
 //      analysis logic. Functions take their dependencies (config, and where
 //      needed a `log` function or a `deps` bag holding shell primitives)
 //      as explicit parameters. The section hands a bundle of functions to
 //      the interface section via `shellContext.__varietyImpl`.
 //
-//   2. INTERFACE SECTION (shell/mongo-shell-adapter.js) — everything that touches shell
-//      globals: reading input (`collection`, `plugins`, `__quiet`,
+//   3. INTERFACE SECTION (shell/mongo-shell-adapter.js) — everything that touches
+//      shell globals: reading input (`collection`, `plugins`, `__quiet`,
 //      `slaveOk`, etc.), the config-echo logging, plugin loading via
 //      `load()`, input validation, and constructing the dependency bag
 //      passed to `impl.run()`.
 //
-// The handoff property is deleted at the end so the pair is idempotent and
+// The handoff properties are deleted at the end so the build is idempotent and
 // does not pollute the shell's global namespace after execution.
 // -----------------------------------------------------------------------------
+
+
+// =============================================================================
+// BUILT-IN FORMATTER: ASCII TABLE
+// =============================================================================
+(function (shellContext) {
+  'use strict';
+
+  shellContext = typeof globalThis !== 'undefined' ? globalThis : shellContext;
+
+  shellContext.__varietyFormatters = shellContext.__varietyFormatters || Object.create(null);
+
+  /**
+   * Returns a formatter that renders results as a padded ASCII table.
+   * @param {object} config - The parsed Variety config (uses config.lastValue and config.arrayEscape).
+   * @returns {{ formatResults: function(Array): string }}
+   */
+  shellContext.__varietyFormatters.ascii = (config) => {
+    const formatResults = (results) => {
+      const headers = ['key', 'types', 'occurrences', 'percents'];
+      if (config.lastValue) {
+        headers.push('lastValue');
+      }
+
+      // Return the number of decimal places, or 1 for integers (1.23 => 2, 100 => 1, 0.1415 => 4).
+      const significantDigits = (value) => {
+        const res = value.toString().match(/^[0-9]+\.([0-9]+)$/);
+        return res !== null ? res[1].length : 1;
+      };
+
+      const maxDigits = results
+        .map((value) => significantDigits(value.percentContaining))
+        .reduce((acc, val) => Math.max(acc, val), 1);
+
+      const rows = results.map((row) => {
+        const typeKeys = Object.keys(row.value.types);
+        const types = typeKeys.length > 1
+          ? typeKeys.map((type) => `${type} (${row.value.types[type]})`)
+          : typeKeys;
+
+        const rawArray = [row._id.key, types, row.totalOccurrences, row.percentContaining.toFixed(Math.min(maxDigits, 20))];
+        if (config.lastValue && row.lastValue) {
+          rawArray.push(row.lastValue);
+        }
+        return rawArray;
+      });
+
+      const table = [headers, headers.map(() => '')].concat(rows);
+      const colMaxWidth = (arr, index) => Math.max(...arr.map((row) => row[index] ? row[index].toString().length : 0));
+      const pad = (width, string, symbol) => width <= string.length ? string : pad(width, isNaN(string) ? string + symbol : symbol + string, symbol);
+      const formattedTable = table.map((row, ri) =>
+        `| ${row.map((cell, i) => pad(colMaxWidth(table, i), cell.toString(), ri === 1 ? '-' : ' ')).join(' | ')} |`
+      );
+      const border = `+${pad(formattedTable[0].length - 2, '', '-')}+`;
+      return [border].concat(formattedTable).concat(border).join('\n');
+    };
+
+    return {formatResults};
+  };
+}(this));
+
+
+// =============================================================================
+// BUILT-IN FORMATTER: JSON
+// =============================================================================
+(function (shellContext) {
+  'use strict';
+
+  shellContext = typeof globalThis !== 'undefined' ? globalThis : shellContext;
+
+  shellContext.__varietyFormatters = shellContext.__varietyFormatters || Object.create(null);
+
+  /**
+   * Returns a formatter that serializes results as pretty-printed JSON.
+   * @returns {{ formatResults: function(Array): string }}
+   */
+  shellContext.__varietyFormatters.json = () => ({
+    formatResults: (results) => JSON.stringify(results, null, 2),
+  });
+}(this));
 
 
 // =============================================================================
@@ -340,45 +427,6 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     return result;
   };
 
-  const createAsciiTable = (config, results) => {
-    const headers = ['key', 'types', 'occurrences', 'percents'];
-    if (config.lastValue) {
-      headers.push('lastValue');
-    }
-
-    // Return the number of decimal places, or 1 for integers (1.23 => 2, 100 => 1, 0.1415 => 4).
-    const significantDigits = (value) => {
-      const res = value.toString().match(/^[0-9]+\.([0-9]+)$/);
-      return res !== null ? res[1].length : 1;
-    };
-
-    const maxDigits = results
-      .map((value) => significantDigits(value.percentContaining))
-      .reduce((acc, val) => Math.max(acc, val), 1);
-
-    const rows = results.map((row) => {
-      const typeKeys = Object.keys(row.value.types);
-      const types = typeKeys.length > 1
-        ? typeKeys.map((type) => `${type} (${row.value.types[type]})`)
-        : typeKeys;
-
-      const rawArray = [row._id.key, types, row.totalOccurrences, row.percentContaining.toFixed(Math.min(maxDigits, 20))];
-      if (config.lastValue && row.lastValue) {
-        rawArray.push(row.lastValue);
-      }
-      return rawArray;
-    });
-
-    const table = [headers, headers.map(() => '')].concat(rows);
-    const colMaxWidth = (arr, index) => Math.max(...arr.map((row) => row[index] ? row[index].toString().length : 0));
-    const pad = (width, string, symbol) => width <= string.length ? string : pad(width, isNaN(string) ? string + symbol : symbol + string, symbol);
-    const formattedTable = table.map((row, ri) =>
-      `| ${row.map((cell, i) => pad(colMaxWidth(table, i), cell.toString(), ri === 1 ? '-' : ' ')).join(' | ')} |`
-    );
-    const border = `+${pad(formattedTable[0].length - 2, '', '-')}+`;
-    return [border].concat(formattedTable).concat(border).join('\n');
-  };
-
   // By default, keys ending in an array index (e.g. "tags.XX") are suppressed,
   // since the parent key already captures the Array type. Set showArrayElements:true
   // to include them — useful for verifying element-type consistency within arrays.
@@ -396,7 +444,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
   // Orchestrates a Variety analysis from a parsed config and constructed
   // pluginsRunner, pulling every shell primitive it needs from `deps`.
   const run = (config, pluginsRunner, deps) => {
-    const {db, connect, log, print, shellPrintJson, countMatchingDocuments} = deps;
+    const {db, connect, log, print, countMatchingDocuments} = deps;
 
     // limit(0) meant "no limit" in MongoDB ≤7 but is rejected by MongoDB 8+; guard against it.
     let cursor = db.getCollection(config.collection).find(config.query).sort(config.sort);
@@ -432,14 +480,15 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
       resultsDB.getCollection(resultsCollectionName).insert(varietyResults);
     }
 
-    const pluginsOutput = pluginsRunner.execute('formatResults', varietyResults);
-    if (pluginsOutput.length > 0) {
-      pluginsOutput.forEach((output) => print(output));
-    } else if (config.outputFormat === 'json') {
-      shellPrintJson(varietyResults); // valid formatted json output, compressed variant is printjsononeline()
-    } else {
-      print(createAsciiTable(config, varietyResults)); // output nice ascii table with results
+    const formatterFactory = shellContext.__varietyFormatters[config.outputFormat];
+    if (typeof formatterFactory !== 'function') {
+      throw new Error(`Unknown outputFormat "${config.outputFormat}". Valid values are: ${Object.keys(shellContext.__varietyFormatters).join(', ')}.`);
     }
+    const builtInFormatter = formatterFactory(config);
+
+    const pluginsOutput = pluginsRunner.execute('formatResults', varietyResults);
+    const outputs = pluginsOutput.length > 0 ? pluginsOutput : [builtInFormatter.formatResults(varietyResults)];
+    outputs.forEach((output) => print(output));
   };
 
   shellContext.__varietyImpl = {
@@ -457,7 +506,6 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     convertResults,
     reduceDocuments,
     reduceCursor,
-    createAsciiTable,
     run,
   };
 }(this));
@@ -488,10 +536,6 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     if (!shellIsQuiet()) {
       print(message);
     }
-  };
-
-  const shellPrintJson = (value) => {
-    print(JSON.stringify(value, null, 2));
   };
 
   const getDatabase = (name) => {
@@ -638,11 +682,11 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
     connect: typeof connect !== 'undefined' ? connect : undefined,
     log,
     print,
-    shellPrintJson,
     countMatchingDocuments,
   });
 
-  // Clean up the implementation handoff so repeated loads remain idempotent
+  // Clean up the implementation handoffs so repeated loads remain idempotent
   // and no ad hoc internals leak onto globalThis after execution.
   delete shellContext.__varietyImpl;
+  delete shellContext.__varietyFormatters;
 }(this)); // end strict mode

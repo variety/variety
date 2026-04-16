@@ -291,45 +291,6 @@
     return result;
   };
 
-  const createAsciiTable = (config, results) => {
-    const headers = ['key', 'types', 'occurrences', 'percents'];
-    if (config.lastValue) {
-      headers.push('lastValue');
-    }
-
-    // Return the number of decimal places, or 1 for integers (1.23 => 2, 100 => 1, 0.1415 => 4).
-    const significantDigits = (value) => {
-      const res = value.toString().match(/^[0-9]+\.([0-9]+)$/);
-      return res !== null ? res[1].length : 1;
-    };
-
-    const maxDigits = results
-      .map((value) => significantDigits(value.percentContaining))
-      .reduce((acc, val) => Math.max(acc, val), 1);
-
-    const rows = results.map((row) => {
-      const typeKeys = Object.keys(row.value.types);
-      const types = typeKeys.length > 1
-        ? typeKeys.map((type) => `${type} (${row.value.types[type]})`)
-        : typeKeys;
-
-      const rawArray = [row._id.key, types, row.totalOccurrences, row.percentContaining.toFixed(Math.min(maxDigits, 20))];
-      if (config.lastValue && row.lastValue) {
-        rawArray.push(row.lastValue);
-      }
-      return rawArray;
-    });
-
-    const table = [headers, headers.map(() => '')].concat(rows);
-    const colMaxWidth = (arr, index) => Math.max(...arr.map((row) => row[index] ? row[index].toString().length : 0));
-    const pad = (width, string, symbol) => width <= string.length ? string : pad(width, isNaN(string) ? string + symbol : symbol + string, symbol);
-    const formattedTable = table.map((row, ri) =>
-      `| ${row.map((cell, i) => pad(colMaxWidth(table, i), cell.toString(), ri === 1 ? '-' : ' ')).join(' | ')} |`
-    );
-    const border = `+${pad(formattedTable[0].length - 2, '', '-')}+`;
-    return [border].concat(formattedTable).concat(border).join('\n');
-  };
-
   // By default, keys ending in an array index (e.g. "tags.XX") are suppressed,
   // since the parent key already captures the Array type. Set showArrayElements:true
   // to include them — useful for verifying element-type consistency within arrays.
@@ -347,7 +308,7 @@
   // Orchestrates a Variety analysis from a parsed config and constructed
   // pluginsRunner, pulling every shell primitive it needs from `deps`.
   const run = (config, pluginsRunner, deps) => {
-    const {db, connect, log, print, shellPrintJson, countMatchingDocuments} = deps;
+    const {db, connect, log, print, countMatchingDocuments} = deps;
 
     // limit(0) meant "no limit" in MongoDB ≤7 but is rejected by MongoDB 8+; guard against it.
     let cursor = db.getCollection(config.collection).find(config.query).sort(config.sort);
@@ -383,14 +344,15 @@
       resultsDB.getCollection(resultsCollectionName).insert(varietyResults);
     }
 
-    const pluginsOutput = pluginsRunner.execute('formatResults', varietyResults);
-    if (pluginsOutput.length > 0) {
-      pluginsOutput.forEach((output) => print(output));
-    } else if (config.outputFormat === 'json') {
-      shellPrintJson(varietyResults); // valid formatted json output, compressed variant is printjsononeline()
-    } else {
-      print(createAsciiTable(config, varietyResults)); // output nice ascii table with results
+    const formatterFactory = shellContext.__varietyFormatters[config.outputFormat];
+    if (typeof formatterFactory !== 'function') {
+      throw new Error(`Unknown outputFormat "${config.outputFormat}". Valid values are: ${Object.keys(shellContext.__varietyFormatters).join(', ')}.`);
     }
+    const builtInFormatter = formatterFactory(config);
+
+    const pluginsOutput = pluginsRunner.execute('formatResults', varietyResults);
+    const outputs = pluginsOutput.length > 0 ? pluginsOutput : [builtInFormatter.formatResults(varietyResults)];
+    outputs.forEach((output) => print(output));
   };
 
   shellContext.__varietyImpl = {
@@ -408,7 +370,6 @@
     convertResults,
     reduceDocuments,
     reduceCursor,
-    createAsciiTable,
     run,
   };
 }(this));

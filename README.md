@@ -169,16 +169,61 @@ Variety captures each `lastValue` from the first matching document it sees in th
 `Date` is converted into `timestamp`, `ObjectId` into `string`, and binary data into hex. Other types are shown in square brackets.
 Variety reports BSON wrapper types such as `Decimal128`, `Timestamp`, `Code`, `BSONRegExp`, `MinKey`, `MaxKey`, and `DBRef` by their BSON type names in the `types` column.
 
-## Render Output As JSON For Easy Ingestion and Parsing
+## Output Formats and Plugins
 
-Variety supports two built-in output formats:
+Variety has a built-in formatter registry and a plugin system, both of which use the same `formatResults` interface. Built-in formatters are selected by name; plugins override the built-in entirely when a `formatResults` hook is provided.
 
-- ASCII: nicely formatted tables (as in this README)
-- JSON: valid JSON results for subsequent processing in other tools (see also [quiet option](#quiet-option))
+### Built-in Formats
 
-Default format is `ascii`. You can select the format with the `outputFormat` property provided to Variety. Valid values are `ascii` and `json`. If you load a plugin with a `formatResults` hook, the plugin can emit a custom format instead.
+Two formatters are included out of the box:
+
+| Format | Description |
+| --- | --- |
+| `ascii` (default) | Padded table, as shown throughout this README |
+| `json` | Pretty-printed JSON array, suitable for piping to other tools |
+
+Select a format with the `outputFormat` option:
 
     $ mongosh test --quiet --eval "var collection = 'users', outputFormat='json'" variety.js
+
+Passing an unrecognised value throws an error listing the valid options.
+
+### Plugins
+
+A plugin is a `.js` file that exports a plain object. Variety calls lifecycle hooks on it at specific points during execution:
+
+| Hook | When called | Expected return value |
+| --- | --- | --- |
+| `init(config)` | Once, after the plugin is loaded | — |
+| `onConfig(config)` | Once, after Variety's config is resolved | — |
+| `formatResults(results)` | After analysis completes, instead of the built-in formatter | String to print |
+
+Any hook may be omitted. A plugin that only defines `formatResults` is a custom output formatter; one that only defines `onConfig` can act as a post-processing step without changing the output.
+
+**Example: CSV plugin**
+
+```js
+// my-csv-plugin.js
+module.exports = {
+  formatResults(results) {
+    const headers = ['key', 'types', 'occurrences', 'percents'];
+    const rows = results.map((row) =>
+      [row._id.key, Object.keys(row.value.types).join('+'), row.totalOccurrences, row.percentContaining].join(',')
+    );
+    return [headers.join(','), ...rows].join('\n');
+  },
+};
+```
+
+Load it with the `plugins` option (comma-separated for multiple):
+
+    $ mongosh test --quiet --eval "var collection='users', plugins='/path/to/my-csv-plugin.js'" variety.js
+
+Pass per-plugin configuration by appending `|key=value&key=value` after the path:
+
+    $ mongosh test --quiet --eval "var collection='users', plugins='/path/to/my-csv-plugin.js|delimiter=;'" variety.js
+
+The plugin receives the config object in `init` as `{ delimiter: ';' }`. See [CONTRIBUTING.md](CONTRIBUTING.md) for a complete guide to writing and testing plugins.
 
 ### Quiet Option
 
