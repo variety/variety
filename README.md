@@ -10,6 +10,12 @@ _Co-founder of [Zipfian Academy](https://www.zipfianacademy.com/)_
 
 ***
 
+_“This code saved me at least an hour of work, so least i could do was spend a minute to [say thanks](https://github.com/variety/variety/issues/107#issue-129803853). Thank you.”_
+
+[@a-c-m](https://github.com/a-c-m)
+
+***
+
 Also featured on the [official MongoDB blog](https://web.archive.org/web/20231002225312/http://www.mongodb.com:80/blog/post/meet-variety-a-schema-analyzer-for-mongodb).
 
 ## An Easy Example
