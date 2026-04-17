@@ -21,9 +21,7 @@ outliers to that schema. Particularly useful when you inherit a codebase with
 data dump and want to quickly learn how the data's structured. Also useful for
 finding rare keys.
 
-Please see https://github.com/variety/variety for details.
-
-Released by James Cropcho, © 2012–2026, under the MIT License. */
+Please see https://github.com/variety/variety for details. */
 
 // -----------------------------------------------------------------------------
 // GENERATED FILE — do not edit directly.
