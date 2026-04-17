@@ -88,6 +88,14 @@ MONGODB_VERSION=8.0 NODEJS_VERSION=24 npm run test:docker
 
 GitHub Actions runs a MongoDB matrix on Node.js 22: `5.0` (which ships only the legacy `mongo` shell, exercising that code path), `7.0`, and `8.0` (both of which ship only `mongosh`). A single Node.js 24 smoke test also runs against MongoDB 8.0. MongoDB 6.0+ no longer ships the legacy `mongo` shell, so `5.0` is the newest version available for `mongo`-shell coverage.
 
+In GitHub Actions, Dockerized test jobs opt into Docker Buildx's GitHub
+Actions cache for the generated test images. Cache scopes are separated by
+runner OS/architecture, MongoDB version, and Node.js version. This cache is
+only an optimization: cache misses, unavailable cache support, or cache-backed
+build failures fall back to a clean `docker build --no-cache` rebuild so CI
+behavior remains predictable. Local `npm run test:docker` runs keep the clean
+rebuild behavior by default.
+
 ## Linting
 
 Variety keeps its repository checks split into a few layers so it is clear which tool is complaining and why.
