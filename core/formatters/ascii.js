@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
 // =============================================================================
 // BUILT-IN FORMATTER: ASCII TABLE
 // =============================================================================

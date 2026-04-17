@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
 'use strict';
 
 // Assembles variety.js by concatenating the formatter files, core/analyzer.js, and
@@ -10,16 +12,16 @@
 const fs = require('fs');
 const path = require('path');
 
-const HEADER = `/* Variety: A MongoDB Schema Analyzer
+const HEADER = `// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: © 2012 James Cropcho <numerate_penniless652@dralias.com>
+/* Variety: A MongoDB Schema Analyzer
 
 This tool helps you get a sense of your application's schema, as well as any
 outliers to that schema. Particularly useful when you inherit a codebase with
 data dump and want to quickly learn how the data's structured. Also useful for
 finding rare keys.
 
-Please see https://github.com/variety/variety for details.
-
-Released by James Cropcho, © 2012–2026, under the MIT License. */
+Please see https://github.com/variety/variety for details. */
 
 // -----------------------------------------------------------------------------
 // GENERATED FILE — do not edit directly.

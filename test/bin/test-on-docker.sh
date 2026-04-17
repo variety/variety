@@ -1,4 +1,6 @@
 #! /usr/bin/env bash
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
 set -e
 
 RUNNER=$(command -v docker 2>/dev/null || command -v podman 2>/dev/null)

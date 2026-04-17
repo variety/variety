@@ -115,6 +115,7 @@ Otherwise all of the following run:
 - `npm run lint:yaml` — js-yaml (YAML files)
 - `npm run lint:dockerfile` — hadolint (`docker/Dockerfile.template`)
 - `npm run lint:shell` — shellcheck (shell scripts)
+- `npm run lint:spdx` — verifies `SPDX-License-Identifier: MIT` headers in all tracked source files
 - `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for `bin/variety`, `cli/**/*.js`, `.eslint.config.js`, `build.js`, and Node-side test code under `test`
 
 ### ESLint Rulesets
@@ -140,6 +141,29 @@ Node-side JavaScript such as `bin/variety`, `cli/**/*.js`, `mongo-shell/launcher
 #### Extra Strictness
 
 That pass enables stricter flags such as `noImplicitReturns`, `noUncheckedIndexedAccess`, `noPropertyAccessFromIndexSignature`, and `exactOptionalPropertyTypes`. Both ESLint and `npm run test:mocha` now rely on native Node parsing for repo code, with `test/package.json` marking the test tree as ESM while the repository root remains CommonJS so the CLI entrypoint and config files keep their current behavior.
+
+### SPDX License Headers
+
+All source files — `.js`, `.sh`, `.yml`/`.yaml`, `docker/Dockerfile.template`, and `bin/variety` — must open with an `SPDX-License-Identifier: MIT` comment. `npm run lint:spdx` verifies this for every git-tracked file in those categories and is enforced by the pre-commit hook.
+
+When adding a new source file, put both tags on the first two lines (or immediately after the shebang for executable scripts):
+
+```js
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
+```
+
+```sh
+#!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
+```
+
+**Copyright year convention:** use the year the file was *first committed to git* — never a range. To look it up: `git log --diff-filter=A --format="%ad" --date=format:"%Y" -- <file>`. Rationale: [REUSE FAQ §years-copyright](https://reuse.software/faq/#years-copyright) → [Matija Šuklje — how and why to properly write copyright statements](https://matija.suklje.name/how-and-why-to-properly-write-copyright-statements-in-your-code#tldr).
+
+`npm run lint:spdx` enforces the presence of both tags and validates that `SPDX-FileCopyrightText` uses a single year (not a range). The correct year value is left to author judgement at review time.
+
+The two tags are injected into `variety.js` automatically via the `HEADER` constant in `build.js`; they do not need to be added manually to that generated file.
 
 ### Container-backed Linters
 
