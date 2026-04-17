@@ -1,11 +1,16 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: © 2012–2026 James Kirk Cropcho <numerate_penniless652@dralias.com>
+// SPDX-FileCopyrightText: © 2026 James Kirk Cropcho <numerate_penniless652@dralias.com>
 'use strict';
 
 // Verifies that every git-tracked source file carries both SPDX-License-Identifier
 // and SPDX-FileCopyrightText tags.  Run via `npm run lint:spdx`; also enforced by
 // the Husky pre-commit hook.
+//
+// Copyright year convention: use the year the file was FIRST committed to git —
+// never a range.  Rationale:
+//   https://reuse.software/faq/#years-copyright
+//   https://matija.suklje.name/how-and-why-to-properly-write-copyright-statements-in-your-code#tldr
 
 const { execSync } = require('child_process');
 const fs = require('fs');
@@ -27,6 +32,13 @@ const files = execSync('git ls-files', { encoding: 'utf8' })
 
 const REQUIRED_TAGS = ['SPDX-License-Identifier:', 'SPDX-FileCopyrightText:'];
 
+// Enforce single-year copyright (no ranges like "2012–2026").
+// The year must match `git log --diff-filter=A` for the file — i.e. the year
+// the file was first committed.  This check validates only the format, not the
+// exact year value (that requires git history per file and is left to author
+// judgement at review time).
+const COPYRIGHT_SINGLE_YEAR = /SPDX-FileCopyrightText: © \d{4} /;
+
 let failures = 0;
 for (const file of files) {
   const head = fs.readFileSync(file, 'utf8').split('\n').slice(0, 15).join('\n');
@@ -35,6 +47,10 @@ for (const file of files) {
       console.error(`Missing ${tag} in: ${file}`);
       failures++;
     }
+  }
+  if (head.includes('SPDX-FileCopyrightText:') && !COPYRIGHT_SINGLE_YEAR.test(head)) {
+    console.error(`SPDX-FileCopyrightText must use a single year (not a range) in: ${file}`);
+    failures++;
   }
 }
 

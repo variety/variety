@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 # SPDX-License-Identifier: MIT
-# SPDX-FileCopyrightText: © 2012–2026 James Kirk Cropcho <numerate_penniless652@dralias.com>
+# SPDX-FileCopyrightText: © 2026 James Kirk Cropcho <numerate_penniless652@dralias.com>
 
 ### Init script for test suite's Docker container ###
 

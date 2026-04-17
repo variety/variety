@@ -138,18 +138,24 @@ That pass enables stricter flags such as `noImplicitReturns`, `noUncheckedIndexe
 
 All source files — `.js`, `.sh`, `.yml`/`.yaml`, `docker/Dockerfile.template`, and `bin/variety` — must open with an `SPDX-License-Identifier: MIT` comment. `npm run lint:spdx` verifies this for every git-tracked file in those categories and is enforced by the pre-commit hook.
 
-When adding a new source file, put the identifier on the first line (or on the line immediately after the shebang for executable scripts):
+When adding a new source file, put both tags on the first two lines (or immediately after the shebang for executable scripts):
 
 ```js
 // SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: © 2026 James Kirk Cropcho <numerate_penniless652@dralias.com>
 ```
 
 ```sh
 #!/usr/bin/env bash
 # SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: © 2026 James Kirk Cropcho <numerate_penniless652@dralias.com>
 ```
 
-The identifier is injected into `variety.js` automatically via the `HEADER` constant in `build.js`; it does not need to be added manually to that generated file.
+**Copyright year convention:** use the year the file was *first committed to git* — never a range. To look it up: `git log --diff-filter=A --format="%ad" --date=format:"%Y" -- <file>`. Rationale: [REUSE FAQ §years-copyright](https://reuse.software/faq/#years-copyright) → [Matija Šuklje — how and why to properly write copyright statements](https://matija.suklje.name/how-and-why-to-properly-write-copyright-statements-in-your-code#tldr).
+
+`npm run lint:spdx` enforces the presence of both tags and validates that `SPDX-FileCopyrightText` uses a single year (not a range). The correct year value is left to author judgement at review time.
+
+The two tags are injected into `variety.js` automatically via the `HEADER` constant in `build.js`; they do not need to be added manually to that generated file.
 
 ### Container-backed Linters
 
