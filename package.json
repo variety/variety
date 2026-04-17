@@ -61,7 +61,11 @@
     "test:mocha": "./node_modules/.bin/mocha --reporter spec --timeout 15000 \"test/**/*Test.js\""
   },
   "overrides": {
-    "serialize-javascript": "7.0.5"
+    "serialize-javascript": "7.0.5",
+    "diff": "^8.0.3",
+    "@prantlf/jsonlint": {
+      "ajv": "^8.18.0"
+    }
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
