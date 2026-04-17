@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import assert from 'assert';
 import { chmod, mkdtemp, rm, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';

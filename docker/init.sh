@@ -1,4 +1,5 @@
 #! /usr/bin/env bash
+# SPDX-License-Identifier: MIT
 
 ### Init script for test suite's Docker container ###
 

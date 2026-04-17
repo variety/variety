@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: MIT
 'use strict';
 
 // Assembles variety.js by concatenating the formatter files, core/analyzer.js, and
@@ -10,7 +11,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const HEADER = `/* Variety: A MongoDB Schema Analyzer
+const HEADER = `// SPDX-License-Identifier: MIT
+/* Variety: A MongoDB Schema Analyzer
 
 This tool helps you get a sense of your application's schema, as well as any
 outliers to that schema. Particularly useful when you inherit a codebase with

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // @ts-check
 'use strict';
 

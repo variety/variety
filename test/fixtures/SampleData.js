@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { Binary } from 'mongodb';
 
 export default [{

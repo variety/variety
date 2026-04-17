@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import assert from 'assert';
 import { readFileSync } from 'fs';
 import { chmod, mkdtemp, readFile, rm, writeFile } from 'fs/promises';

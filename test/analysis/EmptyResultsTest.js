@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // Regression test for https://github.com/variety/variety/issues/108
 // When a query matches zero documents, Variety should produce empty output
 // rather than crashing with "reduce of empty array with no initial value".

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import assert from 'assert';
 import Tester from '../utils/Tester.js';
 const test = new Tester('test', 'users');

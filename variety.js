@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 /* Variety: A MongoDB Schema Analyzer
 
 This tool helps you get a sense of your application's schema, as well as any
@@ -54,6 +55,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 // -----------------------------------------------------------------------------
 
 
+// SPDX-License-Identifier: MIT
 // =============================================================================
 // BUILT-IN FORMATTER: ASCII TABLE
 // =============================================================================
@@ -114,6 +116,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 }(this));
 
 
+// SPDX-License-Identifier: MIT
 // =============================================================================
 // BUILT-IN FORMATTER: JSON
 // =============================================================================
@@ -134,6 +137,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 }(this));
 
 
+// SPDX-License-Identifier: MIT
 // =============================================================================
 // IMPLEMENTATION SECTION
 // =============================================================================
@@ -511,6 +515,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 }(this));
 
 
+// SPDX-License-Identifier: MIT
 // =============================================================================
 // INTERFACE SECTION
 // =============================================================================

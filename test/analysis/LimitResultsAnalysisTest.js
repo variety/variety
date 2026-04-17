@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import Tester from '../utils/Tester.js';
 import sampleData from '../fixtures/SampleData.js';
 

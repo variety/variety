@@ -1,4 +1,5 @@
 #! /usr/bin/env bash
+# SPDX-License-Identifier: MIT
 set -e
 
 RUNNER=$(command -v docker 2>/dev/null || command -v podman 2>/dev/null)

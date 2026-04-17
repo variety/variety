@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 /**
  * @typedef {import('../utils/JsonValidator.js').VarietyResultRow} VarietyResultRow
  * @typedef {{ delimiter?: string | undefined }} CsvPluginContext

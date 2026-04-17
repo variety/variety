@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import assert from 'assert';
 import fs from 'fs';
 import vm from 'vm';
