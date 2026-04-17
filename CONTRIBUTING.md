@@ -102,6 +102,10 @@ to GitHub code scanning, and keeps `publish_results: false` so results are not
 published to the OpenSSF REST API or README badges until maintainers explicitly
 enable public publishing.
 
+GitHub Actions workflows pin third-party actions to full commit SHAs with a
+nearby version comment for reviewability. CI jobs install NPM dependencies with
+`npm ci` so GitHub Actions uses the committed lockfile exactly.
+
 ## Linting
 
 Variety keeps its repository checks split into a few layers so it is clear which tool is complaining and why.
