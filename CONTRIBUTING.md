@@ -142,13 +142,13 @@ When adding a new source file, put both tags on the first two lines (or immediat
 
 ```js
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: © 2026 James Kirk Cropcho <numerate_penniless652@dralias.com>
+// SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
 ```
 
 ```sh
 #!/usr/bin/env bash
 # SPDX-License-Identifier: MIT
-# SPDX-FileCopyrightText: © 2026 James Kirk Cropcho <numerate_penniless652@dralias.com>
+# SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
 ```
 
 **Copyright year convention:** use the year the file was *first committed to git* — never a range. To look it up: `git log --diff-filter=A --format="%ad" --date=format:"%Y" -- <file>`. Rationale: [REUSE FAQ §years-copyright](https://reuse.software/faq/#years-copyright) → [Matija Šuklje — how and why to properly write copyright statements](https://matija.suklje.name/how-and-why-to-properly-write-copyright-statements-in-your-code#tldr).
