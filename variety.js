@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: © 2012–2026 James Kirk Cropcho <numerate_penniless652@dralias.com>
 /* Variety: A MongoDB Schema Analyzer
 
 This tool helps you get a sense of your application's schema, as well as any
@@ -56,6 +57,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 
 
 // SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: © 2012–2026 James Kirk Cropcho <numerate_penniless652@dralias.com>
 // =============================================================================
 // BUILT-IN FORMATTER: ASCII TABLE
 // =============================================================================
@@ -117,6 +119,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 
 
 // SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: © 2012–2026 James Kirk Cropcho <numerate_penniless652@dralias.com>
 // =============================================================================
 // BUILT-IN FORMATTER: JSON
 // =============================================================================
@@ -138,6 +141,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 
 
 // SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: © 2012–2026 James Kirk Cropcho <numerate_penniless652@dralias.com>
 // =============================================================================
 // IMPLEMENTATION SECTION
 // =============================================================================
@@ -516,6 +520,7 @@ Released by James Cropcho, © 2012–2026, under the MIT License. */
 
 
 // SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: © 2012–2026 James Kirk Cropcho <numerate_penniless652@dralias.com>
 // =============================================================================
 // INTERFACE SECTION
 // =============================================================================

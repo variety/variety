@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: © 2012–2026 James Kirk Cropcho <numerate_penniless652@dralias.com>
 FROM docker.io/library/mongo:${MONGODB_VERSION}
 
 # The base image pre-configures the MongoDB apt repo, whose signing key has

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: © 2012–2026 James Kirk Cropcho <numerate_penniless652@dralias.com>
 'use strict';
 
 // Assembles variety.js by concatenating the formatter files, core/analyzer.js, and
@@ -12,6 +13,7 @@ const fs = require('fs');
 const path = require('path');
 
 const HEADER = `// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: © 2012–2026 James Kirk Cropcho <numerate_penniless652@dralias.com>
 /* Variety: A MongoDB Schema Analyzer
 
 This tool helps you get a sense of your application's schema, as well as any

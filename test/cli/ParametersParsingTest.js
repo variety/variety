@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: © 2012–2026 James Kirk Cropcho <numerate_penniless652@dralias.com>
 import assert from 'assert';
 import execute from '../utils/MongoShell.js';
 import Tester from '../utils/Tester.js';
