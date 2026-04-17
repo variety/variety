@@ -236,6 +236,8 @@ Integration tests for plugins live in `test/plugins/`. Copy the structure of `te
 
 ## Reporting Issues / Contributing
 
+Please follow the [Variety Code of Conduct](CODE_OF_CONDUCT.md) when participating in project spaces.
+
 Please report any bugs and feature requests on the Github issue tracker. I will read all reports!
 
 I accept pull requests from forks. Very grateful to accept contributions from folks.
