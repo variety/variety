@@ -5,22 +5,22 @@
 
 import { MongoClient } from 'mongodb';
 import { fileURLToPath } from 'url';
-import execute from './MongoShell.js';
-import JsonValidator from './JsonValidator.js';
+import execute from './MongoShellRunner.js';
+import AnalysisResultsValidator from './AnalysisResultsValidator.js';
 
 /**
  * @typedef {import('mongodb').Document} MongoDocument
  * @typedef {import('mongodb').MongoClient} MongoClientType
  * @typedef {import('mongodb').Collection<MongoDocument>} MongoCollection
  * @typedef {Record<string, unknown> & { outputFormat?: string }} AnalysisOptions
- * @typedef {import('./JsonValidator.js').VarietyResultRow} VarietyResultRow
+ * @typedef {import('./AnalysisResultsValidator.js').VarietyResultRow} VarietyResultRow
  */
 
 const mongodbPort = Number(process.env['MONGODB_PORT'] || 27017);
 const defaultUrl = `mongodb://localhost:${mongodbPort}/test`;
 const varietyPath = fileURLToPath(new URL('../../variety.js', import.meta.url));
 
-export default class Tester {
+export default class VarietyHarness {
   /** @type {MongoClientType | undefined} */
   connection;
 
@@ -97,7 +97,7 @@ export default class Tester {
       throw new Error('Expected JSON analysis output to be an array.');
     }
     const typedResults = /** @type {VarietyResultRow[]} */ (parsedResults);
-    return new JsonValidator(typedResults);
+    return new AnalysisResultsValidator(typedResults);
   }
 
 

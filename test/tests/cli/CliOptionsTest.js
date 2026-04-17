@@ -10,9 +10,9 @@ import { fileURLToPath } from 'url';
 const require = createRequire(import.meta.url);
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-const cliOptionsModule = /** @type {typeof import('../../cli/options.js')} */ (require('../../cli/options.js'));
+const cliOptionsModule = /** @type {typeof import('../../../cli/options.js')} */ (require('../../../cli/options.js'));
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-const mongoShellModule = /** @type {typeof import('../../mongo-shell/launcher.js')} */ (require('../../mongo-shell/launcher.js'));
+const mongoShellModule = /** @type {typeof import('../../../mongo-shell/launcher.js')} */ (require('../../../mongo-shell/launcher.js'));
 
 const {
   CliUsageError,
@@ -22,7 +22,7 @@ const {
 } = cliOptionsModule;
 const { buildShellInvocation } = mongoShellModule;
 
-const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
+const repoRoot = fileURLToPath(new URL('../../..', import.meta.url));
 
 describe('CLI option parsing', () => {
   it('builds a CLI execution plan with bundled variety.js by default', () => {

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
 import assert from 'assert';
-import Tester from '../utils/Tester.js';
+import VarietyHarness from '../../helpers/VarietyHarness.js';
 import { fileURLToPath } from 'url';
-import sampleData from '../fixtures/SampleData.js';
+import sampleData from '../../fixtures/SampleData.js';
 
-const test = new Tester('test', 'users');
+const test = new VarietyHarness('test', 'users');
 
 const expectedOutput = `
 key|types|occurrences|percents

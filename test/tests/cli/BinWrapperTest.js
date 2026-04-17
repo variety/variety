@@ -8,11 +8,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { execFile } from 'promisify-child-process';
 
-const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
-const binVarietyPath = fileURLToPath(new URL('../../bin/variety', import.meta.url));
+const repoRoot = fileURLToPath(new URL('../../..', import.meta.url));
+const binVarietyPath = fileURLToPath(new URL('../../../bin/variety', import.meta.url));
 /** @typedef {{ version: string }} PackageMetadata */
 const rawPackageMetadata = /** @type {unknown} */ (
-  JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'))
+  JSON.parse(readFileSync(new URL('../../../package.json', import.meta.url), 'utf8'))
 );
 const packageMetadata = /** @type {PackageMetadata} */ (rawPackageMetadata);
 

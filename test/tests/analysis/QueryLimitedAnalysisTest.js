@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
-import Tester from '../utils/Tester.js';
-import sampleData from '../fixtures/SampleData.js';
-const test = new Tester('test', 'users');
+import VarietyHarness from '../../helpers/VarietyHarness.js';
+import sampleData from '../../fixtures/SampleData.js';
+const test = new VarietyHarness('test', 'users');
 
 describe('Query-limited analysis', () => {
 

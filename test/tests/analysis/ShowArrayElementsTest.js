@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
-import Tester from '../utils/Tester.js';
-const test = new Tester('test', 'users');
+import VarietyHarness from '../../helpers/VarietyHarness.js';
+const test = new VarietyHarness('test', 'users');
 
 // Two documents: one with homogeneous arrays, one with a mixed-type array.
 // Alice's tags are all Strings; Bob's tags include a Number — so tags.XX

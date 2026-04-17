@@ -15,8 +15,8 @@ import {
   Timestamp,
   UUID
 } from 'mongodb';
-import Tester from '../utils/Tester.js';
-const test = new Tester('test', 'users');
+import VarietyHarness from '../../helpers/VarietyHarness.js';
+const test = new VarietyHarness('test', 'users');
 
 const crazyObject = {
   key_string: 'Just plain String',

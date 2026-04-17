@@ -5,7 +5,7 @@ import fs from 'fs';
 import vm from 'vm';
 import { fileURLToPath } from 'url';
 
-const adapterPath = fileURLToPath(new URL('../../mongo-shell/adapter.js', import.meta.url));
+const adapterPath = fileURLToPath(new URL('../../../mongo-shell/adapter.js', import.meta.url));
 const adapterSource = fs.readFileSync(adapterPath, 'utf8');
 
 /**

@@ -64,13 +64,13 @@ The built `variety.js` is committed to the repository so that `mongosh variety.j
 npm run test:mocha
 ```
 
-The test suite under `test/` runs as native ESM through its own `test/package.json`, while the repository root intentionally stays CommonJS so the CLI entrypoint and config files keep their current behavior. Tests are grouped by concern — `test/analysis/`, `test/cli/`, `test/formatters/`, `test/persistence/`, and `test/plugins/` — with shared helpers under `test/utils/` and static inputs under `test/fixtures/`. That Mocha lane also includes focused CLI tests that execute `bin/variety` and stub `mongosh` / `mongo`, so the command-line translation layer can be validated without a live MongoDB shell install.
+The test suite under `test/` runs as native ESM through its own `test/package.json`, while the repository root intentionally stays CommonJS so the CLI entrypoint and config files keep their current behavior. Tests are grouped by concern under `test/tests/` — `test/tests/analysis/`, `test/tests/cli/`, `test/tests/formatters/`, `test/tests/persistence/`, and `test/tests/plugins/` — with shared helpers under `test/helpers/` and static inputs under `test/fixtures/`. That Mocha lane also includes focused CLI tests that execute `bin/variety` and stub `mongosh` / `mongo`, so the command-line translation layer can be validated without a live MongoDB shell install.
 
 If you have Docker or Podman installed and don't want to test against your own MongoDB instance,
 you can execute tests against dockerized MongoDB:
 
 ```
-npm run test:docker
+npm run test:container
 ```
 
 The script downloads one of [the official MongoDB images](https://hub.docker.com/_/mongo/) (based on your provided version),
@@ -81,9 +81,9 @@ The Docker harness prefers `mongosh` when it is available and falls back to the 
 Dockerized tests default to MongoDB 8.0 on Node.js 22. You can override `MONGODB_VERSION` and `NODEJS_VERSION` when you want to try another supported combination:
 
 ```
-MONGODB_VERSION=7.0 npm run test:docker
-MONGODB_VERSION=8.0 npm run test:docker
-MONGODB_VERSION=8.0 NODEJS_VERSION=24 npm run test:docker
+MONGODB_VERSION=7.0 npm run test:container
+MONGODB_VERSION=8.0 npm run test:container
+MONGODB_VERSION=8.0 NODEJS_VERSION=24 npm run test:container
 ```
 
 GitHub Actions runs a MongoDB matrix on Node.js 22: `5.0` (which ships only the legacy `mongo` shell, exercising that code path), `7.0`, and `8.0` (both of which ship only `mongosh`). A single Node.js 24 smoke test also runs against MongoDB 8.0. MongoDB 6.0+ no longer ships the legacy `mongo` shell, so `5.0` is the newest version available for `mongo`-shell coverage.
@@ -93,7 +93,7 @@ Actions cache for the generated test images. Cache scopes are separated by
 runner OS/architecture, MongoDB version, and Node.js version. This cache is
 only an optimization: cache misses, unavailable cache support, or cache-backed
 build failures fall back to a clean `docker build --no-cache` rebuild so CI
-behavior remains predictable. Local `npm run test:docker` runs keep the clean
+behavior remains predictable. Local `npm run test:container` runs keep the clean
 rebuild behavior by default.
 
 GitHub Actions also runs CodeQL and OpenSSF Scorecard security scans. OpenSSF
@@ -177,7 +177,7 @@ The two tags are injected into `variety.js` automatically via the `HEADER` const
 
 ### Container-backed Linters
 
-`npm run lint:dockerfile` and `npm run lint:shell` run inside containers. [Docker](https://www.docker.com/) is used if available, with [Podman](https://podman.io/) as a fallback. At least one must be installed. `npm run lint:shell` now covers the remaining shell scripts (`docker/init.sh` and `test/bin/test-on-docker.sh`), while the published `bin/variety` entrypoint is linted as Node-side JavaScript.
+`npm run lint:dockerfile` and `npm run lint:shell` run inside containers. [Docker](https://www.docker.com/) is used if available, with [Podman](https://podman.io/) as a fallback. At least one must be installed. `npm run lint:shell` now covers the remaining shell scripts (`docker/init.sh` and `test/bin/test-in-container.sh`), while the published `bin/variety` entrypoint is linted as Node-side JavaScript.
 
 ## Writing a Plugin
 
@@ -236,7 +236,7 @@ mongosh test --quiet --eval "var collection='users', plugins='./csv-plugin.js|de
 
 ### Testing a plugin
 
-Integration tests for plugins live in `test/plugins/`. Copy the structure of `test/plugins/PluginTest.js` and put your fixture file under `test/fixtures/`. The `Tester` helper's `runAnalysis({ plugins: getPluginPath() })` method is the easiest way to wire everything up.
+Integration tests for plugins live in `test/tests/plugins/`. Copy the structure of `test/tests/plugins/PluginTest.js` and put your fixture file under `test/fixtures/`. The `VarietyHarness` helper's `runAnalysis({ plugins: getPluginPath() })` method is the easiest way to wire everything up.
 
 ## Reporting Issues / Contributing
 

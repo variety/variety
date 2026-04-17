@@ -5,9 +5,9 @@
 // rather than crashing with "reduce of empty array with no initial value".
 
 import assert from 'assert';
-import Tester from '../utils/Tester.js';
+import VarietyHarness from '../../helpers/VarietyHarness.js';
 
-const test = new Tester('test', 'users');
+const test = new VarietyHarness('test', 'users');
 
 const sampleData = [
   { name: 'Alice', age: 30 },
