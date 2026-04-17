@@ -88,11 +88,17 @@ jobs:
       - run: npm install
         env:
           HUSKY: '0'
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Expose GitHub Actions cache runtime
+        uses: crazy-max/ghaction-github-runtime@v4
       - run: mkdir -p docker/Dockerfiles
       - run: npm run test:docker
         env:
           MONGODB_VERSION: ${{ matrix.mongodb-version }}
           NODEJS_VERSION: '22'
+          DOCKER_BUILD_CACHE: gha
+          DOCKER_BUILD_CACHE_SCOPE: variety-test-${{ runner.os }}-${{ runner.arch }}-mongodb-${{ matrix.mongodb-version }}-node-22
 
   test-smoke:
     name: Smoke Test (Node 24, MongoDB 8.0)
@@ -108,8 +114,14 @@ jobs:
       - run: npm install
         env:
           HUSKY: '0'
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Expose GitHub Actions cache runtime
+        uses: crazy-max/ghaction-github-runtime@v4
       - run: mkdir -p docker/Dockerfiles
       - run: npm run test:docker
         env:
           MONGODB_VERSION: '8.0'
           NODEJS_VERSION: '24'
+          DOCKER_BUILD_CACHE: gha
+          DOCKER_BUILD_CACHE_SCOPE: variety-test-${{ runner.os }}-${{ runner.arch }}-mongodb-8.0-node-24
