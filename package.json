@@ -73,6 +73,7 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^25.6.0",
     "eslint": "^10.2.0",
+    "fast-check": "^4.7.0",
     "globals": "^17.5.0",
     "husky": "^9.1.7",
     "js-yaml": "^4.1.1",
