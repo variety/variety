@@ -18,7 +18,7 @@ someBinData|BinData-generic|1|20
 someWeirdLegacyKey|String|1|20
 `.trim();
 
-const getPluginPath = () => fileURLToPath(new URL('../../fixtures/csv-plugin.js', import.meta.url));
+const getPluginPath = () => fileURLToPath(new URL('../../fixtures/plugins/csv-plugin.js', import.meta.url));
 
 describe('Plugins', () => {
 
