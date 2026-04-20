@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
+name: Documentation issue
+description: Report confusing, missing, or outdated documentation.
+title: "Docs: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping make Variety easier to understand. Please point to the affected docs and the reader problem they create.
+  - type: checkboxes
+    id: existing-issues
+    attributes:
+      label: Existing issues
+      options:
+        - label: I searched existing issues before opening this report.
+          required: true
+  - type: textarea
+    id: location
+    attributes:
+      label: Where is the documentation problem?
+      description: Link to the section, file, heading, or example if possible.
+      placeholder: "README.md -> Analyze a Subset of Documents"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is confusing, missing, or outdated?
+      description: Describe what made the docs hard to use.
+    validations:
+      required: true
+  - type: textarea
+    id: improvement
+    attributes:
+      label: Suggested improvement
+      description: Share wording, examples, commands, or structure that would help.
+  - type: dropdown
+    id: audience
+    attributes:
+      label: Who is the documentation for?
+      options:
+        - Someone using Variety from the MongoDB shell
+        - Someone using the Variety CLI
+        - Someone contributing to Variety
+        - Someone writing a plugin
+        - Other
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add screenshots, links, command output, or related issues if useful.

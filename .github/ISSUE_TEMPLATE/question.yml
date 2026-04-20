@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
+name: Question
+description: Ask for usage help or clarification.
+title: "Question: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for asking. Please include the command or workflow you are trying so someone can answer from the same context.
+  - type: checkboxes
+    id: existing-issues
+    attributes:
+      label: Existing issues and docs
+      options:
+        - label: I searched existing issues and checked the README before opening this question.
+          required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: What are you trying to do?
+      description: Describe the analysis, output, or workflow you want.
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command or configuration
+      description: Paste the command, Variety options, plugin configuration, or relevant code.
+      render: shell
+  - type: textarea
+    id: tried
+    attributes:
+      label: What have you tried?
+      description: Mention docs, commands, examples, or workarounds you already checked.
+  - type: input
+    id: variety-version
+    attributes:
+      label: Variety version or commit
+      placeholder: "1.5.0"
+  - type: input
+    id: mongodb-shell
+    attributes:
+      label: MongoDB shell and server version
+      placeholder: "mongosh 2.5.0, MongoDB 8.0.0"
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js version
+      description: Required only when using the Variety CLI or npm package.
+      placeholder: "22.14.0"
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add output, error messages, sample document shape, or links if useful.
+      render: shell

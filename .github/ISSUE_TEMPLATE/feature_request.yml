@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
+name: Feature request
+description: Suggest an improvement or new capability.
+title: "Feature: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement. The most useful feature requests explain the data-analysis problem first, then the possible solution.
+  - type: checkboxes
+    id: existing-issues
+    attributes:
+      label: Existing issues
+      options:
+        - label: I searched existing issues before opening this request.
+          required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you trying to do with Variety that is difficult or impossible today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the behavior, option, output format, or workflow you would like.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What workarounds or other designs have you tried or considered?
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Analysis behavior
+        - Output formatting
+        - CLI usage
+        - MongoDB shell usage
+        - Plugin support
+        - Documentation
+        - Testing or development workflow
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: examples
+    attributes:
+      label: Examples
+      description: Include sample input, desired output, commands, or links that clarify the request.
+      render: shell
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility considerations
+      description: Note any MongoDB, mongosh, legacy mongo shell, or Node.js version concerns you know about.
