@@ -193,22 +193,21 @@ When a single representative value is not enough, use `maxExamples` to gather up
 
     $ mongosh test --eval "var collection = 'users', maxExamples = 3" variety.js
 
-    +-----------------------------------------------------------------------------------+
-    | key                | types                | occurrences | percents | examples     |
-    | ------------------ | -------------------- | ----------- | -------- | ------------ |
+    +-------------------------------------------------------------------------------------+
+    | key                | types                | occurrences | percents | examples       |
+    | ------------------ | -------------------- | ----------- | -------- | -------------- |
     | _id                | ObjectId             |           5 |    100.0 | [ObjectId]...  |
-    | name               | String               |           5 |    100.0 | Jim, Geneviè... |
-    | bio                | String               |           3 |     60.0 | Ça va?, I sw... |
+    | name               | String               |           5 |    100.0 | Jim, Geneviè...|
+    | bio                | String               |           3 |     60.0 | Ça va?, I sw...|
     | birthday           | Date                 |           2 |     40.0 | 44807040000... |
     | pets               | String (1),Array (1) |           2 |     40.0 | egret, [Array] |
-    | someBinData        | BinData-old          |           1 |     20.0 | 31323334     |
-    | someWeirdLegacyKey | String               |           1 |     20.0 | I like Ike!  |
-    +-----------------------------------------------------------------------------------+
+    | someBinData        | BinData-old          |           1 |     20.0 | 31323334       |
+    | someWeirdLegacyKey | String               |           1 |     20.0 | I like Ike!    |
+    +-------------------------------------------------------------------------------------+
 
 Via the first-party CLI:
 
     $ variety test/users --maxExamples 3
-    $ variety test/users --max-examples 3   # hyphenated alias also accepted
 
 The same serialisation rules as `lastValue` apply: `Date` → timestamp, `ObjectId` → hex string, binary data → hex. Non-serialisable types such as `Array` or `Object` appear as `[TypeName]` placeholders.
 
