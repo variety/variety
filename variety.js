@@ -68,7 +68,7 @@ Please see https://github.com/variety/variety for details. */
 
   /**
    * Returns a formatter that renders results as a padded ASCII table.
-   * @param {object} config - The parsed Variety config (uses config.lastValue and config.arrayEscape).
+   * @param {object} config - The parsed Variety config (uses config.lastValue, config.maxExamples, and config.arrayEscape).
    * @returns {{ formatResults: function(Array): string }}
    */
   shellContext.__varietyFormatters.ascii = (config) => {
