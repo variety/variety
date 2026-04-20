@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
 /**
- * @typedef {import('../helpers/AnalysisResultsValidator.js').VarietyResultRow} VarietyResultRow
+ * @typedef {import('../../helpers/AnalysisResultsValidator.js').VarietyResultRow} VarietyResultRow
  * @typedef {{ delimiter?: string | undefined }} CsvPluginContext
  * @typedef {{ delimiter?: string | undefined }} CsvPluginConfig
  */
