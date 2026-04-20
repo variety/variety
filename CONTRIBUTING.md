@@ -96,11 +96,13 @@ build failures fall back to a clean `docker build --no-cache` rebuild so CI
 behavior remains predictable. Local `npm run test:container` runs keep the clean
 rebuild behavior by default.
 
-GitHub Actions also runs CodeQL and OpenSSF Scorecard security scans. OpenSSF
-Scorecard runs on pushes to `main` and weekly on `main`, uploads SARIF results
-to GitHub code scanning, and keeps `publish_results: false` so results are not
-published to the OpenSSF REST API or README badges until maintainers explicitly
-enable public publishing.
+GitHub Actions also runs CodeQL and OpenSSF Scorecard security scans. CodeQL
+runs on every push to `main`, every pull request targeting `main`, weekly on
+`main`, and on manual dispatch so SAST coverage stays attached to all commits.
+OpenSSF Scorecard runs on pushes to `main` and weekly on `main`, uploads SARIF
+results to GitHub code scanning, and keeps `publish_results: false` so results
+are not published to the OpenSSF REST API or README badges until maintainers
+explicitly enable public publishing.
 
 GitHub Actions workflows pin third-party actions to full commit SHAs with a
 nearby version comment for reviewability. CI jobs install NPM dependencies with
