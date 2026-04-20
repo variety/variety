@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
 import VarietyHarness from '../../helpers/VarietyHarness.js';
-import sampleData from '../../fixtures/SampleData.js';
+import sampleData from '../../fixtures/seed-data.js';
 
 const test = new VarietyHarness('test', 'users');
 
@@ -29,7 +29,7 @@ describe('Sorted-data analysis', () => {
       limit:1
     };
 
-    // when sorting default SampleData by name desc, first entry becomes Tom. He is only with key 'someWeirdLegacyKey'
+    // when sorting default seed data by name desc, first entry becomes Tom. He is only with key 'someWeirdLegacyKey'
     // Together with applying limit 1, Tom is the only result in analysis. That gives us chance to assume keys and verify
     // that ordering is correct.
     // {name: "Tom", bio: "A nice guy.", pets: ["monkey", "fish"], someWeirdLegacyKey: "I like Ike!"}

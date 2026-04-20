@@ -3,7 +3,7 @@
 import assert from 'assert';
 import VarietyHarness from '../../helpers/VarietyHarness.js';
 import { fileURLToPath } from 'url';
-import sampleData from '../../fixtures/SampleData.js';
+import sampleData from '../../fixtures/seed-data.js';
 
 const test = new VarietyHarness('test', 'users');
 

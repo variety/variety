@@ -3,7 +3,7 @@
 import assert from 'assert';
 import execute from '../../helpers/MongoShellRunner.js';
 import VarietyHarness from '../../helpers/VarietyHarness.js';
-import sampleData from '../../fixtures/SampleData.js';
+import sampleData from '../../fixtures/seed-data.js';
 
 const test = new VarietyHarness('test', 'users');
 const mongodbPort = Number(process.env['MONGODB_PORT'] || 27017);

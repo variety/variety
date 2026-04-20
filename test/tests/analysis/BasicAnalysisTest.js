@@ -4,7 +4,7 @@ import assert from 'assert';
 import VarietyHarness from '../../helpers/VarietyHarness.js';
 const test = new VarietyHarness('test', 'users');
 
-import sampleData from '../../fixtures/SampleData.js';
+import sampleData from '../../fixtures/seed-data.js';
 import expectedAscii from '../../fixtures/AsciiSnapshot.js';
 
 describe('Basic Analysis', () => {

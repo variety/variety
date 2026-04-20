@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
 import assert from 'assert';
 import VarietyHarness from '../../helpers/VarietyHarness.js';
-import sampleData from '../../fixtures/SampleData.js';
+import sampleData from '../../fixtures/seed-data.js';
 
 /** @typedef {import('../../helpers/AnalysisResultsValidator.js').VarietyResultRow} VarietyResultRow */
 

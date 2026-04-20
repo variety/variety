@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
 import VarietyHarness from '../../helpers/VarietyHarness.js';
-import sampleData from '../../fixtures/SampleData.js';
+import sampleData from '../../fixtures/seed-data.js';
 const test = new VarietyHarness('test', 'users');
 
 describe('Query-limited analysis', () => {
