@@ -187,6 +187,34 @@ Variety captures each `lastValue` from the first matching document it sees in th
 `Date` is converted into `timestamp`, `ObjectId` into `string`, and binary data into hex. Other types are shown in square brackets.
 Variety reports BSON wrapper types such as `Decimal128`, `Timestamp`, `Code`, `BSONRegExp`, `MinKey`, `MaxKey`, and `DBRef` by their BSON type names in the `types` column.
 
+## Collect Multiple Example Values
+
+When a single representative value is not enough, use `maxExamples` to gather up to N sample values per key. Unlike `lastValue`, which captures only one value from the first matching document, `maxExamples` accumulates examples across all analyzed documents (up to the specified count).
+
+    $ mongosh test --eval "var collection = 'users', maxExamples = 3" variety.js
+
+    +-------------------------------------------------------------------------------------+
+    | key                | types                | occurrences | percents | examples       |
+    | ------------------ | -------------------- | ----------- | -------- | -------------- |
+    | _id                | ObjectId             |           5 |    100.0 | [ObjectId]...  |
+    | name               | String               |           5 |    100.0 | Jim, Geneviè...|
+    | bio                | String               |           3 |     60.0 | Ça va?, I sw...|
+    | birthday           | Date                 |           2 |     40.0 | 44807040000... |
+    | pets               | String (1),Array (1) |           2 |     40.0 | egret, [Array] |
+    | someBinData        | BinData-old          |           1 |     20.0 | 31323334       |
+    | someWeirdLegacyKey | String               |           1 |     20.0 | I like Ike!    |
+    +-------------------------------------------------------------------------------------+
+
+Via the first-party CLI:
+
+    $ variety test/users --maxExamples 3
+
+The same serialisation rules as `lastValue` apply: `Date` → timestamp, `ObjectId` → hex string, binary data → hex. Non-serialisable types such as `Array` or `Object` appear as `[TypeName]` placeholders.
+
+`maxExamples` and `lastValue` are independent; both can be used together.
+
+_Thanks to [@humanitiesclinic](https://github.com/humanitiesclinic) for suggesting this feature ([#154](https://github.com/variety/variety/issues/154))._
+
 ## Output Formats and Plugins
 
 Variety has a built-in formatter registry and a plugin system, both of which use the same `formatResults` interface. Built-in formatters are selected by name; plugins override the built-in entirely when a `formatResults` hook is provided.

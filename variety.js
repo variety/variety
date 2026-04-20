@@ -68,7 +68,7 @@ Please see https://github.com/variety/variety for details. */
 
   /**
    * Returns a formatter that renders results as a padded ASCII table.
-   * @param {object} config - The parsed Variety config (uses config.lastValue and config.arrayEscape).
+   * @param {object} config - The parsed Variety config (uses config.lastValue, config.maxExamples, and config.arrayEscape).
    * @returns {{ formatResults: function(Array): string }}
    */
   shellContext.__varietyFormatters.ascii = (config) => {
@@ -76,6 +76,9 @@ Please see https://github.com/variety/variety for details. */
       const headers = ['key', 'types', 'occurrences', 'percents'];
       if (config.lastValue) {
         headers.push('lastValue');
+      }
+      if (config.maxExamples > 0) {
+        headers.push('examples');
       }
 
       // Return the number of decimal places, or 1 for integers (1.23 => 2, 100 => 1, 0.1415 => 4).
@@ -97,6 +100,9 @@ Please see https://github.com/variety/variety for details. */
         const rawArray = [row._id.key, types, row.totalOccurrences, row.percentContaining.toFixed(Math.min(maxDigits, 20))];
         if (config.lastValue && row.lastValue) {
           rawArray.push(row.lastValue);
+        }
+        if (config.maxExamples > 0 && row.examples) {
+          rawArray.push(row.examples.join(', '));
         }
         return rawArray;
       });
@@ -343,7 +349,7 @@ Please see https://github.com/variety/variety for details. */
       const type = varietyTypeOf(config, value);
       result[key][type] = null;
 
-      if (config.lastValue) {
+      if (config.lastValue || config.maxExamples > 0) {
         if (type in {'String': true, 'Boolean': true}) {
           result[key][type] = value.toString();
         } else if (type in {'Number': true, 'NumberLong': true}) {
@@ -375,16 +381,24 @@ Please see https://github.com/variety/variety for details. */
               log(`Found new key type "${key}" type "${type}"`);
             }
           }
+          if (config.maxExamples > 0 && existing.examples.length < config.maxExamples) {
+            const rawVal = docResult[key][type];
+            existing.examples.push(rawVal !== null ? rawVal : `[${type}]`);
+          }
         }
         existing.totalOccurrences += 1;
       } else {
         let lastValue = null;
         let lastType = null;
         const types = createKeyMap();
+        const examples = [];
         for (const newType of Object.keys(docResult[key])) {
           types[newType] = 1;
           lastValue = docResult[key][newType];
           lastType = newType;
+          if (config.maxExamples > 0 && examples.length < config.maxExamples) {
+            examples.push(lastValue !== null ? lastValue : `[${newType}]`);
+          }
           if (config.logKeysContinuously) {
             log(`Found new key type "${key}" type "${newType}"`);
           }
@@ -392,6 +406,9 @@ Please see https://github.com/variety/variety for details. */
         interimResults[key] = {types, totalOccurrences: 1};
         if (config.lastValue) {
           interimResults[key].lastValue = lastValue ? lastValue : `[${lastType}]`;
+        }
+        if (config.maxExamples > 0) {
+          interimResults[key].examples = examples;
         }
       }
     }
@@ -411,6 +428,10 @@ Please see https://github.com/variety/variety for details. */
 
       if (config.lastValue) {
         obj.lastValue = entry.lastValue;
+      }
+
+      if (config.maxExamples > 0) {
+        obj.examples = entry.examples;
       }
 
       varietyResults.push(obj);
@@ -622,6 +643,7 @@ Please see https://github.com/variety/variety for details. */
     read('showArrayElements', false);
     read('compactArrayTypes', false);
     read('lastValue', false);
+    read('maxExamples', 0);
 
     // Translate excludeSubkeys into a set-like object for compatibility.
     config.excludeSubkeys = config.excludeSubkeys.reduce((result, item) => {

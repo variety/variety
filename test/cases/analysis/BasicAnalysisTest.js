@@ -28,4 +28,14 @@ describe('Basic Analysis', () => {
     results.validate('someBinData', 1,  20.0, {'BinData-generic': 1});
     results.validate('someWeirdLegacyKey', 1,  20.0, {String: 1}, 'I like Ike!');
   });
+
+  it('should collect up to maxExamples example values per key', async () => {
+    // seed data sorted by _id desc: Jim, Geneviève, Harry, Dick, Tom
+    const results = await test.runJsonAnalysis({collection:'users', maxExamples:3}, true);
+    results.validateResultsCount(7);
+    results.validateExamples('name', ['Jim', 'Geneviève', 'Harry']);
+    results.validateExamples('bio', ['Ça va?', 'I swordfight.', 'A nice guy.']);
+    results.validateExamples('pets', ['egret', '[Array]']);
+    results.validateExamples('someWeirdLegacyKey', ['I like Ike!']);
+  });
 });
