@@ -64,7 +64,7 @@ The built `variety.js` is committed to the repository so that `mongosh variety.j
 npm run test:mocha
 ```
 
-The test suite under `test/` runs as native ESM through its own `test/package.json`, while the repository root intentionally stays CommonJS so the CLI entrypoint and config files keep their current behavior. Tests are grouped by concern under `test/cases/` — `test/cases/analysis/`, `test/cases/cli/`, `test/cases/formatters/`, `test/cases/persistence/`, and `test/cases/plugins/` — with shared helpers under `test/helpers/` and static inputs under `test/fixtures/`. That Mocha lane also includes focused CLI tests that execute `bin/variety` and stub `mongosh` / `mongo`, so the command-line translation layer can be validated without a live MongoDB shell install.
+The test suite under `test/` runs as native ESM through its own `test/package.json`, while the repository root intentionally stays CommonJS so the CLI entrypoint and config files keep their current behavior. Tests are grouped by concern under `test/cases/` — `test/cases/analysis/`, `test/cases/cli/`, `test/cases/formatters/`, `test/cases/persistence/`, and `test/cases/plugins/` — with shared helpers under `test/helpers/` and static inputs under `test/fixtures/`. That Mocha lane also includes focused CLI tests that execute `bin/variety` and stub `mongosh` / `mongo`, so the command-line translation layer can be validated without a live MongoDB shell install. Analysis tests include deterministic property-based fuzzing with `fast-check` to exercise generated Mongo-like documents against core analyzer invariants.
 
 If you have Docker or Podman installed and don't want to test against your own MongoDB instance,
 you can execute tests against dockerized MongoDB:
