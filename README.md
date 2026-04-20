@@ -22,11 +22,13 @@ Also featured on the [official MongoDB blog](https://web.archive.org/web/2023100
 
 We'll make a collection:
 
-    db.users.insert({name: "Tom", bio: "A nice guy.", pets: ["monkey", "fish"], someWeirdLegacyKey: "I like Ike!"});
-    db.users.insert({name: "Dick", bio: "I swordfight.", birthday: new Date("1974/03/14")});
-    db.users.insert({name: "Harry", pets: "egret", birthday: new Date("1984/03/14")});
-    db.users.insert({name: "Geneviève", bio: "Ça va?"});
-    db.users.insert({name: "Jim", someBinData: new BinData(2,"1234")});
+    db.users.insertMany([
+      {name: "Tom", bio: "A nice guy.", pets: ["monkey", "fish"], someWeirdLegacyKey: "I like Ike!"},
+      {name: "Dick", bio: "I swordfight.", birthday: new Date("1974/03/14")},
+      {name: "Harry", pets: "egret", birthday: new Date("1984/03/14")},
+      {name: "Geneviève", bio: "Ça va?"},
+      {name: "Jim", someBinData: new BinData(2,"1234")},
+    ]);
 
 So, let's see what we've got here:
 
@@ -100,7 +102,7 @@ Perhaps you have a potentially very deep nested object structure, and you don't 
 
 One can apply a `maxDepth` constraint, which limits the depth Variety will recursively search to find new objects.
 
-    db.users.insert({name:"Walter", someNestedObject:{a:{b:{c:{d:{e:1}}}}}});
+    db.users.insertOne({name:"Walter", someNestedObject:{a:{b:{c:{d:{e:1}}}}}});
 
 The default will traverse all the way to the bottom of that structure:
 
@@ -288,7 +290,7 @@ Sometimes you want to see the keys and types come in as it happens.  Maybe you h
 ### Exclude Subkeys
 Sometimes you inherit a database full of junk.  Maybe the previous developer put data in the database keys, which causes Variety to go out of memory when run.  After you've run the `logKeysContinuously` to figure out which subkeys may be a problem, you can use this option to run Variety without those subkeys.  
 
-    db.users.insert({name:"Walter", someNestedObject:{a:{b:{c:{d:{e:1}}}}}, otherNestedObject:{a:{b:{c:{d:{e:1}}}}}});
+    db.users.insertOne({name:"Walter", someNestedObject:{a:{b:{c:{d:{e:1}}}}}, otherNestedObject:{a:{b:{c:{d:{e:1}}}}}});
 
     $ mongosh test --eval "var collection = 'users', sort = { updated_at : -1 }, excludeSubkeys = [ 'someNestedObject.a.b' ]" variety.js
 
