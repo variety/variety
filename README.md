@@ -1,4 +1,7 @@
 # Meet Variety, a Schema Analyzer for MongoDB
+
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/variety/variety/badge)](https://scorecard.dev/viewer/?uri=github.com/variety/variety)
+
 This lightweight tool helps you get a sense of your application's schema, as well as any outliers to that schema. Particularly useful when you inherit a codebase with a data dump and want to quickly learn how the data's structured. Also useful for finding rare keys.
 
 ***
