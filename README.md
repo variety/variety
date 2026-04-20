@@ -213,6 +213,8 @@ The same serialisation rules as `lastValue` apply: `Date` → timestamp, `Object
 
 `maxExamples` and `lastValue` are independent; both can be used together.
 
+_Thanks to [@humanitiesclinic](https://github.com/humanitiesclinic) for suggesting this feature ([#154](https://github.com/variety/variety/issues/154))._
+
 ## Output Formats and Plugins
 
 Variety has a built-in formatter registry and a plugin system, both of which use the same `formatResults` interface. Built-in formatters are selected by name; plugins override the built-in entirely when a `formatResults` hook is provided.
