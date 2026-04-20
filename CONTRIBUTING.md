@@ -258,3 +258,8 @@ though approvals are not currently required by the branch rules. When someone
 other than the PR author has reviewed a change and is comfortable with it, use
 GitHub's **Review changes** flow and submit **Approve** instead of only leaving
 comments.
+
+That formal approval gives the project an auditable human review signal for
+future maintainers and supply-chain checks such as OpenSSF Scorecard. Automated
+review comments from Copilot, Codex, or other bots are useful, but they do not
+replace human approval.
