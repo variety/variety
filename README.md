@@ -78,7 +78,7 @@ Perhaps you have a really large collection, and you can't wait a whole day for V
 
 Perhaps you want to ignore a collection's oldest documents, and only see what the collection's documents' structures have been looking like, as of late.
 
-One can apply a `limit` constraint, which analyzes only the newest documents in a collection ([unless sorting](#analyze-documents-sorted-in-a-particular-order)), like so:
+One can apply a `limit` constraint, which analyzes only the newest documents in a collection ([unless sorting](#analyze-documents-sorted-in-a-particular-order)), like so. Note that `limit` controls _which documents are analyzed_ and therefore affects occurrence counts and percentages — it is not the same as [`maxExamples`](#collect-multiple-example-values), which controls how many sample values appear per key in the output without affecting which documents are scanned.
 
     $ mongosh test --eval "var collection = 'users', limit = 1" variety.js
 
@@ -189,27 +189,29 @@ Variety reports BSON wrapper types such as `Decimal128`, `Timestamp`, `Code`, `B
 
 ## Collect Multiple Example Values
 
-When a single representative value is not enough, use `maxExamples` to gather up to N sample values per key. Unlike `lastValue`, which captures only one value from the first matching document, `maxExamples` accumulates examples across all analyzed documents (up to the specified count).
+When a single representative value is not enough, use `maxExamples` to gather up to N sample values per key. Unlike `lastValue`, which captures only one value from the first matching document, `maxExamples` accumulates examples across all analyzed documents (up to the specified count). Unlike [`limit`](#analyze-only-recent-documents), it does not change which documents are analyzed — all documents still contribute to the schema; `maxExamples` only controls how many sample values are retained per key in the output.
 
     $ mongosh test --eval "var collection = 'users', maxExamples = 3" variety.js
 
-    +-------------------------------------------------------------------------------------+
-    | key                | types                | occurrences | percents | examples       |
-    | ------------------ | -------------------- | ----------- | -------- | -------------- |
-    | _id                | ObjectId             |           5 |    100.0 | [ObjectId]...  |
-    | name               | String               |           5 |    100.0 | Jim, Geneviè...|
-    | bio                | String               |           3 |     60.0 | Ça va?, I sw...|
-    | birthday           | Date                 |           2 |     40.0 | 44807040000... |
-    | pets               | String (1),Array (1) |           2 |     40.0 | egret, [Array] |
-    | someBinData        | BinData-old          |           1 |     20.0 | 31323334       |
-    | someWeirdLegacyKey | String               |           1 |     20.0 | I like Ike!    |
-    +-------------------------------------------------------------------------------------+
+    +---------------------------------------------------------------------------------------------------------------------------------------------------+
+    | key                | types                | occurrences | percents | examples                                                                     |
+    | ------------------ | -------------------- | ----------- | -------- | ---------------------------------------------------------------------------- |
+    | _id                | ObjectId             |           5 |    100.0 | 69e6a561b5d42ed48544ba8d, 69e6a561b5d42ed48544ba8c, 69e6a561b5d42ed48544ba8b |
+    | name               | String               |           5 |    100.0 | Jim, Geneviève, Harry                                                        |
+    | bio                | String               |           3 |     60.0 | Ça va?, I swordfight., A nice guy.                                           |
+    | birthday           | Date                 |           2 |     40.0 | 448070400000, 132451200000                                                   |
+    | pets               | String (1),Array (1) |           2 |     40.0 | egret, [Array]                                                               |
+    | someBinData        | BinData-old          |           1 |     20.0 | d76df8                                                                       |
+    | someWeirdLegacyKey | String               |           1 |     20.0 | I like Ike!                                                                  |
+    +---------------------------------------------------------------------------------------------------------------------------------------------------+
+
+_(ObjectId hex strings and timestamps are runtime-generated; exact values will differ.)_
 
 Via the first-party CLI:
 
     $ variety test/users --maxExamples 3
 
-The same serialisation rules as `lastValue` apply: `Date` → timestamp, `ObjectId` → hex string, binary data → hex. Non-serialisable types such as `Array` or `Object` appear as `[TypeName]` placeholders.
+The same serialisation rules as `lastValue` apply: `Date` → Unix timestamp (ms), `ObjectId` → hex string, binary data → hex. Non-serialisable types such as `Array` or `Object` appear as `[TypeName]` placeholders.
 
 `maxExamples` and `lastValue` are independent; both can be used together.
 

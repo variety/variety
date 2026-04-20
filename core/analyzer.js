@@ -209,7 +209,7 @@
         } else if (type in {'Number': true, 'NumberLong': true}) {
           result[key][type] = value.valueOf();
         } else if (type === 'ObjectId') {
-          result[key][type] = value.str;
+          result[key][type] = typeof value.toHexString === 'function' ? value.toHexString() : value.str;
         } else if (type === 'Date') {
           result[key][type] = new Date(value).getTime();
         } else if (type.startsWith('BinData')) {
