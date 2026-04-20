@@ -12,9 +12,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  actions: read
   contents: read
-  security-events: write
 
 jobs:
   changes:
@@ -57,6 +55,9 @@ jobs:
     # When skipped, only-markdown is empty → != 'true' → analyze proceeds.
     if: always() && needs.changes.outputs.only-markdown != 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     strategy:
       fail-fast: false
       matrix:
