@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
 import assert from 'assert';
-import Tester from '../utils/Tester.js';
+import VarietyHarness from '../../helpers/VarietyHarness.js';
 import { fileURLToPath } from 'url';
-import sampleData from '../fixtures/SampleData.js';
+import sampleData from '../../fixtures/seed-data.js';
 
-const test = new Tester('test', 'users');
+const test = new VarietyHarness('test', 'users');
 
 const expectedOutput = `
 key|types|occurrences|percents
@@ -18,7 +18,7 @@ someBinData|BinData-generic|1|20
 someWeirdLegacyKey|String|1|20
 `.trim();
 
-const getPluginPath = () => fileURLToPath(new URL('../fixtures/CsvPlugin.js', import.meta.url));
+const getPluginPath = () => fileURLToPath(new URL('../../fixtures/plugins/csv-plugin.js', import.meta.url));
 
 describe('Plugins', () => {
 

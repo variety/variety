@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
 import assert from 'assert';
-import Tester from '../utils/Tester.js';
-const test = new Tester('test', 'users');
+import VarietyHarness from '../../helpers/VarietyHarness.js';
+const test = new VarietyHarness('test', 'users');
 
-import sampleData from '../fixtures/SampleData.js';
-import expectedAscii  from '../fixtures/ExpectedAscii.js';
+import sampleData from '../../fixtures/seed-data.js';
+import expectedAscii from '../../fixtures/ascii-output-fixture.js';
 
 describe('Basic Analysis', () => {
 

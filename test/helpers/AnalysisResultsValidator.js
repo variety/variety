@@ -15,7 +15,7 @@ import { equal, deepEqual }  from 'assert';
  * }} VarietyResultRow
  */
 
-export default class JsonValidator {
+export default class AnalysisResultsValidator {
   /** @type {VarietyResultRow[]} */
   results;
 
