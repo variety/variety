@@ -38,4 +38,26 @@ describe('Basic Analysis', () => {
     results.validateExamples('pets', ['egret', '[Array]']);
     results.validateExamples('someWeirdLegacyKey', ['I like Ike!']);
   });
+
+  it('should extract ObjectId values as hex strings in lastValue', async () => {
+    if (!test.coll) { throw new Error('Collection not available.'); }
+    // sort {_id:-1} means Jim (last inserted) is first seen → his _id is the lastValue
+    const jim = await test.coll.findOne({name: 'Jim'});
+    if (!jim) { throw new Error('Expected Jim document to exist.'); }
+    const results = await test.runJsonAnalysis({collection:'users', lastValue:true}, true);
+    results.validate('_id', 5, 100.0, {ObjectId: 5}, jim._id.toHexString());
+  });
+
+  it('should extract ObjectId values as hex strings in maxExamples', async () => {
+    if (!test.coll) { throw new Error('Collection not available.'); }
+    // sort {_id:-1}: Jim, Geneviève, Harry are the first three
+    const [jim, genevieve, harry] = await Promise.all([
+      test.coll.findOne({name: 'Jim'}),
+      test.coll.findOne({name: 'Geneviève'}),
+      test.coll.findOne({name: 'Harry'}),
+    ]);
+    if (!jim || !genevieve || !harry) { throw new Error('Expected seed documents to exist.'); }
+    const results = await test.runJsonAnalysis({collection:'users', maxExamples:3}, true);
+    results.validateExamples('_id', [jim._id.toHexString(), genevieve._id.toHexString(), harry._id.toHexString()]);
+  });
 });
