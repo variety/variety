@@ -75,43 +75,27 @@ jobs:
   test:
     name: Test (Node 22, MongoDB ${{ matrix.mongodb-version }})
     needs: changes
-    # No job-level if: here — see note below. Steps are guarded individually.
+    if: needs.changes.outputs.only-markdown != 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         mongodb-version: ['5.0', '7.0', '8.0']
     steps:
-      # NOTE: The only-markdown skip is applied at the step level rather than
-      # the job level. A job-level `if: only-markdown != true` causes GitHub
-      # Actions to skip the entire job, which: (a) leaves the job name showing
-      # the raw `${{ matrix.mongodb-version }}` template string (matrix
-      # variables are only expanded when the job runs), and (b) never reports
-      # the expanded check names (e.g. "Test (Node 22, MongoDB 5.0)") that
-      # branch protection requires, leaving those checks permanently pending.
-      # Step-level guards let the job start, do nothing, and exit success —
-      # satisfying required checks while still skipping the expensive work.
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        if: needs.changes.outputs.only-markdown != 'true'
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        if: needs.changes.outputs.only-markdown != 'true'
         with:
           node-version: '22'
           cache: npm
       - run: npm ci
-        if: needs.changes.outputs.only-markdown != 'true'
         env:
           HUSKY: '0'
       - name: Set up Docker Buildx
-        if: needs.changes.outputs.only-markdown != 'true'
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
       - name: Expose GitHub Actions cache runtime
-        if: needs.changes.outputs.only-markdown != 'true'
         uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # v4.0.0
       - run: mkdir -p docker/Dockerfiles
-        if: needs.changes.outputs.only-markdown != 'true'
       - run: npm run test:container
-        if: needs.changes.outputs.only-markdown != 'true'
         env:
           MONGODB_VERSION: ${{ matrix.mongodb-version }}
           NODEJS_VERSION: '22'
@@ -121,30 +105,23 @@ jobs:
   test-smoke:
     name: Smoke Test (Node 24, MongoDB 8.0)
     needs: changes
-    # No job-level if: here — same reason as the test matrix job above.
+    if: needs.changes.outputs.only-markdown != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        if: needs.changes.outputs.only-markdown != 'true'
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        if: needs.changes.outputs.only-markdown != 'true'
         with:
           node-version: '24'
           cache: npm
       - run: npm ci
-        if: needs.changes.outputs.only-markdown != 'true'
         env:
           HUSKY: '0'
       - name: Set up Docker Buildx
-        if: needs.changes.outputs.only-markdown != 'true'
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
       - name: Expose GitHub Actions cache runtime
-        if: needs.changes.outputs.only-markdown != 'true'
         uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # v4.0.0
       - run: mkdir -p docker/Dockerfiles
-        if: needs.changes.outputs.only-markdown != 'true'
       - run: npm run test:container
-        if: needs.changes.outputs.only-markdown != 'true'
         env:
           MONGODB_VERSION: '8.0'
           NODEJS_VERSION: '24'

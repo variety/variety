@@ -96,20 +96,6 @@ build failures fall back to a clean `docker build --no-cache` rebuild so CI
 behavior remains predictable. Local `npm run test:container` runs keep the clean
 rebuild behavior by default.
 
-**Why test and smoke-test jobs guard at the step level, not the job level:**
-When a matrix job is skipped via a job-level `if:`, GitHub Actions never
-expands the matrix variables, so the job name stays as the raw template
-string (e.g. `Test (Node 22, MongoDB ${{ matrix.mongodb-version }})`).
-More importantly, the expanded check names that branch protection requires
-(e.g. `CI / Test (Node 22, MongoDB 5.0)`) are never reported at all,
-leaving those required checks permanently in a "waiting" state. Guarding
-individual steps instead lets the job start, skip all real work, and exit
-success — the expanded name gets reported, required checks are satisfied,
-and no tests are falsely implied. This is safe because the `only-markdown`
-detection (which requires all changed files to be existing `.md` files with
-`M` status — no additions or deletions, no non-`.md` files) is the gate;
-if it is correct, "success with no steps run" is semantically accurate.
-
 GitHub Actions also runs CodeQL and OpenSSF Scorecard security scans. CodeQL
 runs on every push to `main`, every pull request targeting `main`, weekly on
 `main`, and on manual dispatch so SAST coverage stays attached to all commits.
