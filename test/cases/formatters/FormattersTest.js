@@ -3,7 +3,7 @@
 import assert from 'assert';
 import VarietyHarness from '../../helpers/VarietyHarness.js';
 import sampleData from '../../fixtures/seed-data.js';
-import expectedAscii from '../../fixtures/AsciiSnapshot.js';
+import expectedAscii from '../../fixtures/ascii-output-fixture.js';
 
 const test = new VarietyHarness('test', 'users');
 

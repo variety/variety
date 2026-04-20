@@ -64,7 +64,7 @@ The built `variety.js` is committed to the repository so that `mongosh variety.j
 npm run test:mocha
 ```
 
-The test suite under `test/` runs as native ESM through its own `test/package.json`, while the repository root intentionally stays CommonJS so the CLI entrypoint and config files keep their current behavior. Tests are grouped by concern under `test/tests/` — `test/tests/analysis/`, `test/tests/cli/`, `test/tests/formatters/`, `test/tests/persistence/`, and `test/tests/plugins/` — with shared helpers under `test/helpers/` and static inputs under `test/fixtures/`. That Mocha lane also includes focused CLI tests that execute `bin/variety` and stub `mongosh` / `mongo`, so the command-line translation layer can be validated without a live MongoDB shell install.
+The test suite under `test/` runs as native ESM through its own `test/package.json`, while the repository root intentionally stays CommonJS so the CLI entrypoint and config files keep their current behavior. Tests are grouped by concern under `test/cases/` — `test/cases/analysis/`, `test/cases/cli/`, `test/cases/formatters/`, `test/cases/persistence/`, and `test/cases/plugins/` — with shared helpers under `test/helpers/` and static inputs under `test/fixtures/`. That Mocha lane also includes focused CLI tests that execute `bin/variety` and stub `mongosh` / `mongo`, so the command-line translation layer can be validated without a live MongoDB shell install.
 
 If you have Docker or Podman installed and don't want to test against your own MongoDB instance,
 you can execute tests against dockerized MongoDB:
@@ -236,7 +236,7 @@ mongosh test --quiet --eval "var collection='users', plugins='./csv-plugin.js|de
 
 ### Testing a plugin
 
-Integration tests for plugins live in `test/tests/plugins/`. Copy the structure of `test/tests/plugins/PluginTest.js` and put your fixture file under `test/fixtures/`. The `VarietyHarness` helper's `runAnalysis({ plugins: getPluginPath() })` method is the easiest way to wire everything up.
+Integration tests for plugins live in `test/cases/plugins/`. Copy the structure of `test/cases/plugins/PluginTest.js` and put your fixture file under `test/fixtures/`. The `VarietyHarness` helper's `runAnalysis({ plugins: getPluginPath() })` method is the easiest way to wire everything up.
 
 ## Reporting Issues / Contributing
 
