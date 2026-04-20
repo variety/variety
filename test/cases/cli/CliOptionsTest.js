@@ -45,6 +45,21 @@ describe('CLI option parsing', () => {
     });
   });
 
+  it('includes maxExamples in the execution plan when specified', () => {
+    const plan = createExecutionPlan([
+      'sales/orders',
+      '--max-examples', '3',
+    ], {});
+
+    assert.deepEqual(plan, {
+      database: 'sales',
+      evalCode: 'var collection = "orders"; var maxExamples = 3',
+      mode: 'cli',
+      scriptPath: path.join(repoRoot, 'variety.js'),
+      shellOptions: {},
+    });
+  });
+
   it('keeps zero-valued analysis options while requiring a positive port', () => {
     const plan = createExecutionPlan([
       'sales/orders',

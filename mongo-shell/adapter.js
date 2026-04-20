@@ -103,6 +103,7 @@
     read('showArrayElements', false);
     read('compactArrayTypes', false);
     read('lastValue', false);
+    read('maxExamples', 0);
 
     // Translate excludeSubkeys into a set-like object for compatibility.
     config.excludeSubkeys = config.excludeSubkeys.reduce((result, item) => {

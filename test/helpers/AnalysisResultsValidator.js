@@ -11,7 +11,8 @@ import { equal, deepEqual }  from 'assert';
  *   totalOccurrences: number,
  *   percentContaining: number,
  *   value: { types: Record<string, number> },
- *   lastValue?: unknown
+ *   lastValue?: unknown,
+ *   examples?: unknown[]
  * }} VarietyResultRow
  */
 
@@ -44,6 +45,18 @@ export default class AnalysisResultsValidator {
     if (arguments.length === 5) {
       deepEqual(row.lastValue, lastValue, `LastValue of key ${key} does not match`);
     }
+  }
+
+  /**
+   * @param {string} key
+   * @param {unknown[]} expectedExamples
+   */
+  validateExamples(key, expectedExamples) {
+    const row = this.results.find((item) => item._id.key === key);
+    if (typeof row === 'undefined') {
+      throw new Error(`Key '${key}' not present in results.`);
+    }
+    deepEqual(row.examples, expectedExamples, `Examples of key ${key} do not match`);
   }
 
   /**

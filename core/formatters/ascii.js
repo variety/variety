@@ -21,6 +21,9 @@
       if (config.lastValue) {
         headers.push('lastValue');
       }
+      if (config.maxExamples > 0) {
+        headers.push('examples');
+      }
 
       // Return the number of decimal places, or 1 for integers (1.23 => 2, 100 => 1, 0.1415 => 4).
       const significantDigits = (value) => {
@@ -41,6 +44,9 @@
         const rawArray = [row._id.key, types, row.totalOccurrences, row.percentContaining.toFixed(Math.min(maxDigits, 20))];
         if (config.lastValue && row.lastValue) {
           rawArray.push(row.lastValue);
+        }
+        if (config.maxExamples > 0 && row.examples) {
+          rawArray.push(row.examples.join(', '));
         }
         return rawArray;
       });

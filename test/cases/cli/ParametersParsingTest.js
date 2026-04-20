@@ -14,6 +14,7 @@ const mongodbPort = Number(process.env['MONGODB_PORT'] || 27017);
  *   query?: unknown,
  *   limit?: unknown,
  *   maxDepth?: unknown,
+ *   maxExamples?: unknown,
  *   sort?: unknown,
  *   outputFormat?: unknown,
  *   persistResults?: unknown,
@@ -39,6 +40,7 @@ const setParsedParam = (params, key, parsedValue) => {
   case 'query':
   case 'limit':
   case 'maxDepth':
+  case 'maxExamples':
   case 'sort':
   case 'outputFormat':
   case 'persistResults':
@@ -91,6 +93,7 @@ describe('Parameters parsing', () => {
     assert.deepEqual(params.query, {});
     assert.equal(params.limit, 5);
     assert.equal(params.maxDepth, 99);
+    assert.equal(params.maxExamples, 0);
     assert.deepEqual(params.sort, {'_id':-1});
     assert.equal(params.outputFormat, 'ascii');
     assert.equal(params.persistResults, false);

@@ -19,6 +19,7 @@ const path = require('path');
  * @typedef {{
  *   limit?: number,
  *   maxDepth?: number,
+ *   maxExamples?: number,
  *   outputFormat?: string,
  *   query?: Record<string, unknown>,
  *   sort?: Record<string, unknown>,
@@ -79,11 +80,12 @@ class CliUsageError extends Error {
 
 const COMPATIBILITY_ENV_KEYS = ['DB', 'EVAL_CMDS', 'VARIETYJS_DIR'];
 /** @type {Array<keyof VarietyOptions>} */
-const TARGET_OPTION_NAMES = ['query', 'sort', 'limit', 'maxDepth', 'outputFormat'];
+const TARGET_OPTION_NAMES = ['query', 'sort', 'limit', 'maxDepth', 'outputFormat', 'maxExamples'];
 /** @type {Record<string, string>} */
 const FLAG_ALIASES = {
   'authentication-database': 'authenticationDatabase',
   'max-depth': 'maxDepth',
+  'max-examples': 'maxExamples',
   'output-format': 'outputFormat',
 };
 
@@ -322,6 +324,12 @@ const parseCliArguments = (argv) => {
       parsed.varietyOptions.maxDepth = parseNonNegativeInteger(optionName, result.value);
       break;
     }
+    case 'maxExamples': {
+      const result = readOptionValue(argv, index, inlineValue, optionName);
+      index = result.nextIndex;
+      parsed.varietyOptions.maxExamples = parseNonNegativeInteger(optionName, result.value);
+      break;
+    }
     case 'outputFormat': {
       const result = readOptionValue(argv, index, inlineValue, optionName);
       index = result.nextIndex;
@@ -477,6 +485,7 @@ const formatUsage = () => {
     '  --sort <json>                    Strict JSON sort object',
     '  --limit <number>                 Limit documents analyzed',
     '  --maxDepth <number>              Maximum traversal depth',
+    '  --maxExamples <number>           Number of example values to collect per key',
     '  --outputFormat <value>           Output format, e.g. ascii or json',
     '  --quiet                          Pass --quiet through to the Mongo shell',
     '  --host <value>                   Mongo shell host',

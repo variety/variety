@@ -203,7 +203,7 @@
       const type = varietyTypeOf(config, value);
       result[key][type] = null;
 
-      if (config.lastValue) {
+      if (config.lastValue || config.maxExamples > 0) {
         if (type in {'String': true, 'Boolean': true}) {
           result[key][type] = value.toString();
         } else if (type in {'Number': true, 'NumberLong': true}) {
@@ -235,16 +235,24 @@
               log(`Found new key type "${key}" type "${type}"`);
             }
           }
+          if (config.maxExamples > 0 && existing.examples.length < config.maxExamples) {
+            const rawVal = docResult[key][type];
+            existing.examples.push(rawVal !== null ? rawVal : `[${type}]`);
+          }
         }
         existing.totalOccurrences += 1;
       } else {
         let lastValue = null;
         let lastType = null;
         const types = createKeyMap();
+        const examples = [];
         for (const newType of Object.keys(docResult[key])) {
           types[newType] = 1;
           lastValue = docResult[key][newType];
           lastType = newType;
+          if (config.maxExamples > 0 && examples.length < config.maxExamples) {
+            examples.push(lastValue !== null ? lastValue : `[${newType}]`);
+          }
           if (config.logKeysContinuously) {
             log(`Found new key type "${key}" type "${newType}"`);
           }
@@ -252,6 +260,9 @@
         interimResults[key] = {types, totalOccurrences: 1};
         if (config.lastValue) {
           interimResults[key].lastValue = lastValue ? lastValue : `[${lastType}]`;
+        }
+        if (config.maxExamples > 0) {
+          interimResults[key].examples = examples;
         }
       }
     }
@@ -271,6 +282,10 @@
 
       if (config.lastValue) {
         obj.lastValue = entry.lastValue;
+      }
+
+      if (config.maxExamples > 0) {
+        obj.examples = entry.examples;
       }
 
       varietyResults.push(obj);
