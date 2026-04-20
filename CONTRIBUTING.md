@@ -242,6 +242,24 @@ Integration tests for plugins live in `test/cases/plugins/`. Copy the structure 
 
 Please follow the [Variety Code of Conduct](CODE_OF_CONDUCT.md) when participating in project spaces.
 
-Please report any bugs and feature requests on the Github issue tracker. I will read all reports!
+Please report bugs, feature requests, documentation issues, and usage questions
+on the GitHub issue tracker. The repository includes issue forms for each of
+those report types; choose the closest fit and include the requested details. I
+will read all reports!
 
 I accept pull requests from forks. Very grateful to accept contributions from folks.
+
+Pull requests use the repository's GitHub pull request template. Please summarize
+the change, link related issues when they exist, note documentation impact, and
+include the checks you ran or explain why local checks were not run.
+
+Maintainers prefer formal GitHub pull request reviews for human signoff, even
+though approvals are not currently required by the branch rules. When someone
+other than the PR author has reviewed a change and is comfortable with it, use
+GitHub's **Review changes** flow and submit **Approve** instead of only leaving
+comments.
+
+That formal approval gives the project an auditable human review signal for
+future maintainers and supply-chain checks such as OpenSSF Scorecard. Automated
+review comments from Copilot, Codex, or other bots are useful, but they do not
+replace human approval.

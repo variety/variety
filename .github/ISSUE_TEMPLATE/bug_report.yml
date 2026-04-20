@@ -1,0 +1,89 @@
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
+name: Bug report
+description: Report something that is not working as expected.
+title: "Bug: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Variety. Please include enough detail for someone else to reproduce the problem.
+  - type: checkboxes
+    id: existing-issues
+    attributes:
+      label: Existing issues
+      options:
+        - label: I searched existing issues before opening this report.
+          required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the behavior you saw.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+      description: Describe the behavior you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: How can someone reproduce this?
+      description: Include commands, relevant Variety options, and a small sample document shape when possible.
+      placeholder: |
+        1. Run ...
+        2. Analyze collection ...
+        3. See error ...
+    validations:
+      required: true
+  - type: input
+    id: variety-version
+    attributes:
+      label: Variety version or commit
+      description: For example, an npm version, release tag, or commit SHA.
+      placeholder: "1.5.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: invocation
+    attributes:
+      label: How are you running Variety?
+      options:
+        - Direct mongosh or mongo invocation with variety.js
+        - variety CLI
+        - npm package
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: mongodb-shell
+    attributes:
+      label: MongoDB shell
+      description: Include shell name and version if available.
+      placeholder: "mongosh 2.5.0"
+  - type: input
+    id: mongodb-server
+    attributes:
+      label: MongoDB server version
+      placeholder: "8.0.0"
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js version
+      description: Required only when using the Variety CLI or npm package.
+      placeholder: "22.14.0"
+  - type: input
+    id: operating-system
+    attributes:
+      label: Operating system
+      placeholder: "macOS 15.4, Ubuntu 24.04, Windows 11, etc."
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Paste error messages, command output, or logs here.
+      render: shell
