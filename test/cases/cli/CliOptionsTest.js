@@ -238,4 +238,34 @@ describe('CLI option parsing', () => {
     const plan = createExecutionPlan(['test/users'], {});
     assert.equal(evalCodeOf(plan), 'var collection = "users"');
   });
+
+  it('emits persistResults when the flag is passed', () => {
+    const plan = createExecutionPlan(['test/users', '--persist-results'], {});
+    assert.equal(evalCodeOf(plan), 'var collection = "users"; var persistResults = true');
+  });
+
+  it('emits all persistence options together', () => {
+    const plan = createExecutionPlan([
+      'test/users',
+      '--persist-results',
+      '--results-database', 'db.example.com/variety',
+      '--results-collection', 'myKeys',
+      '--results-user', 'reporter',
+      '--results-password', 'secret',
+    ], {});
+    assert.equal(
+      evalCodeOf(plan),
+      'var collection = "users"; var persistResults = true; var resultsDatabase = "db.example.com/variety"; var resultsCollection = "myKeys"; var resultsUser = "reporter"; var resultsPass = "secret"'
+    );
+  });
+
+  it('emits resultsDatabase alone without requiring persistResults', () => {
+    const plan = createExecutionPlan(['test/users', '--resultsDatabase', 'mydb'], {});
+    assert.equal(evalCodeOf(plan), 'var collection = "users"; var resultsDatabase = "mydb"');
+  });
+
+  it('maps --results-password to var resultsPass', () => {
+    const plan = createExecutionPlan(['test/users', '--results-password', 'hunter2'], {});
+    assert.equal(evalCodeOf(plan), 'var collection = "users"; var resultsPass = "hunter2"');
+  });
 });

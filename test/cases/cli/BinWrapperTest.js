@@ -305,6 +305,32 @@ describe('bin/variety wrapper', () => {
     });
   });
 
+  it('passes persistence flags through to the mongosh eval arg', async () => {
+    const { invocation } = await runBinVariety({
+      args: [
+        'testdb/orders',
+        '--persist-results',
+        '--results-database', 'db.example.com/variety',
+        '--results-collection', 'orderKeys',
+        '--results-user', 'reporter',
+        '--results-password', 'secret',
+      ],
+    });
+
+    if (!invocation) {
+      throw new Error('Expected the fake shell invocation to be recorded.');
+    }
+    assert.deepEqual(invocation, {
+      command: 'mongosh',
+      args: [
+        'testdb',
+        '--eval',
+        'var collection = "orders"; var persistResults = true; var resultsDatabase = "db.example.com/variety"; var resultsCollection = "orderKeys"; var resultsUser = "reporter"; var resultsPass = "secret"',
+        path.join(repoRoot, 'variety.js'),
+      ],
+    });
+  });
+
   it('fails fast on invalid JSON query input', async () => {
     await assert.rejects(
       () => runBinVariety({
