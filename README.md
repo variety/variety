@@ -180,7 +180,7 @@ One can also apply a `lastValue` constraint to capture one representative value 
     | animals         | Array        |           1 |    100.0 | [Array]                          |
     | animals.XX.type | String       |           1 |    100.0 | dog                              |
     | balance         | NumberLong   |           1 |    100.0 |                 1236458945684846 |
-    | date            | Date         |           1 |    100.0 |                    1513539969000 |
+    | date            | Date         |           1 |    100.0 | 2017-12-17T19:46:09.000Z         |
     | fn              | Object       |           1 |    100.0 | [Object]                         |
     | fn.code         | String       |           1 |    100.0 | function (x, y){ return x + y; } |
     | name            | String       |           1 |    100.0 | John                             |
@@ -189,7 +189,7 @@ One can also apply a `lastValue` constraint to capture one representative value 
     +--------------------------------------------------------------------------------------------+
 
 Variety captures each `lastValue` from the first matching document it sees in the configured sort order. If you do not provide `sort`, it uses the default `{ _id: -1 }` ordering, so these values come from the newest matching documents encountered during the scan.
-`Date` is converted into `timestamp`, `ObjectId` into `string`, and binary data into hex. Other types are shown in square brackets.
+`Date` is converted into an ISO 8601 string, `ObjectId` into `string`, and binary data into hex. Other types are shown in square brackets.
 Variety reports BSON wrapper types such as `Decimal128`, `Timestamp`, `Code`, `BSONRegExp`, `MinKey`, `MaxKey`, and `DBRef` by their BSON type names in the `types` column.
 
 ## Collect Multiple Example Values
@@ -201,22 +201,22 @@ When a single representative value is not enough, use `maxExamples` to gather up
     +---------------------------------------------------------------------------------------------------------------------------------------------------+
     | key                | types                | occurrences | percents | examples                                                                     |
     | ------------------ | -------------------- | ----------- | -------- | ---------------------------------------------------------------------------- |
-    | _id                | ObjectId             |           5 |    100.0 | 69e6a561b5d42ed48544ba8d, 69e6a561b5d42ed48544ba8c, 69e6a561b5d42ed48544ba8b |
+    | _id                | ObjectId             |           5 |    100.0 | 69e6cbc2e9ccbf038c44ba8d, 69e6cbc2e9ccbf038c44ba8c, 69e6cbc2e9ccbf038c44ba8b |
     | name               | String               |           5 |    100.0 | Jim, Geneviève, Harry                                                        |
     | bio                | String               |           3 |     60.0 | Ça va?, I swordfight., A nice guy.                                           |
-    | birthday           | Date                 |           2 |     40.0 | 448070400000, 132451200000                                                   |
+    | birthday           | Date                 |           2 |     40.0 | 1984-03-14T00:00:00.000Z, 1974-03-14T00:00:00.000Z                           |
     | pets               | String (1),Array (1) |           2 |     40.0 | egret, [Array]                                                               |
     | someBinData        | BinData-old          |           1 |     20.0 | d76df8                                                                       |
     | someWeirdLegacyKey | String               |           1 |     20.0 | I like Ike!                                                                  |
     +---------------------------------------------------------------------------------------------------------------------------------------------------+
 
-_(ObjectId hex strings and timestamps are runtime-generated; exact values will differ.)_
+_(ObjectId hex strings are runtime-generated; exact values will differ.)_
 
 Via the first-party CLI:
 
     $ variety test/users --maxExamples 3
 
-The same serialisation rules as `lastValue` apply: `Date` → Unix timestamp (ms), `ObjectId` → hex string, binary data → hex. Non-serialisable types such as `Array` or `Object` appear as `[TypeName]` placeholders.
+The same serialisation rules as `lastValue` apply: `Date` → ISO 8601 string, `ObjectId` → hex string, binary data → hex. Non-serialisable types such as `Array` or `Object` appear as `[TypeName]` placeholders.
 
 `maxExamples` and `lastValue` are independent; both can be used together.
 
