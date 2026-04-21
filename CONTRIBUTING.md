@@ -120,7 +120,7 @@ If every staged change is a modification to an existing `.md` file (no new or de
 Otherwise all of the following run:
 
 - `npm run verify:build` — verifies `variety.js` matches what `build.js` would produce from `core/formatters/`, `core/`, and `mongo-shell/adapter.js`
-- `npm run lint` — ESLint (JavaScript)
+- `npm run lint` — ESLint (JavaScript, including fenced code blocks in Markdown)
 - `npm run lint:json` — `@prantlf/jsonlint` (JSON files)
 - `npm run lint:markdown` — markdownlint (Markdown files)
 - `npm run lint:yaml` — js-yaml (YAML files)
@@ -133,7 +133,7 @@ Otherwise all of the following run:
 
 #### Shared Baseline
 
-`npm run lint` applies a shared baseline of formatting and safety rules across the repo. That baseline also bans a few repo-specific legacy patterns, including `Function('return this')`, `indexOf(...)` presence checks, and unguarded `for...in` loops.
+`npm run lint` applies a shared baseline of formatting and safety rules across the repo. Through `@eslint/markdown`, JavaScript fenced code blocks in Markdown are extracted into virtual files and checked by the same ESLint pass, while Markdown prose remains covered by `npm run lint:markdown`. That baseline also bans a few repo-specific legacy patterns, including `Function('return this')`, `indexOf(...)` presence checks, and unguarded `for...in` loops.
 
 #### Node-side Modernization
 
