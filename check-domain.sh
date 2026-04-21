@@ -97,6 +97,20 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# GitHub org domain verification TXT record
+# ---------------------------------------------------------------------------
+echo
+echo "=== GitHub org domain verification ==="
+CHALLENGE_HOST="_github-pages-challenge-variety.$DOMAIN"
+EXPECTED_TXT="d1846b7643914fe51e8c1199a563d6"
+ACTUAL_TXT=$(dig +short TXT "$CHALLENGE_HOST" | tr -d '"')
+if [ "$ACTUAL_TXT" = "$EXPECTED_TXT" ]; then
+  ok "GitHub Pages challenge TXT record present: $CHALLENGE_HOST"
+else
+  fail "GitHub Pages challenge TXT missing or wrong (expected '$EXPECTED_TXT', got '${ACTUAL_TXT:-<empty>}')"
+fi
+
+# ---------------------------------------------------------------------------
 # TLS
 # ---------------------------------------------------------------------------
 echo
