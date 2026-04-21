@@ -11,6 +11,8 @@
   "MD022": false,
   // MD031: Fenced code blocks should be surrounded by blank lines — disabled
   "MD031": false,
+  // MD033: Inline HTML — allow explicit line breaks in compact tables only
+  "MD033": { "allowed_elements": [ "br" ] },
   // MD036: Emphasis used instead of a heading — disabled
   "MD036": false,
   // MD040: Fenced code blocks should have a language specified — disabled
