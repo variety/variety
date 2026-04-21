@@ -24,6 +24,17 @@ const { buildShellInvocation } = mongoShellModule;
 
 const repoRoot = fileURLToPath(new URL('../../..', import.meta.url));
 
+/**
+ * @param {unknown} plan
+ * @returns {string}
+ */
+const evalCodeOf = (plan) => {
+  if (!plan || typeof plan !== 'object' || !('evalCode' in plan) || typeof plan['evalCode'] !== 'string') {
+    throw new Error('Expected a runnable execution plan');
+  }
+  return plan['evalCode'];
+};
+
 describe('CLI option parsing', () => {
   it('builds a CLI execution plan with bundled variety.js by default', () => {
     const plan = createExecutionPlan([
@@ -171,5 +182,60 @@ describe('CLI option parsing', () => {
     assert.match(helpText, /variety DB\/COLLECTION \[options\]/);
     assert.match(helpText, /DB=test EVAL_CMDS=/);
     assert.match(helpText, /backwards compatibility/);
+  });
+
+  it('emits showArrayElements when the flag is passed', () => {
+    const plan = createExecutionPlan(['test/users', '--show-array-elements'], {});
+    assert.equal(evalCodeOf(plan), 'var collection = "users"; var showArrayElements = true');
+  });
+
+  it('emits compactArrayTypes when the flag is passed', () => {
+    const plan = createExecutionPlan(['test/users', '--compact-array-types'], {});
+    assert.equal(evalCodeOf(plan), 'var collection = "users"; var compactArrayTypes = true');
+  });
+
+  it('emits logKeysContinuously when the flag is passed', () => {
+    const plan = createExecutionPlan(['test/users', '--log-keys-continuously'], {});
+    assert.equal(evalCodeOf(plan), 'var collection = "users"; var logKeysContinuously = true');
+  });
+
+  it('accepts camelCase boolean flag names as well as kebab aliases', () => {
+    const kebab = createExecutionPlan(['test/users', '--show-array-elements=false'], {});
+    const camel = createExecutionPlan(['test/users', '--showArrayElements=false'], {});
+    assert.equal(evalCodeOf(kebab), evalCodeOf(camel));
+    assert.equal(evalCodeOf(kebab), 'var collection = "users"; var showArrayElements = false');
+  });
+
+  it('emits arrayEscape with the supplied value', () => {
+    const plan = createExecutionPlan(['test/users', '--array-escape', 'YY'], {});
+    assert.equal(evalCodeOf(plan), 'var collection = "users"; var arrayEscape = "YY"');
+  });
+
+  it('rejects an empty --arrayEscape value', () => {
+    assert.throws(
+      () => {
+        createExecutionPlan(['test/users', '--array-escape', ''], {});
+      },
+      /--arrayEscape must not be empty/
+    );
+  });
+
+  it('accumulates a single --exclude-subkeys path', () => {
+    const plan = createExecutionPlan(['test/users', '--exclude-subkeys', 'meta.tags'], {});
+    assert.equal(evalCodeOf(plan), 'var collection = "users"; var excludeSubkeys = ["meta.tags"]');
+  });
+
+  it('accumulates multiple --exclude-subkeys paths via repetition', () => {
+    const plan = createExecutionPlan([
+      'test/users',
+      '--exclude-subkeys', 'meta.tags',
+      '--exclude-subkeys', 'audit.log',
+    ], {});
+    assert.equal(evalCodeOf(plan), 'var collection = "users"; var excludeSubkeys = ["meta.tags","audit.log"]');
+  });
+
+  it('omits excludeSubkeys from eval when the flag is not passed', () => {
+    const plan = createExecutionPlan(['test/users'], {});
+    assert.equal(evalCodeOf(plan), 'var collection = "users"');
   });
 });
