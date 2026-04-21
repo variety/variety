@@ -172,4 +172,112 @@ describe('CLI option parsing', () => {
     assert.match(helpText, /DB=test EVAL_CMDS=/);
     assert.match(helpText, /backwards compatibility/);
   });
+
+  it('includes boolean variety options in the execution plan', () => {
+    const plan = createExecutionPlan([
+      'test/users',
+      '--lastValue',
+      '--showArrayElements',
+      '--compactArrayTypes',
+      '--logKeysContinuously',
+      '--slaveOk',
+      '--persistResults',
+    ], {});
+
+    assert.deepEqual(plan, {
+      database: 'test',
+      evalCode: 'var collection = "users"; var lastValue = true; var showArrayElements = true; var compactArrayTypes = true; var logKeysContinuously = true; var slaveOk = true; var persistResults = true',
+      mode: 'cli',
+      scriptPath: path.join(repoRoot, 'variety.js'),
+      shellOptions: {},
+    });
+  });
+
+  it('includes string variety options in the execution plan', () => {
+    const plan = createExecutionPlan([
+      'test/users',
+      '--arrayEscape', 'YY',
+      '--plugins', '/path/to/my-plugin.js',
+      '--resultsDatabase', 'variety_results',
+      '--resultsCollection', 'usersKeys',
+      '--resultsUser', 'admin',
+      '--resultsPass', 'secret',
+    ], {});
+
+    assert.deepEqual(plan, {
+      database: 'test',
+      evalCode: 'var collection = "users"; var arrayEscape = "YY"; var resultsDatabase = "variety_results"; var resultsCollection = "usersKeys"; var resultsUser = "admin"; var resultsPass = "secret"; var plugins = "/path/to/my-plugin.js"',
+      mode: 'cli',
+      scriptPath: path.join(repoRoot, 'variety.js'),
+      shellOptions: {},
+    });
+  });
+
+  it('includes excludeSubkeys JSON array in the execution plan', () => {
+    const plan = createExecutionPlan([
+      'test/users',
+      '--excludeSubkeys', '["someNestedObject.a.b","otherPath"]',
+    ], {});
+
+    assert.deepEqual(plan, {
+      database: 'test',
+      evalCode: 'var collection = "users"; var excludeSubkeys = ["someNestedObject.a.b","otherPath"]',
+      mode: 'cli',
+      scriptPath: path.join(repoRoot, 'variety.js'),
+      shellOptions: {},
+    });
+  });
+
+  it('throws a usage error for non-array excludeSubkeys input', () => {
+    assert.throws(
+      () => {
+        createExecutionPlan(['test/users', '--excludeSubkeys', '{"key":"value"}'], {});
+      },
+      /--excludeSubkeys must be a JSON array/
+    );
+  });
+
+  it('accepts kebab-case aliases for new options', () => {
+    const plan = createExecutionPlan([
+      'test/users',
+      '--show-array-elements',
+      '--compact-array-types',
+      '--log-keys-continuously',
+      '--slave-ok',
+      '--persist-results',
+      '--array-escape', 'ZZ',
+      '--exclude-subkeys', '["a.b"]',
+      '--last-value',
+      '--results-database', 'mydb',
+      '--results-collection', 'mycol',
+      '--results-user', 'u',
+      '--results-pass', 'p',
+    ], {});
+
+    assert.deepEqual(plan, {
+      database: 'test',
+      evalCode: 'var collection = "users"; var lastValue = true; var showArrayElements = true; var compactArrayTypes = true; var arrayEscape = "ZZ"; var excludeSubkeys = ["a.b"]; var logKeysContinuously = true; var slaveOk = true; var persistResults = true; var resultsDatabase = "mydb"; var resultsCollection = "mycol"; var resultsUser = "u"; var resultsPass = "p"',
+      mode: 'cli',
+      scriptPath: path.join(repoRoot, 'variety.js'),
+      shellOptions: {},
+    });
+  });
+
+  it('documents new options in help output', () => {
+    const helpText = formatUsage();
+
+    assert.match(helpText, /--showArrayElements/);
+    assert.match(helpText, /--compactArrayTypes/);
+    assert.match(helpText, /--excludeSubkeys/);
+    assert.match(helpText, /--logKeysContinuously/);
+    assert.match(helpText, /--slaveOk/);
+    assert.match(helpText, /--persistResults/);
+    assert.match(helpText, /--resultsDatabase/);
+    assert.match(helpText, /--resultsCollection/);
+    assert.match(helpText, /--resultsUser/);
+    assert.match(helpText, /--resultsPass/);
+    assert.match(helpText, /--plugins/);
+    assert.match(helpText, /--lastValue/);
+    assert.match(helpText, /--arrayEscape/);
+  });
 });

@@ -291,4 +291,72 @@ describe('bin/variety wrapper', () => {
       }
     );
   });
+
+  it('translates new boolean and string variety flags into eval assignments', async () => {
+    const { invocation } = await runBinVariety({
+      args: [
+        'test/users',
+        '--showArrayElements',
+        '--compactArrayTypes',
+        '--lastValue',
+        '--slaveOk',
+        '--arrayEscape', 'YY',
+        '--plugins', '/path/to/plugin.js',
+        '--excludeSubkeys', '["a.b"]',
+      ],
+    });
+
+    if (!invocation) {
+      throw new Error('Expected the fake shell invocation to be recorded.');
+    }
+    assert.deepEqual(invocation, {
+      command: 'mongosh',
+      args: [
+        'test',
+        '--eval',
+        'var collection = "users"; var lastValue = true; var showArrayElements = true; var compactArrayTypes = true; var arrayEscape = "YY"; var excludeSubkeys = ["a.b"]; var slaveOk = true; var plugins = "/path/to/plugin.js"',
+        path.join(repoRoot, 'variety.js'),
+      ],
+    });
+  });
+
+  it('translates result persistence flags into eval assignments', async () => {
+    const { invocation } = await runBinVariety({
+      args: [
+        'test/users',
+        '--persistResults',
+        '--resultsDatabase', 'myResults',
+        '--resultsCollection', 'usersKeys',
+        '--resultsUser', 'writer',
+        '--resultsPass', 'pass123',
+      ],
+    });
+
+    if (!invocation) {
+      throw new Error('Expected the fake shell invocation to be recorded.');
+    }
+    assert.deepEqual(invocation, {
+      command: 'mongosh',
+      args: [
+        'test',
+        '--eval',
+        'var collection = "users"; var persistResults = true; var resultsDatabase = "myResults"; var resultsCollection = "usersKeys"; var resultsUser = "writer"; var resultsPass = "pass123"',
+        path.join(repoRoot, 'variety.js'),
+      ],
+    });
+  });
+
+  it('fails fast on invalid excludeSubkeys input', async () => {
+    await assert.rejects(
+      () => runBinVariety({
+        args: ['test/users', '--excludeSubkeys', '{"not":"an-array"}'],
+      }),
+      /** @param {NodeJS.ErrnoException & { stderr?: string | Buffer }} error */
+      (error) => {
+        assert.equal(error.code, 2);
+        assert.match(String(error.stderr || ''), /--excludeSubkeys must be a JSON array/);
+        return true;
+      }
+    );
+  });
 });

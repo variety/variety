@@ -253,11 +253,11 @@ Passing an unrecognised value throws an error listing the valid options.
 
 A plugin is a `.js` file that exports a plain object with lifecycle hooks. Load one with the `plugins` option (comma-separated for multiple):
 
-    $ mongosh test --quiet --eval "var collection='users', plugins='/path/to/my-plugin.js'" variety.js
+    $ variety test/users --plugins /path/to/my-plugin.js --quiet
 
 Pass per-plugin configuration by appending `|key=value` after the path:
 
-    $ mongosh test --quiet --eval "var collection='users', plugins='/path/to/my-plugin.js|delimiter=;'" variety.js
+    $ variety test/users --plugins '/path/to/my-plugin.js|delimiter=;' --quiet
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full hook reference and a guide to writing and testing plugins.
 
@@ -269,16 +269,16 @@ Variety can also read that option and mute unnecessary output. This is useful in
     $ mongosh test --quiet --eval "var collection = 'users', outputFormat='json', sort = { updated_at : -1 }" variety.js
 
 ### Log Keys and Types As They Arrive Option
-Sometimes you want to see the keys and types come in as it happens.  Maybe you have a large dataset and want accurate results, but you also are impatient and want to see something now.  Or maybe you have a large mangled dataset with crazy keys (that probably shouldn't be keys) and Variety is going out of memory.  This option will show you the keys and types as they come in and help you identify problems with your dataset without needing the Variety script to finish.  
+Sometimes you want to see the keys and types come in as it happens.  Maybe you have a large dataset and want accurate results, but you also are impatient and want to see something now.  Or maybe you have a large mangled dataset with crazy keys (that probably shouldn't be keys) and Variety is going out of memory.  This option will show you the keys and types as they come in and help you identify problems with your dataset without needing the Variety script to finish.
 
-    $ mongosh test --eval "var collection = 'users', sort = { updated_at : -1 }, logKeysContinuously = true" variety.js
+    $ variety test/users --logKeysContinuously
 
 ### Exclude Subkeys
-Sometimes you inherit a database full of junk.  Maybe the previous developer put data in the database keys, which causes Variety to go out of memory when run.  After you've run the `logKeysContinuously` to figure out which subkeys may be a problem, you can use this option to run Variety without those subkeys.  
+Sometimes you inherit a database full of junk.  Maybe the previous developer put data in the database keys, which causes Variety to go out of memory when run.  After you've run the `logKeysContinuously` to figure out which subkeys may be a problem, you can use this option to run Variety without those subkeys.
 
     db.users.insertOne({name:"Walter", someNestedObject:{a:{b:{c:{d:{e:1}}}}}, otherNestedObject:{a:{b:{c:{d:{e:1}}}}}});
 
-    $ mongosh test --eval "var collection = 'users', sort = { updated_at : -1 }, excludeSubkeys = [ 'someNestedObject.a.b' ]" variety.js
+    $ variety test/users --excludeSubkeys '["someNestedObject.a.b"]'
 
     +-----------------------------------------------------------------+
     | key                         | types    | occurrences | percents |
@@ -300,7 +300,7 @@ Sometimes you inherit a database full of junk.  Maybe the previous developer put
 
 By default, Variety suppresses keys that end with an array index (e.g. `tags.XX`), because the parent key already captures the `Array` type. If you want to see the types of the values _inside_ primitive arrays — useful for verifying element-type consistency — set `showArrayElements` to `true`:
 
-    $ mongosh test --eval "var collection = 'users', showArrayElements = true" variety.js
+    $ variety test/users --showArrayElements
 
 For example, given documents like:
 
@@ -324,7 +324,7 @@ This reveals that `tags` contains mixed element types across the collection.
 
 If you want the parent array key itself to carry a more informative summary than plain `Array`, set `compactArrayTypes` to `true`:
 
-    $ mongosh test --eval "var collection = 'users', compactArrayTypes = true" variety.js
+    $ variety test/users --compactArrayTypes
 
 With this option enabled, parent keys can be reported as values such as `Array(String)`, `Array(Number|String)`, or `Array(empty)` instead of just `Array`.
 
@@ -336,30 +336,32 @@ _Thanks to [@oufeng](https://github.com/oufeng) for suggesting this feature ([#1
 Analyzing a large collection on a busy replica set primary could take a lot longer than if you read from a secondary. To do so, we have to tell MongoDB it's okay to perform secondary reads
 by setting the `slaveOk` property to `true`:
 
-    $ mongosh secondary.replicaset.member:31337/somedb --eval "var collection = 'users', slaveOk = true" variety.js
+    $ variety somedb/users --host secondary.replicaset.member --port 31337 --slaveOk
 
 ## Save Results in MongoDB For Future Use
 By default, Variety prints results only to standard output and does not store them in MongoDB itself. If you want to persist them automatically in MongoDB for later usage, you can set the `persistResults` parameter.
 Variety then stores result documents in the `varietyResults` database, and the collection name is derived from the source collection's name.
 If the source collection's name is `users`, Variety stores results in the `usersKeys` collection under the `varietyResults` database.
 
-    $ mongosh test --quiet --eval "var collection = 'users', persistResults=true" variety.js
+    $ variety test/users --persistResults --quiet
 
-To persist to an alternate MongoDB database, you may specify the following parameters:
+To persist to an alternate MongoDB database, pass the result destination flags directly:
 
-- `resultsDatabase` - The database to store Variety results in. Accepts either a database name or a `host[:port]/database` URL.
-- `resultsCollection` - Collection to store Variety results in. **WARNING:** This collection is dropped before results are inserted.
-- `resultsUser` - MongoDB username for results database
-- `resultsPass` - MongoDB password for results database
-
+```bash
+variety test/users --persistResults --resultsDatabase db.example.com/variety --quiet
 ```
-$ mongosh test --quiet --eval "var collection = 'users', persistResults=true, resultsDatabase='db.example.com/variety'" variety.js
-```
+
+The full set of result persistence options:
+
+- `--resultsDatabase` — target database name or `host[:port]/database` URL
+- `--resultsCollection` — target collection (**WARNING:** this collection is dropped before results are inserted)
+- `--resultsUser` — MongoDB username for the results database
+- `--resultsPass` — MongoDB password for the results database
 
 ## Reserved Keys
 Variety expects keys to be well formed, not having any `.`s in them (MongoDB 2.4 allows dots in certain cases).  Also MongoDB uses the pseudo keys `XX` and keys corresponding to the regex `XX\d+XX.*` for use with arrays.  You can change the string `XX` in these patterns to whatever you like if there is a conflict in your database using the `arrayEscape` parameter.  
 
-    $ mongosh test --quiet --eval "var collection = 'users', arrayEscape = 'YY'" variety.js
+    $ variety test/users --arrayEscape YY
 
 ## Command Line Interface
 This NPM package publishes a built-in `variety` executable that resolves the bundled `variety.js`, prefers `mongosh` when available, and falls back to the legacy `mongo` shell.
@@ -409,7 +411,42 @@ First-class MongoDB URI support in the built-in CLI is being discussed in
 [@YNX940214](https://github.com/YNX940214)
 ([#152](https://github.com/variety/variety/issues/152)).
 
-Structured flags such as `--query` and `--sort` accept strict JSON. Connection flags such as `--host`, `--port`, `--username`, `--password`, `--authenticationDatabase`, and `--quiet` are passed through to the Mongo shell. `--eval` remains available as an escape hatch when you need to append raw JavaScript assignments.
+All Variety-specific options are available directly as CLI flags. Structured flags such as `--query`, `--sort`, and `--excludeSubkeys` accept strict JSON. Connection flags such as `--host`, `--port`, `--username`, `--password`, `--authenticationDatabase`, and `--quiet` are passed through to the Mongo shell. `--eval` remains available as an escape hatch when you need to append raw JavaScript assignments.
+
+#### Available flags
+
+| Flag | Type | Description |
+| --- | --- | --- |
+| `--query <json>` | JSON object | Filter documents analyzed |
+| `--sort <json>` | JSON object | Sort order for analyzed documents |
+| `--limit <number>` | integer ≥ 0 | Limit documents analyzed |
+| `--maxDepth <number>` | integer ≥ 0 | Maximum traversal depth |
+| `--maxExamples <number>` | integer ≥ 0 | Example values to collect per key |
+| `--lastValue` | boolean | Capture one representative value per key |
+| `--outputFormat <value>` | string | Output format: `ascii` (default) or `json` |
+| `--showArrayElements` | boolean | Include `tags.XX`-style keys in output |
+| `--compactArrayTypes` | boolean | Render `Array(Type)` instead of plain `Array` |
+| `--arrayEscape <value>` | string | Custom escape for array index keys (default `XX`) |
+| `--excludeSubkeys <json>` | JSON array | Dot-paths to skip (e.g. `'["a.b","c.d"]'`) |
+| `--logKeysContinuously` | boolean | Stream keys as they arrive |
+| `--slaveOk` | boolean | Allow secondary reads on a replica set |
+| `--plugins <path>` | string | Path to a plugin file; comma-separated for multiple |
+| `--persistResults` | boolean | Write results to MongoDB |
+| `--resultsDatabase <value>` | string | Target DB for persisted results |
+| `--resultsCollection <value>` | string | Target collection for persisted results |
+| `--resultsUser <value>` | string | MongoDB username for results database |
+| `--resultsPass <value>` | string | MongoDB password for results database |
+| `--quiet` | boolean | Pass `--quiet` through to the Mongo shell |
+| `--host <value>` | string | Mongo shell host |
+| `--port <number>` | integer ≥ 1 | Mongo shell port |
+| `--username <value>` | string | MongoDB username |
+| `--password <value>` | string | MongoDB password |
+| `--authenticationDatabase <value>` | string | Authentication database |
+| `--eval <javascript>` | string | Extra JavaScript appended after CLI assignments |
+| `--help` | — | Show usage |
+| `--version` | — | Show the Variety package version |
+
+Kebab-case aliases (e.g. `--output-format`, `--max-depth`, `--show-array-elements`) are accepted for all multi-word flags.
 
 When you invoke `variety` with no CLI arguments, the documented compatibility environment variables remain supported:
 

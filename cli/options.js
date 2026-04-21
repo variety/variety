@@ -17,11 +17,24 @@ const path = require('path');
 
 /**
  * @typedef {{
+ *   arrayEscape?: string,
+ *   compactArrayTypes?: boolean,
+ *   excludeSubkeys?: unknown[],
+ *   lastValue?: boolean,
  *   limit?: number,
+ *   logKeysContinuously?: boolean,
  *   maxDepth?: number,
  *   maxExamples?: number,
  *   outputFormat?: string,
+ *   persistResults?: boolean,
+ *   plugins?: string,
  *   query?: Record<string, unknown>,
+ *   resultsCollection?: string,
+ *   resultsDatabase?: string,
+ *   resultsPass?: string,
+ *   resultsUser?: string,
+ *   showArrayElements?: boolean,
+ *   slaveOk?: boolean,
  *   sort?: Record<string, unknown>,
  * }} VarietyOptions
  */
@@ -80,13 +93,45 @@ class CliUsageError extends Error {
 
 const COMPATIBILITY_ENV_KEYS = ['DB', 'EVAL_CMDS', 'VARIETYJS_DIR'];
 /** @type {Array<keyof VarietyOptions>} */
-const TARGET_OPTION_NAMES = ['query', 'sort', 'limit', 'maxDepth', 'outputFormat', 'maxExamples'];
+const TARGET_OPTION_NAMES = [
+  'query',
+  'sort',
+  'limit',
+  'maxDepth',
+  'outputFormat',
+  'maxExamples',
+  'lastValue',
+  'showArrayElements',
+  'compactArrayTypes',
+  'arrayEscape',
+  'excludeSubkeys',
+  'logKeysContinuously',
+  'slaveOk',
+  'persistResults',
+  'resultsDatabase',
+  'resultsCollection',
+  'resultsUser',
+  'resultsPass',
+  'plugins',
+];
 /** @type {Record<string, string>} */
 const FLAG_ALIASES = {
+  'array-escape': 'arrayEscape',
   'authentication-database': 'authenticationDatabase',
+  'compact-array-types': 'compactArrayTypes',
+  'exclude-subkeys': 'excludeSubkeys',
+  'last-value': 'lastValue',
+  'log-keys-continuously': 'logKeysContinuously',
   'max-depth': 'maxDepth',
   'max-examples': 'maxExamples',
   'output-format': 'outputFormat',
+  'persist-results': 'persistResults',
+  'results-collection': 'resultsCollection',
+  'results-database': 'resultsDatabase',
+  'results-pass': 'resultsPass',
+  'results-user': 'resultsUser',
+  'show-array-elements': 'showArrayElements',
+  'slave-ok': 'slaveOk',
 };
 
 /**
@@ -192,6 +237,29 @@ const parseBooleanValue = (optionName, rawValue) => {
   }
 
   throw new CliUsageError(`--${optionName} accepts only true or false when given a value.`);
+};
+
+/**
+ * @param {string} optionName
+ * @param {string} rawValue
+ * @returns {unknown[]}
+ */
+const parseJsonArray = (optionName, rawValue) => {
+  /** @type {unknown} */
+  let parsedValue;
+
+  try {
+    parsedValue = JSON.parse(rawValue);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new CliUsageError(`--${optionName} must be strict JSON. ${errorMessage}`);
+  }
+
+  if (!Array.isArray(parsedValue)) {
+    throw new CliUsageError(`--${optionName} must be a JSON array.`);
+  }
+
+  return parsedValue;
 };
 
 /**
@@ -366,6 +434,66 @@ const parseCliArguments = (argv) => {
       parsed.shellOptions.port = parsePositiveInteger(optionName, result.value);
       break;
     }
+    case 'lastValue':
+      parsed.varietyOptions.lastValue = parseBooleanValue(optionName, inlineValue);
+      break;
+    case 'showArrayElements':
+      parsed.varietyOptions.showArrayElements = parseBooleanValue(optionName, inlineValue);
+      break;
+    case 'compactArrayTypes':
+      parsed.varietyOptions.compactArrayTypes = parseBooleanValue(optionName, inlineValue);
+      break;
+    case 'logKeysContinuously':
+      parsed.varietyOptions.logKeysContinuously = parseBooleanValue(optionName, inlineValue);
+      break;
+    case 'slaveOk':
+      parsed.varietyOptions.slaveOk = parseBooleanValue(optionName, inlineValue);
+      break;
+    case 'persistResults':
+      parsed.varietyOptions.persistResults = parseBooleanValue(optionName, inlineValue);
+      break;
+    case 'arrayEscape': {
+      const result = readOptionValue(argv, index, inlineValue, optionName);
+      index = result.nextIndex;
+      parsed.varietyOptions.arrayEscape = result.value;
+      break;
+    }
+    case 'excludeSubkeys': {
+      const result = readOptionValue(argv, index, inlineValue, optionName);
+      index = result.nextIndex;
+      parsed.varietyOptions.excludeSubkeys = parseJsonArray(optionName, result.value);
+      break;
+    }
+    case 'plugins': {
+      const result = readOptionValue(argv, index, inlineValue, optionName);
+      index = result.nextIndex;
+      parsed.varietyOptions.plugins = result.value;
+      break;
+    }
+    case 'resultsDatabase': {
+      const result = readOptionValue(argv, index, inlineValue, optionName);
+      index = result.nextIndex;
+      parsed.varietyOptions.resultsDatabase = result.value;
+      break;
+    }
+    case 'resultsCollection': {
+      const result = readOptionValue(argv, index, inlineValue, optionName);
+      index = result.nextIndex;
+      parsed.varietyOptions.resultsCollection = result.value;
+      break;
+    }
+    case 'resultsUser': {
+      const result = readOptionValue(argv, index, inlineValue, optionName);
+      index = result.nextIndex;
+      parsed.varietyOptions.resultsUser = result.value;
+      break;
+    }
+    case 'resultsPass': {
+      const result = readOptionValue(argv, index, inlineValue, optionName);
+      index = result.nextIndex;
+      parsed.varietyOptions.resultsPass = result.value;
+      break;
+    }
     case 'eval': {
       const result = readOptionValue(argv, index, inlineValue, optionName);
       index = result.nextIndex;
@@ -486,7 +614,20 @@ const formatUsage = () => {
     '  --limit <number>                 Limit documents analyzed',
     '  --maxDepth <number>              Maximum traversal depth',
     '  --maxExamples <number>           Number of example values to collect per key',
+    '  --lastValue                      Capture one representative value per key',
     '  --outputFormat <value>           Output format, e.g. ascii or json',
+    '  --showArrayElements              Include tags.XX-style keys in output',
+    '  --compactArrayTypes              Render Array(Type) instead of plain Array',
+    '  --arrayEscape <value>            Custom escape for array index conflicts (default XX)',
+    '  --excludeSubkeys <json>          JSON array of dot-paths to skip',
+    '  --logKeysContinuously            Stream keys as they arrive',
+    '  --slaveOk                        Allow secondary reads on a replica set',
+    '  --plugins <path>                 Path to a plugin file (comma-separated for multiple)',
+    '  --persistResults                 Write results to MongoDB',
+    '  --resultsDatabase <value>        Target DB for persisted results',
+    '  --resultsCollection <value>      Target collection for persisted results',
+    '  --resultsUser <value>            MongoDB username for results database',
+    '  --resultsPass <value>            MongoDB password for results database',
     '  --quiet                          Pass --quiet through to the Mongo shell',
     '  --host <value>                   Mongo shell host',
     '  --port <number>                  Mongo shell port',
@@ -509,5 +650,6 @@ module.exports = {
   formatUsage,
   hasCompatibilityEnv,
   parseCliArguments,
+  parseJsonArray,
   stripMatchingOuterQuotes,
 };
