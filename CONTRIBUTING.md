@@ -96,6 +96,17 @@ build failures fall back to a clean `docker build --no-cache` rebuild so CI
 behavior remains predictable. Local `npm run test:container` runs keep the clean
 rebuild behavior by default.
 
+**Required CI Gate and markdown-only pull requests:** The `changes` job detects
+pull requests that only modify existing `.md` files. For those PRs, CI still
+runs markdown linting, but the Dockerized test matrix and Node.js 24 smoke test
+are skipped at the job level so GitHub shows those jobs as skipped rather than
+successful. The always-running `Required CI Gate` job is the branch-protection
+status that should be required instead of the individual test-matrix and smoke
+test statuses: it passes only when either full CI passed, or the change is
+markdown-only and the test jobs were intentionally skipped. This replaces the
+workaround from #295, which satisfied required matrix check names by reporting
+green test jobs even when the test commands did not run.
+
 GitHub Actions also runs CodeQL and OpenSSF Scorecard security scans. CodeQL
 runs on every push to `main`, every pull request targeting `main`, weekly on
 `main`, and on manual dispatch so SAST coverage stays attached to all commits.
