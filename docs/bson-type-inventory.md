@@ -1,0 +1,244 @@
+# MongoDB BSON Type Inventory
+
+Retrieved: 2026-04-21
+
+This document inventories the BSON value types that MongoDB can store or has
+historically recognized, including deprecated types, `$type` aliases, binary
+subtypes, and known nested interpretation schemes. It intentionally separates
+storage-level BSON from shell constructors, Extended JSON representations,
+driver wrapper classes, and query/operator-only aliases.
+
+## Scope Notes
+
+- "Storage-level BSON type" means an element type byte from the BSON
+  specification, plus the payload shape associated with that type.
+- BSON `Binary` (`binData`, type `5`) has its own subtype byte. This is the
+  only top-level BSON type whose subtypes are formally part of the BSON value
+  payload.
+- Some BSON values have internal structure, such as ObjectId's 12 bytes,
+  Timestamp's two 32-bit halves, regular expression options, and vector binary
+  metadata. This document lists those structures separately so they are not
+  mistaken for top-level types.
+- Shell helpers such as `ObjectId()`, `ISODate()`, `NumberLong()`,
+  `Decimal128()`, `Timestamp()`, `BinData()`, and `UUID()` are constructors or
+  wrappers. They are not additional stored BSON types.
+- Extended JSON tokens such as `$oid`, `$date`, `$numberLong`, `$binary`,
+  `$regularExpression`, and `$numberDecimal` are JSON representations used to
+  preserve BSON type information. They are not additional stored BSON types.
+- BSON type code `0` is not a value type. In the BSON grammar, a null byte
+  terminates a document's element list.
+
+## Variety Status Legend
+
+The "Variety" column summarizes current Variety support status from local code
+and test evidence inspected on 2026-04-21.
+
+| Status | Meaning |
+| --- | --- |
+| Tested | A test asserts Variety output for this entry. |
+| Tested merged | A test exists, but Variety reports this under a broader or legacy label. |
+| Partial | Some important cases in this row are tested; others are not. |
+| Untested | Code may handle it, but no test-backed support claim is made here. |
+| Unmapped | Variety does not currently assign this entry a distinct, intentional label; values may fall through to `BinData-undefined`, `Object`, or another generic result instead of being recognized as this type. |
+| Out of scope | Not a storage type or not something Variety should directly classify. |
+
+Primary local evidence: [V1] tests most BSON-wrapper recognition; [V2], [V3],
+and [V4] cover common application values and arrays; [V5] defines the current
+type mapping. Current tests recognize BSON `Double` and `Int32` as Variety
+`Number`, and BSON JavaScript-with-scope as Variety `Code`.
+
+## Top-Level BSON Value Types
+
+The following list is the complete storage-level element type inventory from
+the BSON 1.1 grammar and MongoDB's BSON Types reference. The "query alias"
+column is the string alias accepted by MongoDB `$type` where documented.
+
+| Type code | BSON value type | Query alias | Status | Variety | Storage shape and notes | Sources |
+| --- | --- | --- | --- | --- | --- | --- |
+| `-1` | Min key | `minKey` | Current | Tested | Special value that compares lower than every other possible BSON element value. No payload beyond the element type and field name. | [S1], [S2] |
+| `1` | Double | `double` | Current | Tested merged | 64-bit IEEE 754 binary floating point. Variety's integration test currently observes this as `Number`. | [S1], [S2] |
+| `2` | String | `string` | Current | Tested | Length-prefixed UTF-8 string. MongoDB drivers generally convert language strings to UTF-8. | [S1], [S2] |
+| `3` | Object / embedded document | `object` | Current | Tested | Embedded BSON document. A top-level MongoDB record is also a BSON document, but it is not preceded by an element type byte unless nested as a value. | [S1], [S2] |
+| `4` | Array | `array` | Current | Tested | Encoded as a BSON document whose keys are sequential integer strings starting at `0`. | [S1], [S2] |
+| `5` | Binary data | `binData` | Current | Partial | Length-prefixed byte array plus a binary subtype byte. Generic and standard UUID binary values are tested; see "BSON Binary Subtypes" for subtype coverage. | [S1], [S2] |
+| `6` | Undefined | `undefined` | Deprecated | Untested | Historical undefined value with no payload. It remains a recognized BSON type and `$type` alias, but should not be used for new data. | [S1], [S2] |
+| `7` | ObjectId | `objectId` | Current | Tested | 12-byte object identifier. See "Internal Structures and Interpretation Schemes". | [S1], [S2] |
+| `8` | Boolean | `bool` | Current | Tested | One byte: `0` for false, `1` for true. | [S1], [S2] |
+| `9` | Date / UTC datetime | `date` | Current | Tested | Signed 64-bit integer containing milliseconds since the Unix epoch. Before MongoDB 2.0, Date values were incorrectly interpreted as unsigned for some sort, range query, and index behavior. | [S1], [S2] |
+| `10` | Null | `null` | Current | Tested | Null value with no payload. Distinct from a missing field and from deprecated Undefined. | [S1], [S2], [S4] |
+| `11` | Regular expression | `regex` | Current | Tested | Two cstrings: pattern and options. See regex options below. | [S1], [S2] |
+| `12` | DBPointer | `dbPointer` | Deprecated | Unmapped | Historical database pointer: namespace string plus a 12-byte ObjectId. Deprecated. Do not confuse this BSON type with the later DBRef convention, which is a normal document shape rather than a BSON type. | [S1], [S2] |
+| `13` | JavaScript code | `javascript` | Current BSON type, operationally discouraged | Untested | JavaScript source code stored as a string. Server-side JavaScript functions are deprecated starting in MongoDB 8.0, but this BSON storage type remains in the BSON type inventory. | [S1], [S2], [S10] |
+| `14` | Symbol | `symbol` | Deprecated | Untested | Historical symbol value stored as a string. Deprecated. | [S1], [S2] |
+| `15` | JavaScript code with scope | `javascriptWithScope` | Deprecated | Tested merged | Code-with-scope value containing total length, JavaScript source string, and a scope document. Variety's test reports this as `Code`. `$where` no longer supports this type; its use with `$where` was deprecated since MongoDB 4.2.1. `mapReduce` function support was removed in MongoDB 4.4 after the same deprecation. | [S1], [S2], [S9], [S10] |
+| `16` | 32-bit integer | `int` | Current | Tested merged | Signed 32-bit integer. Variety's integration test currently observes this as `Number`. | [S1], [S2] |
+| `17` | Timestamp | `timestamp` | Current, mostly internal | Tested | 64-bit timestamp used internally by MongoDB replication and sharding. MongoDB compares the time portion before the increment portion. Use BSON Date for application timestamps in most cases. | [S1], [S2] |
+| `18` | 64-bit integer | `long` | Current | Tested | Signed 64-bit integer. Variety reports this as `NumberLong`. | [S1], [S2] |
+| `19` | Decimal128 | `decimal` | Current, introduced with MongoDB 3.4 | Tested | 128-bit IEEE 754-2008 decimal floating point. MongoDB documents 34 decimal digits of precision and an exponent range of `-6143` to `+6144`. Variety reports this as `Decimal128`. | [S1], [S2], [S8] |
+| `127` | Max key | `maxKey` | Current | Tested | Special value that compares higher than every other possible BSON element value. No payload beyond the element type and field name. | [S1], [S2] |
+
+## BSON Binary Subtypes
+
+Binary subtype is a one-byte unsigned value inside a BSON `Binary` value. The
+BSON specification defines subtype `0x80` through `0xFF` as user-defined. The
+MongoDB manual currently summarizes this as custom data at `128`; the
+specification is the broader authority for the whole user-defined range.
+
+| Subtype | Name | Status | Variety | Meaning and caveats | Sources |
+| --- | --- | --- | --- | --- | --- |
+| `0` / `0x00` | Generic binary | Current | Tested | Default generic binary subtype for arbitrary bytes. Variety reports this as `BinData-generic`. | [S1], [S2] |
+| `1` / `0x01` | Function | Current / historical | Untested | Function data. Rare in modern application schemas. Variety has a mapping for `BinData-function`, but no current test case. | [S1], [S2] |
+| `2` / `0x02` | Binary (old) | Deprecated | Untested | Old binary format, deprecated in favor of subtype `0`. Its payload nests an additional `int32` length before the bytes. Variety has a mapping for `BinData-old`, but no current test case. | [S1], [S2] |
+| `3` / `0x03` | UUID (old) | Deprecated | Untested | Legacy UUID storage. Deprecated in favor of subtype `4`. The bytes do not identify which legacy driver byte order was used. Variety maps this to `BinData-UUID`, but no current test case covers subtype `3`. See "Legacy UUID Interpretations". | [S1], [S2], [S7] |
+| `4` / `0x04` | UUID | Current | Tested | Standard UUID binary subtype. Drivers use this for standardized UUID byte order. Variety reports this as `BinData-UUID`. | [S1], [S2], [S7] |
+| `5` / `0x05` | MD5 | Current / historical | Untested | MD5 binary subtype. Mostly encountered in older schemas or protocol/tooling contexts. Variety has a mapping for `BinData-MD5`, but no current test case. | [S1], [S2] |
+| `6` / `0x06` | Encrypted BSON value | Current | Unmapped | Encrypted BSON value, used by MongoDB encryption features. | [S1], [S2] |
+| `7` / `0x07` | Compressed BSON column / compressed time series data | Current | Unmapped | BSON spec calls this "Compressed BSON column"; MongoDB docs describe it as compressed time series data and mark it new in MongoDB 5.2. The format uses delta, delta-of-delta, run-length encoding, and sparse-array missing-value encoding. | [S1], [S2] |
+| `8` / `0x08` | Sensitive | Current | Unmapped | Sensitive data such as a key or secret. MongoDB logs a placeholder rather than the literal binary value. | [S1], [S2] |
+| `9` / `0x09` | Vector | Current | Unmapped | Dense numeric vector storage. The binary payload starts with vector metadata bytes before the packed elements. See "Vector Subtype 9 Dtypes". | [S1], [S2], [S6] |
+| `128` / `0x80` through `255` / `0xFF` | User-defined / custom | Current | Untested | User-defined binary subtype range. MongoDB's BSON Types page lists `128` as custom data; the BSON spec reserves the full `128` through `255` range for user-defined subtypes. Variety maps subtype `0x80` to `BinData-user`, but does not map the rest of the user-defined range and has no current test case. | [S1], [S2] |
+
+## Vector Subtype 9 Dtypes
+
+Binary subtype `9` is itself a BSON `Binary` value. Its first payload byte is a
+vector dtype, the second payload byte is padding metadata, and the remaining
+bytes are the packed vector values. These dtype bytes are not BSON element type
+codes and are not valid outside binary subtype `9`.
+
+The vector subtype specification is accepted, says it is not tied to a minimum
+MongoDB server version, and records acceptance on 2024-11-01 with later
+validation updates through 2025-06-23.
+
+| Dtype byte | Alias | Bits per vector element | Variety | Meaning | Sources |
+| --- | --- | --- | --- | --- | --- |
+| `0x03` | `INT8` | 8 | Unmapped | Signed 8-bit integer vector elements in the range `-128` through `127`. | [S6] |
+| `0x10` | `PACKED_BIT` | 1 | Unmapped | Binary quantized vector. Logical values are bits, packed into bytes. The padding byte says how many least-significant bits in the final byte should be ignored. | [S6] |
+| `0x27` | `FLOAT32` | 32 | Unmapped | 32-bit floating point vector elements. Payload length after metadata must be a multiple of 4 bytes. | [S6] |
+
+## Legacy UUID Interpretations
+
+Legacy UUIDs are BSON `Binary` subtype `3`. The subtype does not encode which
+legacy representation was used, so the following are driver interpretation
+schemes, not additional stored subtypes. New data should use subtype `4`
+standard UUIDs.
+
+| Representation | Stored subtype | Variety | Byte order / behavior | Sources |
+| --- | --- | --- | --- | --- |
+| `STANDARD` | `4` | Tested | Standard UUID representation using BSON binary subtype `4`. Variety reports this as `BinData-UUID`. | [S7] |
+| `PYTHON_LEGACY` | `3` | Untested | Legacy PyMongo representation. Uses the standard RFC 4122 byte order but stores it under old UUID subtype `3`. | [S7] |
+| `JAVA_LEGACY` | `3` | Untested | Legacy Java driver byte order under old UUID subtype `3`. | [S7] |
+| `CSHARP_LEGACY` | `3` | Untested | Legacy .NET/C# driver byte order under old UUID subtype `3`. | [S7] |
+| `UNSPECIFIED` | Not a storage format | Out of scope | Driver configuration state: do not automatically encode native UUIDs, and decode UUID binary values as raw Binary objects unless a representation is supplied. | [S7] |
+
+## Internal Structures and Interpretation Schemes
+
+These structures are part of BSON value payloads or MongoDB interpretation
+rules. They are useful when building type detection, display, migration, or
+round-trip tests, but they are not extra top-level BSON types.
+
+| BSON value | Variety | Internal structure | Sources |
+| --- | --- | --- | --- |
+| Array | Tested | Encoded as a BSON document whose field names are sequential integer strings beginning with `0`. | [S1] |
+| Binary old, subtype `2` | Untested | The binary payload itself contains an `int32` length followed by bytes. This is in addition to the outer binary length field. | [S1] |
+| Boolean | Tested | Single byte: `0` means false and `1` means true. | [S1] |
+| Code with scope, type `15` | Tested merged | Total byte length, JavaScript source string, and scope document mapping identifiers to values. Variety reports this as `Code`. | [S1] |
+| DBPointer, type `12` | Unmapped | Namespace string and 12-byte ObjectId. | [S1] |
+| Date, type `9` | Tested | Signed 64-bit integer containing UTC milliseconds since the Unix epoch. MongoDB notes old pre-2.0 unsigned interpretation bugs for dates before 1970. | [S1], [S2] |
+| Decimal128, type `19` | Tested | IEEE 754-2008 128-bit decimal floating point. MongoDB stores Decimal128 using binary integer decimal encoding and requires exact value preservation on round trip. | [S2], [S8] |
+| ObjectId, type `7` | Tested | 12 bytes: 4-byte timestamp in seconds, 5-byte process-random value, and 3-byte counter. MongoDB notes ObjectIds are approximately ordered but not strictly monotonic. | [S2] |
+| Regular expression, type `11` | Tested | Pattern cstring and options cstring. Options must be stored alphabetically. Supported option characters are `i`, `m`, `s`, `x`, and `u`. | [S1] |
+| String, type `2` | Tested | `int32` byte length, UTF-8 bytes, and trailing null byte. | [S1], [S2] |
+| Timestamp, type `17` | Tested | Serialized as a BSON `uint64`. BSON spec describes the first serialized 4 bytes as increment and the second as timestamp; MongoDB describes the logical value as high 32 bits `time_t` and low 32 bits ordinal, and compares time before ordinal. | [S1], [S2] |
+| Vector binary, subtype `9` | Unmapped | First byte is dtype, second byte is padding, and the rest is packed vector data using little-endian format. | [S6] |
+
+## Query and Operator Aliases That Are Not Storage Types
+
+| Alias or output | Where it appears | Variety | Meaning | Sources |
+| --- | --- | --- | --- | --- |
+| `$type: <number>` | Query predicate `$type` | Out of scope | Query `$type` accepts either the numeric BSON type code or string alias. | [S3] |
+| `$type: "number"` | Query predicate `$type`; BSON Types reference | Out of scope | Convenience alias matching numeric BSON values: double, 32-bit integer, 64-bit integer, and Decimal128. It is not a stored BSON type. | [S2], [S3] |
+| `$isNumber` | Aggregation expression | Out of scope | Returns true for BSON integer, decimal, double, or long values. It is a predicate/operator, not a stored type. | [S2], [S4] |
+| `"missing"` | Aggregation expression `$type` output | Out of scope | Returned by aggregation `$type` when the referenced field is missing. It is not BSON Null, not deprecated Undefined, and not a stored BSON type. | [S4] |
+
+## Common Non-Types To Keep Separate
+
+| Looks like a type | Classification | Variety | Why it is not another storage type | Sources |
+| --- | --- | --- | --- | --- |
+| `ObjectId()`, `ISODate()`, `NumberInt()`, `NumberLong()`, `Decimal128()`, `Timestamp()`, `BinData()`, `UUID()` | Shell/helper constructors or wrappers | Out of scope | They create or display BSON values from the storage-level types above. The function names are not additional BSON element type codes. | [S2], [S10] |
+| Extended JSON keys such as `$oid`, `$date`, `$binary`, `$numberLong`, `$numberDecimal`, `$regularExpression` | JSON interchange representations | Out of scope | JSON cannot directly represent every BSON type, so Extended JSON adds representations that preserve type information. These are serialized JSON forms, not extra BSON storage types. | [S5] |
+| Canonical Extended JSON vs relaxed Extended JSON | Representation modes | Out of scope | Canonical mode emphasizes type preservation; relaxed mode emphasizes readability and can lose type information during conversion back to BSON. Neither mode changes the BSON type inventory. | [S5] |
+| DBRef | Document convention / helper shape | Tested | DBRef is conventionally represented as an ordinary document. It is distinct from deprecated BSON DBPointer type `12`. Variety recognizes the driver `DBRef` wrapper and reports `DBRef`. | [S1], [S2], [S10] |
+| GeoJSON, legacy coordinate pairs, dates encoded as strings, application enums | Application schema conventions | Out of scope | They are stored using ordinary BSON object, array, string, number, or other top-level BSON types. | [S1], [S2] |
+
+## Historical and Version Notes
+
+| Item | Variety | Version note | Sources |
+| --- | --- | --- | --- |
+| Deprecated top-level BSON types | Partial | Undefined (`6`), DBPointer (`12`), Symbol (`14`), and JavaScript code with scope (`15`) are still listed and recognized, but deprecated. Only JavaScript code with scope has current Variety test coverage among these deprecated top-level entries. | [S1], [S2] |
+| Date signedness | Tested | Before MongoDB 2.0, Date values were incorrectly interpreted as unsigned integers in some sort, range query, and index behavior. Variety has current Date tests, but no historical pre-2.0 behavioral test. | [S2] |
+| Decimal128 | Tested | MongoDB 3.4 introduced BSON Decimal128, type code `19` / `0x13`. | [S8] |
+| Binary subtype `7` | Unmapped | MongoDB's BSON Types page marks compressed time series data as new in MongoDB 5.2. BSON spec names the subtype "Compressed BSON column". | [S1], [S2] |
+| JavaScript code with scope in server-side JavaScript operations | Tested merged | Use of type `15` for `$where` and `mapReduce` functions was deprecated since MongoDB 4.2.1. MongoDB 4.4 removed `mapReduce` support for type `15`; current `$where` docs say `$where` no longer supports it. Variety reports code-with-scope values as `Code`. | [S9], [S10] |
+| Server-side JavaScript functions | Out of scope | Starting in MongoDB 8.0, server-side JavaScript functions such as `$accumulator`, `$function`, and `$where` are deprecated. This is an operational JavaScript execution caveat, not the removal of BSON type `13` from the storage inventory. | [S10] |
+| Vector binary subtype `9` | Unmapped | The vector subtype specification is accepted, has no minimum server version, and records acceptance on 2024-11-01. It has dtype validation updates through 2025-06-23. | [S6] |
+
+## Source Register
+
+- [S1] BSON (Binary JSON), "Specification Version 1.1",
+  <https://bsonspec.org/spec.html>. Retrieved 2026-04-21. Essential metadata:
+  specification version 1.1.
+- [S2] MongoDB Manual, "BSON Types", current Database Manual 8.2 page,
+  <https://www.mongodb.com/docs/manual/reference/bson-types/>. Retrieved
+  2026-04-21. Essential metadata: current docs page labels the Database Manual
+  as 8.2 current.
+- [S3] MongoDB Manual, "`$type` (query predicate operator)",
+  <https://www.mongodb.com/docs/manual/reference/operator/query/type/>.
+  Retrieved 2026-04-21. Essential metadata: current Database Manual 8.2 page.
+- [S4] MongoDB Manual, "`$type` (expression operator)",
+  <https://www.mongodb.com/docs/manual/reference/operator/aggregation/type/>.
+  Retrieved 2026-04-21. Essential metadata: current Database Manual 8.2 page.
+- [S5] MongoDB Manual, "MongoDB Extended JSON (v2)",
+  <https://www.mongodb.com/docs/manual/reference/mongodb-extended-json/>.
+  Retrieved 2026-04-21. Essential metadata: current Database Manual 8.2 page.
+- [S6] MongoDB specifications repository, "BSON Binary Subtype 9 - Vector",
+  <https://github.com/mongodb/specifications/blob/master/source/bson-binary-vector/bson-binary-vector.md>.
+  Retrieved 2026-04-21. Essential metadata: status Accepted; minimum server
+  version N/A; GitHub page showed 272 lines; changelog included acceptance on
+  2024-11-01 and validation updates through 2025-06-23.
+- [S7] MongoDB PyMongo Driver v4.7 documentation, "Universally Unique IDs
+  (UUIDs)",
+  <https://www.mongodb.com/docs/languages/python/pymongo-driver/v4.7/data-formats/uuid/>.
+  Retrieved 2026-04-21. Essential metadata: documents subtype `3` historical
+  UUID byte-order differences and subtype `4` standard UUID behavior.
+- [S8] MongoDB Specifications, "BSON Decimal128",
+  <https://specifications.readthedocs.io/en/latest/bson-decimal128/decimal128/>.
+  Retrieved 2026-04-21. Essential metadata: status Accepted; minimum server
+  version 3.4.
+- [S9] MongoDB Manual v4.4, "Compatibility Changes in MongoDB 4.4",
+  <https://www.mongodb.com/docs/v4.4/release-notes/4.4-compatibility/>.
+  Retrieved 2026-04-21. Essential metadata: archived v4.4 documentation,
+  explicitly marked no longer supported by MongoDB docs.
+- [S10] MongoDB Manual, "`$where` (query predicate operator)",
+  <https://www.mongodb.com/docs/manual/reference/operator/query/where/>.
+  Retrieved 2026-04-21. Essential metadata: current Database Manual 8.2 page;
+  documents server-side JavaScript deprecation starting MongoDB 8.0 and
+  `$where` support for BSON String and JavaScript but not JavaScript with scope.
+- [V1] Variety local test file,
+  [test/cases/analysis/DatatypeRecognitionTest.js](../test/cases/analysis/DatatypeRecognitionTest.js).
+  Inspected in the current working tree on 2026-04-21. Essential metadata:
+  integration test for current BSON-wrapper recognition.
+- [V2] Variety local test file,
+  [test/cases/analysis/BasicAnalysisTest.js](../test/cases/analysis/BasicAnalysisTest.js).
+  Inspected in the current working tree on 2026-04-21. Essential metadata:
+  integration test for common seed-data type recognition and value examples.
+- [V3] Variety local fixture file,
+  [test/fixtures/seed-data.js](../test/fixtures/seed-data.js). Inspected in the
+  current working tree on 2026-04-21. Essential metadata: seed data used by
+  common analysis, formatter, persistence, and plugin tests.
+- [V4] Variety local test file,
+  [test/cases/analysis/ShowArrayElementsTest.js](../test/cases/analysis/ShowArrayElementsTest.js).
+  Inspected in the current working tree on 2026-04-21. Essential metadata:
+  array element and nested-array analysis tests.
+- [V5] Variety local source file, [core/analyzer.js](../core/analyzer.js).
+  Inspected in the current working tree on 2026-04-21. Essential metadata:
+  current Variety type-detection and binary-subtype mapping implementation.
