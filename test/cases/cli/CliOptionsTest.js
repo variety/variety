@@ -292,4 +292,14 @@ describe('CLI option parsing', () => {
     const plan = createExecutionPlan(['test/users'], {});
     assert.equal(evalCodeOf(plan), 'var collection = "users"');
   });
+
+  it('emits lastValue when the flag is passed', () => {
+    const plan = createExecutionPlan(['test/orders', '--last-value'], {});
+    assert.equal(evalCodeOf(plan), 'var collection = "orders"; var lastValue = true');
+  });
+
+  it('accepts --lastValue camelCase alias', () => {
+    const plan = createExecutionPlan(['test/orders', '--lastValue=false'], {});
+    assert.equal(evalCodeOf(plan), 'var collection = "orders"; var lastValue = false');
+  });
 });
