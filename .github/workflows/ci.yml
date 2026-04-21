@@ -80,7 +80,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mongodb-version: ['5.0', '7.0', '8.0']
+        mongodb-version: ['8.2', '8.0', '7.0', '5.0']
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
@@ -103,7 +103,7 @@ jobs:
           DOCKER_BUILD_CACHE_SCOPE: variety-test-${{ runner.os }}-${{ runner.arch }}-mongodb-${{ matrix.mongodb-version }}-node-22
 
   test-smoke:
-    name: Smoke Test (Node 24, MongoDB 8.0)
+    name: Smoke Test (Node 24, MongoDB 8.2)
     needs: changes
     if: needs.changes.outputs.only-markdown != 'true'
     runs-on: ubuntu-latest
@@ -123,10 +123,10 @@ jobs:
       - run: mkdir -p docker/Dockerfiles
       - run: npm run test:container
         env:
-          MONGODB_VERSION: '8.0'
+          MONGODB_VERSION: '8.2'
           NODEJS_VERSION: '24'
           DOCKER_BUILD_CACHE: gha
-          DOCKER_BUILD_CACHE_SCOPE: variety-test-${{ runner.os }}-${{ runner.arch }}-mongodb-8.0-node-24
+          DOCKER_BUILD_CACHE_SCOPE: variety-test-${{ runner.os }}-${{ runner.arch }}-mongodb-8.2-node-24
 
   required-ci-gate:
     name: Required CI Gate
