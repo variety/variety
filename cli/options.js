@@ -47,6 +47,7 @@ const path = require('path');
  * @typedef {{
  *   extraEval: string[],
  *   help?: boolean,
+ *   pluginEntries: string[],
  *   shellOptions: ShellOptions,
  *   target: TargetSelection | null,
  *   varietyOptions: VarietyOptions,
@@ -301,6 +302,7 @@ const parseCliArguments = (argv) => {
   /** @type {ParsedCliArguments} */
   const parsed = {
     extraEval: [],
+    pluginEntries: [],
     shellOptions: {},
     target: null,
     varietyOptions: {},
@@ -460,6 +462,12 @@ const parseCliArguments = (argv) => {
       parsed.extraEval.push(result.value);
       break;
     }
+    case 'plugin': {
+      const result = readOptionValue(argv, index, inlineValue, optionName);
+      index = result.nextIndex;
+      parsed.pluginEntries.push(result.value);
+      break;
+    }
     default:
       throw new CliUsageError(`Unknown option --${rawOptionName}.`);
     }
@@ -496,6 +504,13 @@ const buildEvalCode = (parsedCliArguments) => {
       statements.push(renderVarAssignment(name, parsedCliArguments.varietyOptions[name]));
     }
   });
+
+  if (parsedCliArguments.pluginEntries.length > 0) {
+    const pluginsValue = parsedCliArguments.pluginEntries
+      .map((entry) => entry.replace('?', '|'))
+      .join(',');
+    statements.push(renderVarAssignment('plugins', pluginsValue));
+  }
 
   return statements.concat(parsedCliArguments.extraEval).join('; ');
 };
@@ -591,6 +606,7 @@ const formatUsage = () => {
     '  --username <value>               MongoDB username',
     '  --password <value>               MongoDB password',
     '  --authenticationDatabase <value> Authentication database',
+    '  --plugin <path[?cfg]>            Plugin file to load; repeat for multiple plugins',
     '  --eval <javascript>              Extra JavaScript appended after CLI assignments',
     '  --help                           Show this help',
     '  --version                        Show the Variety package version',
