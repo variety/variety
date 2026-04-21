@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# gh-pages branch has no npm project — nothing to lint.
+if [ ! -f package.json ]; then
+  echo "→ No package.json — skipping all tooling checks"
+  exit 0
+fi
+
 # If every staged change is a modification (not add/delete) to an existing .md
 # file, skip the non-Markdown checks — they have nothing to verify.
 staged=$(git diff --cached --name-status)
