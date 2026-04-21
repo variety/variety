@@ -71,7 +71,8 @@ fi
 # ---------------------------------------------------------------------------
 echo
 echo "=== DNSSEC ==="
-DS=$(dig +short @"$NS" DS "$DOMAIN")
+# DS record lives in the parent (.org) zone — query recursively, not @domain-NS
+DS=$(dig +short DS "$DOMAIN")
 if [ -n "$DS" ]; then
   ok "DS record present in parent zone: $DS"
 else
@@ -87,12 +88,12 @@ else
   fail "DNSKEY incomplete (KSK: $KSK_COUNT, ZSK: $ZSK_COUNT)"
 fi
 
-# Validate the chain with AD flag
-AD=$(dig +dnssec A "$DOMAIN" | grep -c 'flags:.*ad' || true)
+# Validate the chain using Cloudflare's DNSSEC-validating resolver (1.1.1.1)
+AD=$(dig +dnssec @1.1.1.1 A "$DOMAIN" | grep -c 'flags:.*ad' || true)
 if [ "$AD" -ge 1 ]; then
-  ok "DNSSEC validation successful (AD flag set)"
+  ok "DNSSEC validation successful (AD flag set by 1.1.1.1)"
 else
-  fail "AD flag not set — DNSSEC chain may be broken or resolver does not validate"
+  fail "AD flag not set by 1.1.1.1 — DNSSEC chain may be broken"
 fi
 
 # ---------------------------------------------------------------------------
