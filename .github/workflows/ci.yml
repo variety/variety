@@ -127,3 +127,62 @@ jobs:
           NODEJS_VERSION: '24'
           DOCKER_BUILD_CACHE: gha
           DOCKER_BUILD_CACHE_SCOPE: variety-test-${{ runner.os }}-${{ runner.arch }}-mongodb-8.0-node-24
+
+  required-ci-gate:
+    name: Required CI Gate
+    needs: [changes, lint, test, test-smoke]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate required CI result
+        env:
+          ONLY_MARKDOWN: ${{ needs.changes.outputs.only-markdown }}
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          LINT_RESULT: ${{ needs.lint.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+          SMOKE_RESULT: ${{ needs.test-smoke.result }}
+        run: |
+          {
+            echo "### Required CI Gate"
+            echo
+            echo "| Check | Result |"
+            echo "| --- | --- |"
+            echo "| Detect changes | $CHANGES_RESULT |"
+            echo "| Lint | $LINT_RESULT |"
+            echo "| Test matrix | $TEST_RESULT |"
+            echo "| Smoke test | $SMOKE_RESULT |"
+            echo
+            echo "only-markdown: \`$ONLY_MARKDOWN\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$CHANGES_RESULT" != "success" ]; then
+            echo "Detect changes did not succeed." >&2
+            exit 1
+          fi
+
+          if [ "$LINT_RESULT" != "success" ]; then
+            echo "Lint did not succeed." >&2
+            exit 1
+          fi
+
+          if [ "$ONLY_MARKDOWN" = "true" ]; then
+            if [ "$TEST_RESULT" != "skipped" ] || [ "$SMOKE_RESULT" != "skipped" ]; then
+              echo "Markdown-only changes should skip test jobs; got test=$TEST_RESULT smoke=$SMOKE_RESULT." >&2
+              exit 1
+            fi
+
+            echo "Markdown-only change: tests were intentionally skipped." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if [ "$TEST_RESULT" != "success" ]; then
+            echo "Test matrix did not succeed." >&2
+            exit 1
+          fi
+
+          if [ "$SMOKE_RESULT" != "success" ]; then
+            echo "Smoke test did not succeed." >&2
+            exit 1
+          fi
+
+          echo "Full CI passed." >> "$GITHUB_STEP_SUMMARY"
