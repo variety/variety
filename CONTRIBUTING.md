@@ -141,6 +141,8 @@ Otherwise all of the following run:
 - `npm run lint:spdx` — verifies `SPDX-License-Identifier: MIT` headers in all tracked source files
 - `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for `bin/variety`, `cli/**/*.js`, `.eslint.config.js`, `build.js`, and Node-side test code under `test`
 
+Markdownlint allows only one inline HTML element, `<br />`, for intentional line breaks inside compact Markdown tables.
+
 ### ESLint Rulesets
 
 #### Shared Baseline

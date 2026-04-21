@@ -21,6 +21,14 @@ _“This code saved me at least an hour of work, so least i could do was spend a
 
 Also featured on the [official MongoDB blog](https://web.archive.org/web/20231002225312/http://www.mongodb.com:80/blog/post/meet-variety-a-schema-analyzer-for-mongodb).
 
+## Tested Runtimes
+
+| Runtime | Tested Release Lines |
+| --- | --- |
+| MongoDB | latest 8.2.x, 8.0.x, 7.0.x, and 5.0.x |
+| MongoDB shell | `mongosh`: MongoDB >= 6.0<br />`mongo`: MongoDB < 6.0 |
+| Node.js | latest 22.x, plus a latest 24.x smoke test |
+
 ## An Easy Example
 
 We'll make a collection:
