@@ -232,7 +232,7 @@ _Thanks to [@humanitiesclinic](https://github.com/humanitiesclinic) for suggesti
 
 ## Output Formats and Plugins
 
-Variety has a built-in formatter registry and a plugin system, both of which use the same `formatResults` interface. Built-in formatters are selected by name; plugins override the built-in entirely when a `formatResults` hook is provided.
+Variety ships two built-in output formats. For custom output, plugins can supply their own formatter.
 
 ### Built-in Formats
 
@@ -251,40 +251,15 @@ Passing an unrecognised value throws an error listing the valid options.
 
 ### Plugins
 
-A plugin is a `.js` file that exports a plain object. Variety calls lifecycle hooks on it at specific points during execution:
+A plugin is a `.js` file that exports a plain object with lifecycle hooks. Load one with the `plugins` option (comma-separated for multiple):
 
-| Hook | When called | Expected return value |
-| --- | --- | --- |
-| `init(config)` | Once, after the plugin is loaded | — |
-| `onConfig(config)` | Once, after Variety's config is resolved | — |
-| `formatResults(results)` | After analysis completes, instead of the built-in formatter | String to print |
+    $ mongosh test --quiet --eval "var collection='users', plugins='/path/to/my-plugin.js'" variety.js
 
-Any hook may be omitted. A plugin that only defines `formatResults` is a custom output formatter; one that only defines `onConfig` can act as a post-processing step without changing the output.
+Pass per-plugin configuration by appending `|key=value` after the path:
 
-**Example: CSV plugin**
+    $ mongosh test --quiet --eval "var collection='users', plugins='/path/to/my-plugin.js|delimiter=;'" variety.js
 
-```js
-// my-csv-plugin.js
-module.exports = {
-  formatResults(results) {
-    const headers = ['key', 'types', 'occurrences', 'percents'];
-    const rows = results.map((row) =>
-      [row._id.key, Object.keys(row.value.types).join('+'), row.totalOccurrences, row.percentContaining].join(',')
-    );
-    return [headers.join(','), ...rows].join('\n');
-  },
-};
-```
-
-Load it with the `plugins` option (comma-separated for multiple):
-
-    $ mongosh test --quiet --eval "var collection='users', plugins='/path/to/my-csv-plugin.js'" variety.js
-
-Pass per-plugin configuration by appending `|key=value&key=value` after the path:
-
-    $ mongosh test --quiet --eval "var collection='users', plugins='/path/to/my-csv-plugin.js|delimiter=;'" variety.js
-
-The plugin receives the config object in `init` as `{ delimiter: ';' }`. See [CONTRIBUTING.md](CONTRIBUTING.md) for a complete guide to writing and testing plugins.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full hook reference and a guide to writing and testing plugins.
 
 ### Quiet Option
 
