@@ -357,7 +357,7 @@ Please see https://github.com/variety/variety for details. */
         } else if (type === 'ObjectId') {
           result[key][type] = typeof value.toHexString === 'function' ? value.toHexString() : value.str;
         } else if (type === 'Date') {
-          result[key][type] = new Date(value).getTime();
+          result[key][type] = new Date(value).toISOString();
         } else if (type.startsWith('BinData')) {
           result[key][type] = getBinDataHex(value);
         }

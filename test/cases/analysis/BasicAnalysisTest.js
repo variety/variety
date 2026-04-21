@@ -23,7 +23,7 @@ describe('Basic Analysis', () => {
     results.validate('_id', 5, 100.0, {ObjectId: 5});
     results.validate('name', 5, 100.0, {String: 5}, 'Jim');
     results.validate('bio', 3, 60.0, {String: 3}, 'Ça va?');
-    results.validate('birthday', 2,  40.0, {Date: 2}, 448070400000);
+    results.validate('birthday', 2,  40.0, {Date: 2}, '1984-03-14T00:00:00.000Z');
     results.validate('pets', 2,  40.0, {String: 1, Array: 1}, 'egret');
     results.validate('someBinData', 1,  20.0, {'BinData-generic': 1});
     results.validate('someWeirdLegacyKey', 1,  20.0, {String: 1}, 'I like Ike!');
@@ -35,6 +35,7 @@ describe('Basic Analysis', () => {
     results.validateResultsCount(7);
     results.validateExamples('name', ['Jim', 'Geneviève', 'Harry']);
     results.validateExamples('bio', ['Ça va?', 'I swordfight.', 'A nice guy.']);
+    results.validateExamples('birthday', ['1984-03-14T00:00:00.000Z', '1974-03-14T00:00:00.000Z']);
     results.validateExamples('pets', ['egret', '[Array]']);
     results.validateExamples('someWeirdLegacyKey', ['I like Ike!']);
   });
