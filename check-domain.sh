@@ -127,25 +127,42 @@ fi
 # ---------------------------------------------------------------------------
 # Redirects
 # ---------------------------------------------------------------------------
+# HTTP redirects (curl -L) land on https://www.varietyjs.org/ (200) because
+# the final hop to github.com is a meta-refresh, not an HTTP 3xx.  We verify:
+#   1. http:// upgrades to https:// (Enforce HTTPS)
+#   2. apex redirects to www
+#   3. The served page contains the canonical destination URL
+# ---------------------------------------------------------------------------
 echo
 echo "=== Redirects ==="
 
-check_redirect() {
-  local url="$1"
-  local expected_dest="$2"
+# $1=url  $2=expected final URL after HTTP redirects
+check_http_redirect() {
+  local url="$1" expected="$2"
   local actual
   actual=$(curl -sI --max-time 10 -L "$url" -o /dev/null -w "%{url_effective}" 2>/dev/null || echo "error")
-  if [ "$actual" = "$expected_dest" ]; then
-    ok "$url → $expected_dest"
+  if [ "$actual" = "$expected" ]; then
+    ok "$url →(HTTP) $expected"
   else
-    fail "$url expected '$expected_dest' got '${actual}'"
+    fail "$url expected HTTP redirect to '$expected', got '${actual}'"
   fi
 }
 
-check_redirect "http://$DOMAIN/"  "$CANONICAL"
-check_redirect "http://$WWW/"     "$CANONICAL"
-check_redirect "https://$DOMAIN/" "$CANONICAL"
-check_redirect "https://$WWW/"    "$CANONICAL"
+# All four entry points should ultimately land on https://www (via HTTP redirects)
+check_http_redirect "http://$DOMAIN/"  "https://$WWW/"
+check_http_redirect "http://$WWW/"     "https://$WWW/"
+check_http_redirect "https://$DOMAIN/" "https://$WWW/"
+check_http_redirect "https://$WWW/"    "https://$WWW/"
+
+# The served page must contain the meta-refresh target
+echo
+echo "=== Page content ==="
+PAGE=$(curl -s --max-time 10 "https://$WWW/" 2>/dev/null || echo "")
+if echo "$PAGE" | grep -qF "$CANONICAL"; then
+  ok "Page contains meta-refresh target: $CANONICAL"
+else
+  fail "Page does not contain '$CANONICAL'"
+fi
 
 # ---------------------------------------------------------------------------
 # Summary
