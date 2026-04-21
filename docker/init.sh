@@ -4,7 +4,6 @@
 
 ### Init script for test suite's Docker container ###
 
-MONGODB_PORT=27017
 NVM_DIR="$HOME/.nvm"
 VARIETY_DOCKERDIR=/opt/variety
 
@@ -12,7 +11,9 @@ VARIETY_DOCKERDIR=/opt/variety
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
 # Start MongoDB quietly. Newer server releases removed --nojournal.
-mongod --logpath /dev/null &
+MONGOD_LOG=/tmp/variety-mongod.log
+mongod --logpath "$MONGOD_LOG" &
+MONGOD_PID=$!
 
 cd "$VARIETY_DOCKERDIR" || exit
 
@@ -24,13 +25,31 @@ mkdir -p "$HOME"
 
 npm install || { echo "npm install failed"; exit 1; }
 
+mongo_ping() {
+  if command -v mongosh > /dev/null 2>&1; then
+    mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok' > /dev/null 2>&1
+  elif command -v mongo > /dev/null 2>&1; then
+    mongo --quiet --eval 'db.adminCommand({ ping: 1 }).ok' > /dev/null 2>&1
+  else
+    echo "Error: neither mongosh nor mongo found in PATH" >&2
+    return 1
+  fi
+}
+
 MAX_RETRIES=60
 retries=0
 
-while ! curl --silent http://localhost:$MONGODB_PORT > /dev/null 2>&1
+while ! mongo_ping
 do
+  if ! kill -0 "$MONGOD_PID" > /dev/null 2>&1; then
+    echo "MongoDB exited before becoming ready. mongod log follows:"
+    cat "$MONGOD_LOG"
+    exit 1
+  fi
   if [ "$retries" -ge "$MAX_RETRIES" ]; then
     echo "MongoDB did not become ready after $MAX_RETRIES seconds, giving up."
+    echo "mongod log follows:"
+    cat "$MONGOD_LOG"
     exit 1
   fi
   echo "Waiting for MongoDB connection…"
