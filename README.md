@@ -273,12 +273,20 @@ Sometimes you want to see the keys and types come in as it happens.  Maybe you h
 
     $ mongosh test --eval "var collection = 'users', sort = { updated_at : -1 }, logKeysContinuously = true" variety.js
 
+Via the first-party CLI:
+
+    $ variety test/users --sort '{"updated_at":-1}' --log-keys-continuously
+
 ### Exclude Subkeys
 Sometimes you inherit a database full of junk.  Maybe the previous developer put data in the database keys, which causes Variety to go out of memory when run.  After you've run the `logKeysContinuously` to figure out which subkeys may be a problem, you can use this option to run Variety without those subkeys.  
 
     db.users.insertOne({name:"Walter", someNestedObject:{a:{b:{c:{d:{e:1}}}}}, otherNestedObject:{a:{b:{c:{d:{e:1}}}}}});
 
     $ mongosh test --eval "var collection = 'users', sort = { updated_at : -1 }, excludeSubkeys = [ 'someNestedObject.a.b' ]" variety.js
+
+Via the first-party CLI (repeat `--exclude-subkeys` for multiple paths):
+
+    $ variety test/users --sort '{"updated_at":-1}' --exclude-subkeys someNestedObject.a.b
 
     +-----------------------------------------------------------------+
     | key                         | types    | occurrences | percents |
@@ -301,6 +309,10 @@ Sometimes you inherit a database full of junk.  Maybe the previous developer put
 By default, Variety suppresses keys that end with an array index (e.g. `tags.XX`), because the parent key already captures the `Array` type. If you want to see the types of the values _inside_ primitive arrays — useful for verifying element-type consistency — set `showArrayElements` to `true`:
 
     $ mongosh test --eval "var collection = 'users', showArrayElements = true" variety.js
+
+Via the first-party CLI:
+
+    $ variety test/users --show-array-elements
 
 For example, given documents like:
 
@@ -325,6 +337,10 @@ This reveals that `tags` contains mixed element types across the collection.
 If you want the parent array key itself to carry a more informative summary than plain `Array`, set `compactArrayTypes` to `true`:
 
     $ mongosh test --eval "var collection = 'users', compactArrayTypes = true" variety.js
+
+Via the first-party CLI:
+
+    $ variety test/users --compact-array-types
 
 With this option enabled, parent keys can be reported as values such as `Array(String)`, `Array(Number|String)`, or `Array(empty)` instead of just `Array`.
 
@@ -360,6 +376,10 @@ $ mongosh test --quiet --eval "var collection = 'users', persistResults=true, re
 Variety expects keys to be well formed, not having any `.`s in them (MongoDB 2.4 allows dots in certain cases).  Also MongoDB uses the pseudo keys `XX` and keys corresponding to the regex `XX\d+XX.*` for use with arrays.  You can change the string `XX` in these patterns to whatever you like if there is a conflict in your database using the `arrayEscape` parameter.  
 
     $ mongosh test --quiet --eval "var collection = 'users', arrayEscape = 'YY'" variety.js
+
+Via the first-party CLI:
+
+    $ variety test/users --array-escape YY
 
 ## Command Line Interface
 This NPM package publishes a built-in `variety` executable that resolves the bundled `variety.js`, prefers `mongosh` when available, and falls back to the legacy `mongo` shell.
