@@ -454,18 +454,18 @@ If you are already inside `mongosh` or the legacy `mongo` shell, define the
 same globals you would normally pass with `--eval`, then load `variety.js`:
 
 ```js
-var collection = "users";
-load("/path/to/variety.js");
+var collection = 'users';
+load('/path/to/variety.js');
 ```
 
 The `load()` call executes Variety immediately; there is no separate function
 to call after the script loads. Set any additional options before `load()`:
 
 ```js
-var collection = "users";
-var outputFormat = "json";
+var collection = 'users';
+var outputFormat = 'json';
 var limit = 100;
-load("/path/to/variety.js");
+load('/path/to/variety.js');
 ```
 
 This low-level form is useful for exploratory shell sessions or debugging. For
@@ -482,17 +482,17 @@ machine-readable output, run the CLI with `--outputFormat json --quiet` and
 parse stdout:
 
 ```js
-const { execFile } = require("node:child_process");
-const { promisify } = require("node:util");
+const { execFile } = require('node:child_process');
+const { promisify } = require('node:util');
 
 const execFileAsync = promisify(execFile);
 
 async function analyzeCollection() {
-  const { stdout } = await execFileAsync("variety", [
-    "test/users",
-    "--outputFormat",
-    "json",
-    "--quiet",
+  const { stdout } = await execFileAsync('variety', [
+    'test/users',
+    '--outputFormat',
+    'json',
+    '--quiet',
   ]);
 
   return JSON.parse(stdout);
