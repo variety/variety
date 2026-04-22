@@ -278,6 +278,33 @@ describe('bin/variety wrapper', () => {
     assert.equal(stderr, '');
   });
 
+  it('passes array analysis flags through to the mongosh eval arg', async () => {
+    const { invocation } = await runBinVariety({
+      args: [
+        'testdb/events',
+        '--show-array-elements',
+        '--compact-array-types',
+        '--array-escape', 'YY',
+        '--exclude-subkeys', 'meta.tags',
+        '--exclude-subkeys', 'audit.log',
+        '--log-keys-continuously',
+      ],
+    });
+
+    if (!invocation) {
+      throw new Error('Expected the fake shell invocation to be recorded.');
+    }
+    assert.deepEqual(invocation, {
+      command: 'mongosh',
+      args: [
+        'testdb',
+        '--eval',
+        'var collection = "events"; var showArrayElements = true; var compactArrayTypes = true; var arrayEscape = "YY"; var excludeSubkeys = ["meta.tags","audit.log"]; var logKeysContinuously = true',
+        path.join(repoRoot, 'variety.js'),
+      ],
+    });
+  });
+
   it('fails fast on invalid JSON query input', async () => {
     await assert.rejects(
       () => runBinVariety({

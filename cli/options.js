@@ -17,11 +17,16 @@ const path = require('path');
 
 /**
  * @typedef {{
+ *   arrayEscape?: string,
+ *   compactArrayTypes?: boolean,
+ *   excludeSubkeys?: string[],
  *   limit?: number,
+ *   logKeysContinuously?: boolean,
  *   maxDepth?: number,
  *   maxExamples?: number,
  *   outputFormat?: string,
  *   query?: Record<string, unknown>,
+ *   showArrayElements?: boolean,
  *   sort?: Record<string, unknown>,
  * }} VarietyOptions
  */
@@ -80,13 +85,21 @@ class CliUsageError extends Error {
 
 const COMPATIBILITY_ENV_KEYS = ['DB', 'EVAL_CMDS', 'VARIETYJS_DIR'];
 /** @type {Array<keyof VarietyOptions>} */
-const TARGET_OPTION_NAMES = ['query', 'sort', 'limit', 'maxDepth', 'outputFormat', 'maxExamples'];
+const TARGET_OPTION_NAMES = [
+  'query', 'sort', 'limit', 'maxDepth', 'outputFormat', 'maxExamples',
+  'showArrayElements', 'compactArrayTypes', 'arrayEscape', 'excludeSubkeys', 'logKeysContinuously',
+];
 /** @type {Record<string, string>} */
 const FLAG_ALIASES = {
+  'array-escape': 'arrayEscape',
   'authentication-database': 'authenticationDatabase',
+  'compact-array-types': 'compactArrayTypes',
+  'exclude-subkeys': 'excludeSubkeys',
+  'log-keys-continuously': 'logKeysContinuously',
   'max-depth': 'maxDepth',
   'max-examples': 'maxExamples',
   'output-format': 'outputFormat',
+  'show-array-elements': 'showArrayElements',
 };
 
 /**
@@ -218,6 +231,19 @@ const parseJsonObject = (optionName, rawValue) => {
 };
 
 /**
+ * @param {string} optionName
+ * @param {string} rawValue
+ * @returns {string}
+ */
+const parseNonEmptyString = (optionName, rawValue) => {
+  if (rawValue.length === 0) {
+    throw new CliUsageError(`--${optionName} must not be empty.`);
+  }
+
+  return rawValue;
+};
+
+/**
  * @param {string[]} argv
  * @param {number} currentIndex
  * @param {string | undefined} inlineValue
@@ -334,6 +360,30 @@ const parseCliArguments = (argv) => {
       const result = readOptionValue(argv, index, inlineValue, optionName);
       index = result.nextIndex;
       parsed.varietyOptions.outputFormat = result.value;
+      break;
+    }
+    case 'showArrayElements':
+      parsed.varietyOptions.showArrayElements = parseBooleanValue(optionName, inlineValue);
+      break;
+    case 'compactArrayTypes':
+      parsed.varietyOptions.compactArrayTypes = parseBooleanValue(optionName, inlineValue);
+      break;
+    case 'logKeysContinuously':
+      parsed.varietyOptions.logKeysContinuously = parseBooleanValue(optionName, inlineValue);
+      break;
+    case 'arrayEscape': {
+      const result = readOptionValue(argv, index, inlineValue, optionName);
+      index = result.nextIndex;
+      parsed.varietyOptions.arrayEscape = parseNonEmptyString(optionName, result.value);
+      break;
+    }
+    case 'excludeSubkeys': {
+      const result = readOptionValue(argv, index, inlineValue, optionName);
+      index = result.nextIndex;
+      if (!parsed.varietyOptions.excludeSubkeys) {
+        parsed.varietyOptions.excludeSubkeys = [];
+      }
+      parsed.varietyOptions.excludeSubkeys.push(result.value);
       break;
     }
     case 'host': {
@@ -487,6 +537,11 @@ const formatUsage = () => {
     '  --maxDepth <number>              Maximum traversal depth',
     '  --maxExamples <number>           Number of example values to collect per key',
     '  --outputFormat <value>           Output format, e.g. ascii or json',
+    '  --showArrayElements              Include array element keys in output',
+    '  --compactArrayTypes              Render Array(Type) instead of plain Array',
+    '  --arrayEscape <value>            Custom escape for array index keys (default XX)',
+    '  --excludeSubkeys <path>          Dot-path to skip; repeat to exclude multiple',
+    '  --logKeysContinuously            Stream keys as they arrive',
     '  --quiet                          Pass --quiet through to the Mongo shell',
     '  --host <value>                   Mongo shell host',
     '  --port <number>                  Mongo shell port',
