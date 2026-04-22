@@ -25,7 +25,7 @@ As an additional (not required) dependency, [Docker](https://www.docker.com/) or
   `shellContext.__varietyFormatters` to dispatch output. This is the
   future `@variety/core` package boundary.
 - `mongo-shell/adapter.js` — the shell-facing layer that reads shell
-  globals (`collection`, `plugins`, `slaveOk`, etc.), loads plugins, and
+  globals (`collection`, `plugins`, `secondaryOk`, etc.), loads plugins, and
   hands dependencies to `impl.run()`. The only place in the build that
   touches `db`, `print`, and `load`. Cleans up both `__varietyImpl` and
   `__varietyFormatters` after execution so repeated loads are idempotent.

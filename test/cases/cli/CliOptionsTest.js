@@ -302,4 +302,12 @@ describe('CLI option parsing', () => {
     const plan = createExecutionPlan(['test/orders', '--lastValue=false'], {});
     assert.equal(evalCodeOf(plan), 'var collection = "orders"; var lastValue = false');
   });
+
+  it('emits secondaryOk and accepts the camelCase alias', () => {
+    const kebab = createExecutionPlan(['test/users', '--secondary-ok'], {});
+    const camel = createExecutionPlan(['test/users', '--secondaryOk=false'], {});
+
+    assert.equal(evalCodeOf(kebab), 'var collection = "users"; var secondaryOk = true');
+    assert.equal(evalCodeOf(camel), 'var collection = "users"; var secondaryOk = false');
+  });
 });

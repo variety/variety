@@ -32,6 +32,7 @@ const path = require('path');
  *   resultsDatabase?: string,
  *   resultsPass?: string,
  *   resultsUser?: string,
+ *   secondaryOk?: boolean,
  *   showArrayElements?: boolean,
  *   sort?: Record<string, unknown>,
  * }} VarietyOptions
@@ -94,7 +95,7 @@ const COMPATIBILITY_ENV_KEYS = ['DB', 'EVAL_CMDS', 'VARIETYJS_DIR'];
 /** @type {Array<keyof VarietyOptions>} */
 const TARGET_OPTION_NAMES = [
   'query', 'sort', 'limit', 'maxDepth', 'outputFormat', 'maxExamples',
-  'lastValue', 'showArrayElements', 'compactArrayTypes', 'arrayEscape', 'excludeSubkeys', 'logKeysContinuously',
+  'lastValue', 'secondaryOk', 'showArrayElements', 'compactArrayTypes', 'arrayEscape', 'excludeSubkeys', 'logKeysContinuously',
   'persistResults', 'resultsDatabase', 'resultsCollection', 'resultsUser', 'resultsPass',
 ];
 /** @type {Record<string, string>} */
@@ -113,6 +114,7 @@ const FLAG_ALIASES = {
   'results-database': 'resultsDatabase',
   'results-password': 'resultsPass',
   'results-user': 'resultsUser',
+  'secondary-ok': 'secondaryOk',
   'show-array-elements': 'showArrayElements',
 };
 
@@ -380,6 +382,9 @@ const parseCliArguments = (argv) => {
     case 'lastValue':
       parsed.varietyOptions.lastValue = parseBooleanValue(optionName, inlineValue);
       break;
+    case 'secondaryOk':
+      parsed.varietyOptions.secondaryOk = parseBooleanValue(optionName, inlineValue);
+      break;
     case 'showArrayElements':
       parsed.varietyOptions.showArrayElements = parseBooleanValue(optionName, inlineValue);
       break;
@@ -595,6 +600,7 @@ const formatUsage = () => {
     '  --maxDepth <number>              Maximum traversal depth',
     '  --maxExamples <number>           Number of example values to collect per key',
     '  --lastValue                      Capture one representative value per key',
+    '  --secondary-ok                   Read from a secondary by setting read preference',
     '  --outputFormat <value>           Output format, e.g. ascii or json',
     '  --showArrayElements              Include array element keys in output',
     '  --compactArrayTypes              Render Array(Type) instead of plain Array',

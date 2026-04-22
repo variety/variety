@@ -36,9 +36,9 @@
   log('Variety: A MongoDB Schema Analyzer');
   log('Version 1.5.2, released 30 September 2025');
 
-  if (typeof slaveOk !== 'undefined') {
-    if (slaveOk === true) {
-      db.getMongo().setSlaveOk();
+  if (typeof secondaryOk !== 'undefined') {
+    if (secondaryOk === true) {
+      db.getMongo().setReadPref('secondary');
     }
   }
 
