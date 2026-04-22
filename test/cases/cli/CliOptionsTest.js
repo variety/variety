@@ -268,4 +268,28 @@ describe('CLI option parsing', () => {
     const plan = createExecutionPlan(['test/users', '--results-password', 'hunter2'], {});
     assert.equal(evalCodeOf(plan), 'var collection = "users"; var resultsPass = "hunter2"');
   });
+
+  it('emits var plugins for a single --plugin without config', () => {
+    const plan = createExecutionPlan(['test/users', '--plugin', '/path/to/plugin.js'], {});
+    assert.equal(evalCodeOf(plan), 'var collection = "users"; var plugins = "/path/to/plugin.js"');
+  });
+
+  it('converts ? to | when emitting var plugins', () => {
+    const plan = createExecutionPlan(['test/users', '--plugin', '/path/to/plugin.js?delimiter=;'], {});
+    assert.equal(evalCodeOf(plan), 'var collection = "users"; var plugins = "/path/to/plugin.js|delimiter=;"');
+  });
+
+  it('joins multiple --plugin entries with commas', () => {
+    const plan = createExecutionPlan([
+      'test/users',
+      '--plugin', '/path/to/a.js',
+      '--plugin', '/path/to/b.js?key=val&other=x',
+    ], {});
+    assert.equal(evalCodeOf(plan), 'var collection = "users"; var plugins = "/path/to/a.js,/path/to/b.js|key=val&other=x"');
+  });
+
+  it('omits var plugins when no --plugin flag is passed', () => {
+    const plan = createExecutionPlan(['test/users'], {});
+    assert.equal(evalCodeOf(plan), 'var collection = "users"');
+  });
 });

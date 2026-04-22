@@ -331,6 +331,29 @@ describe('bin/variety wrapper', () => {
     });
   });
 
+  it('passes --plugin flags through to the mongosh eval arg', async () => {
+    const { invocation } = await runBinVariety({
+      args: [
+        'testdb/users',
+        '--plugin', '/path/to/formatter.js',
+        '--plugin', '/path/to/other.js?key=val&extra=x',
+      ],
+    });
+
+    if (!invocation) {
+      throw new Error('Expected the fake shell invocation to be recorded.');
+    }
+    assert.deepEqual(invocation, {
+      command: 'mongosh',
+      args: [
+        'testdb',
+        '--eval',
+        'var collection = "users"; var plugins = "/path/to/formatter.js,/path/to/other.js|key=val&extra=x"',
+        path.join(repoRoot, 'variety.js'),
+      ],
+    });
+  });
+
   it('fails fast on invalid JSON query input', async () => {
     await assert.rejects(
       () => runBinVariety({

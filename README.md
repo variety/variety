@@ -255,9 +255,21 @@ A plugin is a `.js` file that exports a plain object with lifecycle hooks. Load 
 
     $ mongosh test --quiet --eval "var collection='users', plugins='/path/to/my-plugin.js'" variety.js
 
+Via the first-party CLI (use `--plugin` once per plugin):
+
+    $ variety test/users --quiet --plugin /path/to/my-plugin.js
+
 Pass per-plugin configuration by appending `|key=value` after the path:
 
     $ mongosh test --quiet --eval "var collection='users', plugins='/path/to/my-plugin.js|delimiter=;'" variety.js
+
+Via the first-party CLI (use `?key=value` instead of `|`, and `&` between multiple params):
+
+    $ variety test/users --quiet --plugin '/path/to/my-plugin.js?delimiter=;'
+
+For multiple plugins, repeat the flag:
+
+    $ variety test/users --quiet --plugin /path/to/formatter.js --plugin '/path/to/other.js?key=val'
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full hook reference and a guide to writing and testing plugins.
 
