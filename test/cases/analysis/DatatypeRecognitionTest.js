@@ -32,6 +32,7 @@ const crazyObject = {
   key_long: Long.fromString('4611686018427387904'),
   key_decimal128: Decimal128.fromString('12.34'),
   key_timestamp: new Timestamp({ t: 1, i: 2 }),
+  key_javascript_code: new Code('function () { return 42; }'),
   key_code: new Code('function () { return answer; }', { answer: 42 }),
   key_regexp: new BSONRegExp('^abc$', 'i'),
   key_minKey: new MinKey(),
@@ -51,7 +52,7 @@ describe('Data type recognition', () => {
     // Issue #164 (@vitorcampos-db): BSON wrappers should stay distinct from
     // plain Object and should not expand into nested subkeys during analysis.
     const results = await test.runJsonAnalysis({collection:'users'}, true);
-    results.validateResultsCount(21);
+    results.validateResultsCount(22);
     results.validate('_id', 1, 100.0, {ObjectId: 1});
     results.validate('key_string', 1, 100.0, {String: 1});
     results.validate('key_boolean', 1, 100.0, {Boolean: 1});
@@ -65,6 +66,9 @@ describe('Data type recognition', () => {
     results.validate('key_long', 1, 100.0, {NumberLong: 1});
     results.validate('key_decimal128', 1, 100.0, {Decimal128: 1});
     results.validate('key_timestamp', 1, 100.0, {Timestamp: 1});
+    // BSON JavaScript code without scope (type 13) reports as Code.
+    results.validate('key_javascript_code', 1, 100.0, {Code: 1});
+    // BSON JavaScript code with scope (type 15) also reports as Code.
     results.validate('key_code', 1, 100.0, {Code: 1});
     results.validate('key_regexp', 1, 100.0, {BSONRegExp: 1});
     results.validate('key_minKey', 1, 100.0, {MinKey: 1});
