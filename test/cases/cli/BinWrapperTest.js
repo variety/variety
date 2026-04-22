@@ -354,6 +354,25 @@ describe('bin/variety wrapper', () => {
     });
   });
 
+  it('passes --last-value through to the mongosh eval arg', async () => {
+    const { invocation } = await runBinVariety({
+      args: ['testdb/orders', '--last-value'],
+    });
+
+    if (!invocation) {
+      throw new Error('Expected the fake shell invocation to be recorded.');
+    }
+    assert.deepEqual(invocation, {
+      command: 'mongosh',
+      args: [
+        'testdb',
+        '--eval',
+        'var collection = "orders"; var lastValue = true',
+        path.join(repoRoot, 'variety.js'),
+      ],
+    });
+  });
+
   it('fails fast on invalid JSON query input', async () => {
     await assert.rejects(
       () => runBinVariety({

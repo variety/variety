@@ -20,6 +20,7 @@ const path = require('path');
  *   arrayEscape?: string,
  *   compactArrayTypes?: boolean,
  *   excludeSubkeys?: string[],
+ *   lastValue?: boolean,
  *   limit?: number,
  *   logKeysContinuously?: boolean,
  *   maxDepth?: number,
@@ -93,13 +94,14 @@ const COMPATIBILITY_ENV_KEYS = ['DB', 'EVAL_CMDS', 'VARIETYJS_DIR'];
 /** @type {Array<keyof VarietyOptions>} */
 const TARGET_OPTION_NAMES = [
   'query', 'sort', 'limit', 'maxDepth', 'outputFormat', 'maxExamples',
-  'showArrayElements', 'compactArrayTypes', 'arrayEscape', 'excludeSubkeys', 'logKeysContinuously',
+  'lastValue', 'showArrayElements', 'compactArrayTypes', 'arrayEscape', 'excludeSubkeys', 'logKeysContinuously',
   'persistResults', 'resultsDatabase', 'resultsCollection', 'resultsUser', 'resultsPass',
 ];
 /** @type {Record<string, string>} */
 const FLAG_ALIASES = {
   'array-escape': 'arrayEscape',
   'authentication-database': 'authenticationDatabase',
+  'last-value': 'lastValue',
   'compact-array-types': 'compactArrayTypes',
   'exclude-subkeys': 'excludeSubkeys',
   'log-keys-continuously': 'logKeysContinuously',
@@ -375,6 +377,9 @@ const parseCliArguments = (argv) => {
       parsed.varietyOptions.outputFormat = result.value;
       break;
     }
+    case 'lastValue':
+      parsed.varietyOptions.lastValue = parseBooleanValue(optionName, inlineValue);
+      break;
     case 'showArrayElements':
       parsed.varietyOptions.showArrayElements = parseBooleanValue(optionName, inlineValue);
       break;
@@ -589,6 +594,7 @@ const formatUsage = () => {
     '  --limit <number>                 Limit documents analyzed',
     '  --maxDepth <number>              Maximum traversal depth',
     '  --maxExamples <number>           Number of example values to collect per key',
+    '  --lastValue                      Capture one representative value per key',
     '  --outputFormat <value>           Output format, e.g. ascii or json',
     '  --showArrayElements              Include array element keys in output',
     '  --compactArrayTypes              Render Array(Type) instead of plain Array',

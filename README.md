@@ -179,7 +179,11 @@ One can apply a `sort` constraint, which analyzes documents in the specified ord
 One can also apply a `lastValue` constraint to capture one representative value for each key.
 
     $ mongosh test --eval "var collection = 'orders', lastValue = true" variety.js
-    
+
+Via the first-party CLI:
+
+    $ variety test/orders --last-value
+
     +--------------------------------------------------------------------------------------------+
     | key             | types        | occurrences | percents | lastValue                        |
     | --------------- | ------------ | ----------- | -------- | -------------------------------- |
