@@ -361,6 +361,10 @@ If the source collection's name is `users`, Variety stores results in the `users
 
     $ mongosh test --quiet --eval "var collection = 'users', persistResults=true" variety.js
 
+Via the first-party CLI:
+
+    $ variety test/users --quiet --persist-results
+
 To persist to an alternate MongoDB database, you may specify the following parameters:
 
 - `resultsDatabase` - The database to store Variety results in. Accepts either a database name or a `host[:port]/database` URL.
@@ -370,6 +374,12 @@ To persist to an alternate MongoDB database, you may specify the following param
 
 ```
 $ mongosh test --quiet --eval "var collection = 'users', persistResults=true, resultsDatabase='db.example.com/variety'" variety.js
+```
+
+Via the first-party CLI:
+
+```bash
+variety test/users --quiet --persist-results --results-database db.example.com/variety --results-collection myKeys --results-user reporter --results-password secret
 ```
 
 ## Reserved Keys

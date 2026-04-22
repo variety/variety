@@ -25,7 +25,12 @@ const path = require('path');
  *   maxDepth?: number,
  *   maxExamples?: number,
  *   outputFormat?: string,
+ *   persistResults?: boolean,
  *   query?: Record<string, unknown>,
+ *   resultsCollection?: string,
+ *   resultsDatabase?: string,
+ *   resultsPass?: string,
+ *   resultsUser?: string,
  *   showArrayElements?: boolean,
  *   sort?: Record<string, unknown>,
  * }} VarietyOptions
@@ -88,6 +93,7 @@ const COMPATIBILITY_ENV_KEYS = ['DB', 'EVAL_CMDS', 'VARIETYJS_DIR'];
 const TARGET_OPTION_NAMES = [
   'query', 'sort', 'limit', 'maxDepth', 'outputFormat', 'maxExamples',
   'showArrayElements', 'compactArrayTypes', 'arrayEscape', 'excludeSubkeys', 'logKeysContinuously',
+  'persistResults', 'resultsDatabase', 'resultsCollection', 'resultsUser', 'resultsPass',
 ];
 /** @type {Record<string, string>} */
 const FLAG_ALIASES = {
@@ -99,6 +105,11 @@ const FLAG_ALIASES = {
   'max-depth': 'maxDepth',
   'max-examples': 'maxExamples',
   'output-format': 'outputFormat',
+  'persist-results': 'persistResults',
+  'results-collection': 'resultsCollection',
+  'results-database': 'resultsDatabase',
+  'results-password': 'resultsPass',
+  'results-user': 'resultsUser',
   'show-array-elements': 'showArrayElements',
 };
 
@@ -371,6 +382,33 @@ const parseCliArguments = (argv) => {
     case 'logKeysContinuously':
       parsed.varietyOptions.logKeysContinuously = parseBooleanValue(optionName, inlineValue);
       break;
+    case 'persistResults':
+      parsed.varietyOptions.persistResults = parseBooleanValue(optionName, inlineValue);
+      break;
+    case 'resultsDatabase': {
+      const result = readOptionValue(argv, index, inlineValue, optionName);
+      index = result.nextIndex;
+      parsed.varietyOptions.resultsDatabase = result.value;
+      break;
+    }
+    case 'resultsCollection': {
+      const result = readOptionValue(argv, index, inlineValue, optionName);
+      index = result.nextIndex;
+      parsed.varietyOptions.resultsCollection = result.value;
+      break;
+    }
+    case 'resultsUser': {
+      const result = readOptionValue(argv, index, inlineValue, optionName);
+      index = result.nextIndex;
+      parsed.varietyOptions.resultsUser = result.value;
+      break;
+    }
+    case 'resultsPass': {
+      const result = readOptionValue(argv, index, inlineValue, optionName);
+      index = result.nextIndex;
+      parsed.varietyOptions.resultsPass = result.value;
+      break;
+    }
     case 'arrayEscape': {
       const result = readOptionValue(argv, index, inlineValue, optionName);
       index = result.nextIndex;
@@ -542,6 +580,11 @@ const formatUsage = () => {
     '  --arrayEscape <value>            Custom escape for array index keys (default XX)',
     '  --excludeSubkeys <path>          Dot-path to skip; repeat to exclude multiple',
     '  --logKeysContinuously            Stream keys as they arrive',
+    '  --persistResults                 Write results to MongoDB instead of stdout',
+    '  --resultsDatabase <value>        Target DB for persisted results (name or host:port/db)',
+    '  --resultsCollection <value>      Target collection for persisted results',
+    '  --results-user <value>           MongoDB username for results database',
+    '  --results-password <value>       MongoDB password for results database',
     '  --quiet                          Pass --quiet through to the Mongo shell',
     '  --host <value>                   Mongo shell host',
     '  --port <number>                  Mongo shell port',
