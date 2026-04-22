@@ -49,9 +49,9 @@ type mapping; [V6] tests every standard binary subtype plus custom subtype
 `0x80`; and [V7] proves the Variety label for each deprecated top-level BSON
 type.
 Current tests recognize BSON `Double` and `Int32` as Variety `Number`, BSON
-JavaScript-with-scope as Variety `Code`, BSON `Symbol` (type 14) as Variety
-`String` in mongosh, and standard binary subtypes plus custom subtype `0x80`
-under their `BinData-{subtype}` labels.
+JavaScript code and JavaScript-with-scope as Variety `Code`, BSON `Symbol`
+(type 14) as Variety `String` in mongosh, and standard binary subtypes plus
+custom subtype `0x80` under their `BinData-{subtype}` labels.
 
 ## Top-Level BSON Value Types
 
@@ -74,7 +74,7 @@ column is the string alias accepted by MongoDB `$type` where documented.
 | `10` | Null | `null` | Current | Tested | Null value with no payload. Distinct from a missing field and from deprecated Undefined. | [S1], [S2], [S4] |
 | `11` | Regular expression | `regex` | Current | Tested | Two cstrings: pattern and options. See regex options below. | [S1], [S2] |
 | `12` | DBPointer | `dbPointer` | Deprecated | Tested merged | Historical database pointer: namespace string plus a 12-byte ObjectId. Deprecated. Do not confuse this BSON type with the later DBRef convention, which is a normal document shape rather than a BSON type. The BSON library maps stored type-12 values to a DBRef object; Variety reports these as `DBRef`, the broader label shared with the DBRef convention. Coverage is analyzer-level test evidence against the deserialized value. | [S1], [S2], [V7] |
-| `13` | JavaScript code | `javascript` | Current BSON type, operationally discouraged | Untested | JavaScript source code stored as a string. Server-side JavaScript functions are deprecated starting in MongoDB 8.0, but this BSON storage type remains in the BSON type inventory. | [S1], [S2], [S10] |
+| `13` | JavaScript code | `javascript` | Current BSON type, operationally discouraged | Tested merged | JavaScript source code stored as a string. Variety reports this as `Code`, the same label used for JavaScript code with scope (type `15`). Server-side JavaScript functions are deprecated starting in MongoDB 8.0, but this BSON storage type remains in the BSON type inventory. | [S1], [S2], [S10], [V1] |
 | `14` | Symbol | `symbol` | Deprecated | Tested merged | Historical symbol value stored as a string. Deprecated. Mongosh promotes stored type-14 values to plain JavaScript strings; Variety reports these as `String`, the broader label shared with BSON String (type 2). The analyzer also has a `BSONSymbol` path for BSONSymbol objects. | [S1], [S2], [V1], [V7] |
 | `15` | JavaScript code with scope | `javascriptWithScope` | Deprecated | Tested merged | Code-with-scope value containing total length, JavaScript source string, and a scope document. Variety reports this as `Code`. `$where` no longer supports this type; its use with `$where` was deprecated since MongoDB 4.2.1. `mapReduce` function support was removed in MongoDB 4.4 after the same deprecation. | [S1], [S2], [S9], [S10], [V1], [V7] |
 | `16` | 32-bit integer | `int` | Current | Tested merged | Signed 32-bit integer. Variety's integration test currently observes this as `Number`. | [S1], [S2] |
@@ -232,7 +232,8 @@ round-trip tests, but they are not extra top-level BSON types.
 - [V1] Variety local test file,
   [test/cases/analysis/DatatypeRecognitionTest.js](../test/cases/analysis/DatatypeRecognitionTest.js).
   Inspected in the current working tree on 2026-04-22. Essential metadata:
-  integration test for current BSON-wrapper recognition.
+  integration test for current BSON-wrapper recognition, including JavaScript
+  code without scope (type `13`) and JavaScript code with scope (type `15`).
 - [V2] Variety local test file,
   [test/cases/analysis/BasicAnalysisTest.js](../test/cases/analysis/BasicAnalysisTest.js).
   Inspected in the current working tree on 2026-04-22. Essential metadata:
