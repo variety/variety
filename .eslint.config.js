@@ -68,7 +68,7 @@ module.exports = (async () => {
           ...globals.mocha,
           ...globals.mongo,
           __quiet: 'readonly',
-          slaveOk: 'readonly',
+          secondaryOk: 'readonly',
           collection: 'readonly',
           DBQuery: 'readonly',
           BinData: 'readonly',

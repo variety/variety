@@ -59,7 +59,7 @@ Please see https://github.com/variety/variety for details. */
 //
 //   3. INTERFACE SECTION (mongo-shell/adapter.js) — everything that touches
 //      shell globals: reading input (\`collection\`, \`plugins\`, \`__quiet\`,
-//      \`slaveOk\`, etc.), the config-echo logging, plugin loading via
+//      \`secondaryOk\`, etc.), the config-echo logging, plugin loading via
 //      \`load()\`, input validation, and constructing the dependency bag
 //      passed to \`impl.run()\`.
 //

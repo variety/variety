@@ -365,10 +365,16 @@ This option is complementary to `showArrayElements`: `compactArrayTypes` makes t
 _Thanks to [@oufeng](https://github.com/oufeng) for suggesting this feature ([#166](https://github.com/variety/variety/issues/166))._
 
 ### Secondary Reads
-Analyzing a large collection on a busy replica set primary could take a lot longer than if you read from a secondary. To do so, we have to tell MongoDB it's okay to perform secondary reads
-by setting the `slaveOk` property to `true`:
+Analyzing a large collection on a busy replica set primary could take a lot longer than if you read from a secondary. To do so, tell MongoDB to use the `secondary` read preference
+by setting the `secondaryOk` property to `true`:
 
-    $ mongosh secondary.replicaset.member:31337/somedb --eval "var collection = 'users', slaveOk = true" variety.js
+    $ mongosh secondary.replicaset.member:31337/somedb --eval "var collection = 'users', secondaryOk = true" variety.js
+
+Via the first-party CLI:
+
+    $ variety somedb/users --host secondary.replicaset.member --port 31337 --secondary-ok
+
+`secondaryOk` replaces the old `slaveOk` name; see [issue #309](https://github.com/variety/variety/issues/309).
 
 ## Save Results in MongoDB For Future Use
 By default, Variety prints results only to standard output and does not store them in MongoDB itself. If you want to persist them automatically in MongoDB for later usage, you can set the `persistResults` parameter.

@@ -16,7 +16,7 @@ const adapterSource = fs.readFileSync(adapterPath, 'utf8');
  *   adminCommand(command: string): FakeListDatabasesResult,
  *   getCollection(name: string): FakeCollection,
  *   getCollectionNames(): string[],
- *   getMongo(): { setSlaveOk(): void },
+ *   getMongo(): { setReadPref(mode: string): void },
  *   getName(): string,
  *   getSisterDB(name: string): never,
  * }} FakeDb
@@ -24,9 +24,10 @@ const adapterSource = fs.readFileSync(adapterPath, 'utf8');
 
 /**
  * @param {string[]} sisterDbCalls
+ * @param {{ setReadPref(mode: string): void }} [mongoConnection]
  * @returns {FakeDb}
  */
-const createDb = (sisterDbCalls) => ({
+const createDb = (sisterDbCalls, mongoConnection = { setReadPref() {} }) => ({
   adminCommand(command) {
     assert.equal(command, 'listDatabases');
     return {
@@ -51,9 +52,7 @@ const createDb = (sisterDbCalls) => ({
     return ['users'];
   },
   getMongo() {
-    return {
-      setSlaveOk() {},
-    };
+    return mongoConnection;
   },
   getName() {
     return 'test';
@@ -65,6 +64,39 @@ const createDb = (sisterDbCalls) => ({
 });
 
 describe('Mongo shell adapter validation', () => {
+  it('sets the secondary read preference before startup reads when secondaryOk is true', () => {
+    /** @type {string[]} */
+    const readPreferenceModes = [];
+    /** @type {string[]} */
+    const sisterDbCalls = [];
+    let analyzerRan = false;
+
+    const context = {
+      __varietyImpl: {
+        createKeyMap: () => ({}),
+        run: () => {
+          analyzerRan = true;
+        },
+        shellToJson: JSON.stringify,
+      },
+      collection: 'users',
+      db: createDb(sisterDbCalls, {
+        setReadPref(mode) {
+          assert.equal(analyzerRan, false);
+          readPreferenceModes.push(mode);
+        },
+      }),
+      print: () => {},
+      secondaryOk: true,
+    };
+
+    vm.createContext(context);
+    vm.runInContext(adapterSource, context, { filename: adapterPath });
+
+    assert.deepEqual(readPreferenceModes, ['secondary']);
+    assert.equal(analyzerRan, true);
+  });
+
   it('does not enumerate collections for unrelated databases during startup', () => {
     /** @type {unknown[]} */
     const runConfigs = [];
