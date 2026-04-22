@@ -148,6 +148,10 @@
           0x03: 'UUID',
           0x04: 'UUID',
           0x05: 'MD5',
+          0x06: 'encrypted',
+          0x07: 'compressed-column',
+          0x08: 'sensitive',
+          0x09: 'vector',
           0x80: 'user',
         };
         return `BinData-${binDataTypes[getBinDataSubtype(thing)]}`;
