@@ -3,6 +3,7 @@
 import {
   Binary,
   BSONRegExp,
+  BSONSymbol,
   Code,
   DBRef,
   Decimal128,
@@ -37,7 +38,8 @@ const crazyObject = {
   key_maxKey: new MaxKey(),
   key_dbRef: new DBRef('widgets', new ObjectId(), 'test'),
   key_double: new Double(3.14),
-  key_int32: new Int32(7)
+  key_int32: new Int32(7),
+  key_symbol: new BSONSymbol('mysymbol')
 };
 
 describe('Data type recognition', () => {
@@ -49,7 +51,7 @@ describe('Data type recognition', () => {
     // Issue #164 (@vitorcampos-db): BSON wrappers should stay distinct from
     // plain Object and should not expand into nested subkeys during analysis.
     const results = await test.runJsonAnalysis({collection:'users'}, true);
-    results.validateResultsCount(20);
+    results.validateResultsCount(21);
     results.validate('_id', 1, 100.0, {ObjectId: 1});
     results.validate('key_string', 1, 100.0, {String: 1});
     results.validate('key_boolean', 1, 100.0, {Boolean: 1});
@@ -71,5 +73,8 @@ describe('Data type recognition', () => {
     // mongosh promotes BSON Double and Int32 to plain JavaScript numbers.
     results.validate('key_double', 1, 100.0, {Number: 1});
     results.validate('key_int32', 1, 100.0, {Number: 1});
+    // Deprecated BSON Symbol (type 14): mongosh promotes it to a plain string,
+    // so Variety reports 'String' — a broader, merged label.
+    results.validate('key_symbol', 1, 100.0, {String: 1});
   });
 });
