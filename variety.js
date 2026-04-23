@@ -638,6 +638,8 @@ Please see https://github.com/variety/variety for details. */
     if (config.limit > 0) { cursor = cursor.limit(config.limit); }
     const interimResults = engine.createAnalysisState();
     cursor.forEach((obj) => {
+      // This shell-backed cursor already reflects mongosh/mongo BSON promotion,
+      // so Double and Int32 arrive here as plain JavaScript numbers.
       engine.ingestDocument(config, interimResults, obj, log);
     });
     const varietyResults = engine.finalizeResults(

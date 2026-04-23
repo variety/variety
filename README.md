@@ -202,7 +202,7 @@ Via the first-party CLI:
 
 Variety captures each `lastValue` from the first matching document it sees in the configured sort order. If you do not provide `sort`, it uses the default `{ _id: -1 }` ordering, so these values come from the newest matching documents encountered during the scan.
 `Date` is converted into an ISO 8601 string, `ObjectId` into `string`, and binary data into hex. Other types are shown in square brackets.
-Variety reports BSON wrapper types such as `Decimal128`, `Timestamp`, `Code`, `BSONRegExp`, `MinKey`, `MaxKey`, and `DBRef` by their BSON type names in the `types` column.
+Variety reports BSON wrapper types such as `Decimal128`, `Timestamp`, `Code`, `BSONRegExp`, `MinKey`, `MaxKey`, and `DBRef` by their BSON type names in the `types` column. BSON `Double` and `Int32` are the current exception: the shell-backed analysis path receives both as plain JavaScript numbers, so Variety reports both as `Number`.
 
 ## Collect Multiple Example Values
 
