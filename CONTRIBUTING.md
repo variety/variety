@@ -20,9 +20,10 @@ As an additional (not required) dependency, [Docker](https://www.docker.com/) or
   IIFE; registers an `ascii` factory on `shellContext.__varietyFormatters`.
 - `core/formatters/json.js` — built-in JSON formatter. Self-contained IIFE;
   registers a `json` factory on `shellContext.__varietyFormatters`.
-- `core/engine.js` — pure, side-effect-free analysis logic. No runtime
-  dependencies on shell globals, Node I/O, persistence, or formatting. Exports
-  the reducer/finalization engine used by both the shell-facing analyzer and
+- `core/engine.js` — reusable analysis logic that keeps persistence,
+  formatter dispatch, and output side effects out of the engine. It still
+  tolerates shell/runtime helpers when they are available. Exports the
+  reducer/finalization engine used by both the shell-facing analyzer and
   Node-side tests. This is the future `@variety/core` package boundary.
 - `core/analyzer.js` — shell-adjacent orchestration that traverses the cursor,
   optionally persists results, dispatches to formatters, and exposes `run()`

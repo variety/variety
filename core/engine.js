@@ -342,14 +342,6 @@
     return accumulator;
   };
 
-  const reduceCursor = (cursor, callback, initialValue) => {
-    let result = initialValue;
-    cursor.forEach((obj) => {
-      result = callback(result, obj);
-    });
-    return result;
-  };
-
   // By default, keys ending in an array index (e.g. "tags.XX") are suppressed,
   // since the parent key already captures the Array type. Set showArrayElements:true
   // to include them — useful for verifying element-type consistency within arrays.
@@ -373,7 +365,11 @@
   /**
    * @param {Record<string, unknown>} config
    * @param {Iterable<Record<string, unknown>>} documents
-   * @param {{ documentsCount?: number, log?: (message: string) => void }} [options]
+   * @param {{
+   *   documentsCount?: number,
+   *   log?: (message: string) => void
+   * }} [options] When documentsCount is provided, percentContaining uses that
+   * value instead of the number of iterated documents.
    */
   const analyzeDocuments = (config, documents, options) => {
     const analysisOptions = options || {};
@@ -410,13 +406,10 @@
     mergeDocument,
     convertResults,
     ingestDocument,
-    reduceCursor,
     buildResultFilter,
     compareResults,
     finalizeResults,
     analyzeDocuments,
-    // Back-compat alias while the adapter/orchestration migrates to the new names.
-    reduceDocuments: ingestDocument,
   };
 
   shellContext.__varietyEngine = engine;

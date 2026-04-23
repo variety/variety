@@ -20,7 +20,7 @@ const enginePath = fileURLToPath(new URL('../../../core/engine.js', import.meta.
  *   maxExamples: number,
  * }} AnalyzerConfig
  * @typedef {{
-   *   varietyTypeOf: (config: AnalyzerConfig, thing: unknown) => string
+ *   varietyTypeOf: (config: AnalyzerConfig, thing: unknown) => string
  * }} VarietyImpl
  */
 

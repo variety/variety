@@ -37,11 +37,13 @@ Please see https://github.com/variety/variety for details. */
 //      a factory function on `shellContext.__varietyFormatters`. Third-party
 //      formatters can be supplied as plugins instead (see README).
 //
-//   2. ENGINE SECTION (core/engine.js) — pure, side-effect-free analysis logic.
-//      Functions take their dependencies (config, and where needed a `log`
-//      function) as explicit parameters and return structured analysis rows.
-//      The section hands a reusable engine to later sections via
-//      `shellContext.__varietyEngine`.
+//   2. ENGINE SECTION (core/engine.js) — reusable analysis logic that keeps
+//      persistence, formatter dispatch, and output side effects out of the
+//      engine. It still tolerates shell/runtime helpers when they are
+//      available. Functions take their dependencies (config, and where needed
+//      a `log` function) as explicit parameters and return structured
+//      analysis rows. The section hands a reusable engine to later sections
+//      via `shellContext.__varietyEngine`.
 //
 //   3. ANALYZER SECTION (core/analyzer.js) — shell-adjacent orchestration for
 //      cursor traversal, optional persistence, and formatter dispatch. Depends
@@ -493,14 +495,6 @@ Please see https://github.com/variety/variety for details. */
     return accumulator;
   };
 
-  const reduceCursor = (cursor, callback, initialValue) => {
-    let result = initialValue;
-    cursor.forEach((obj) => {
-      result = callback(result, obj);
-    });
-    return result;
-  };
-
   // By default, keys ending in an array index (e.g. "tags.XX") are suppressed,
   // since the parent key already captures the Array type. Set showArrayElements:true
   // to include them — useful for verifying element-type consistency within arrays.
@@ -524,7 +518,11 @@ Please see https://github.com/variety/variety for details. */
   /**
    * @param {Record<string, unknown>} config
    * @param {Iterable<Record<string, unknown>>} documents
-   * @param {{ documentsCount?: number, log?: (message: string) => void }} [options]
+   * @param {{
+   *   documentsCount?: number,
+   *   log?: (message: string) => void
+   * }} [options] When documentsCount is provided, percentContaining uses that
+   * value instead of the number of iterated documents.
    */
   const analyzeDocuments = (config, documents, options) => {
     const analysisOptions = options || {};
@@ -561,13 +559,10 @@ Please see https://github.com/variety/variety for details. */
     mergeDocument,
     convertResults,
     ingestDocument,
-    reduceCursor,
     buildResultFilter,
     compareResults,
     finalizeResults,
     analyzeDocuments,
-    // Back-compat alias while the adapter/orchestration migrates to the new names.
-    reduceDocuments: ingestDocument,
   };
 
   shellContext.__varietyEngine = engine;

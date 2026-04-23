@@ -32,7 +32,7 @@ const enginePath = fileURLToPath(new URL('../../../core/engine.js', import.meta.
  *     config: AnalyzerConfig,
  *     interimResults: Record<string, InterimResult>,
  *     documentsCount: number
- *   ) => VarietyResultRow[]
+ *   ) => VarietyResultRow[],
  *   analyzeDocuments: (
  *     config: AnalyzerConfig,
  *     documents: Iterable<FuzzDocument>,

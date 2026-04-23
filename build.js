@@ -51,11 +51,13 @@ Please see https://github.com/variety/variety for details. */
 //      a factory function on \`shellContext.__varietyFormatters\`. Third-party
 //      formatters can be supplied as plugins instead (see README).
 //
-//   2. ENGINE SECTION (core/engine.js) — pure, side-effect-free analysis logic.
-//      Functions take their dependencies (config, and where needed a \`log\`
-//      function) as explicit parameters and return structured analysis rows.
-//      The section hands a reusable engine to later sections via
-//      \`shellContext.__varietyEngine\`.
+//   2. ENGINE SECTION (core/engine.js) — reusable analysis logic that keeps
+//      persistence, formatter dispatch, and output side effects out of the
+//      engine. It still tolerates shell/runtime helpers when they are
+//      available. Functions take their dependencies (config, and where needed
+//      a \`log\` function) as explicit parameters and return structured
+//      analysis rows. The section hands a reusable engine to later sections
+//      via \`shellContext.__varietyEngine\`.
 //
 //   3. ANALYZER SECTION (core/analyzer.js) — shell-adjacent orchestration for
 //      cursor traversal, optional persistence, and formatter dispatch. Depends
