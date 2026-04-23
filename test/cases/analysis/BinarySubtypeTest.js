@@ -62,7 +62,8 @@ const doc = {
   binData_vector_int8:       new Binary(Uint8Array.from([0x03, 0x00, 0x01, 0x02, 0x03]), 0x09),
   binData_vector_packed_bit: new Binary(Uint8Array.from([0x10, 0x00, 0xff]), 0x09),
   binData_vector_float32:    new Binary(Uint8Array.from([0x27, 0x00, 0x00, 0x00, 0x80, 0x3f]), 0x09),
-  binData_user:              new Binary(Uint8Array.from([0x01, 0x02, 0x03]), Binary.SUBTYPE_USER_DEFINED),
+  binData_user_0x80:         new Binary(Uint8Array.from([0x01, 0x02, 0x03]), Binary.SUBTYPE_USER_DEFINED),
+  binData_user_0x81:         new Binary(Uint8Array.from([0x01, 0x02, 0x03]), 0x81),
 };
 
 describe('Binary subtype recognition', () => {
@@ -71,7 +72,7 @@ describe('Binary subtype recognition', () => {
 
   it('should report each server-insertable mapped binary subtype under its Variety label', async () => {
     const results = await test.runJsonAnalysis({ collection: 'bindata_subtypes' }, true);
-    results.validateResultsCount(13); // _id plus one field per subtype
+    results.validateResultsCount(14); // _id plus one field per subtype
     results.validate('_id',                        1, 100.0, { ObjectId: 1 });
     results.validate('binData_generic',            1, 100.0, { 'BinData-generic':              1 });
     results.validate('binData_function',           1, 100.0, { 'BinData-function':             1 });
@@ -85,12 +86,23 @@ describe('Binary subtype recognition', () => {
     results.validate('binData_vector_int8',        1, 100.0, { 'BinData-vector[INT8]':         1 });
     results.validate('binData_vector_packed_bit',  1, 100.0, { 'BinData-vector[PACKED_BIT]':   1 });
     results.validate('binData_vector_float32',     1, 100.0, { 'BinData-vector[FLOAT32]':      1 });
-    results.validate('binData_user',               1, 100.0, { 'BinData-user':                 1 });
+    results.validate('binData_user_0x80',          1, 100.0, { 'BinData-user[0x80]':           1 });
+    results.validate('binData_user_0x81',          1, 100.0, { 'BinData-user[0x81]':           1 });
   });
 
   it('should report compressed BSON column subtype under its Variety label', () => {
     const result = impl.varietyTypeOf(config, new Binary(Uint8Array.from([0x01, 0x02, 0x03, 0x04]), 0x07));
     assert.equal(result, 'BinData-compressed-column');
+  });
+
+  it('should report a user-defined subtype at the top of the range as BinData-user[0xff]', () => {
+    const result = impl.varietyTypeOf(config, new Binary(Uint8Array.from([0x01]), 0xff));
+    assert.equal(result, 'BinData-user[0xff]');
+  });
+
+  it('should report a spec-reserved subtype as BinData-reserved', () => {
+    const result = impl.varietyTypeOf(config, new Binary(Uint8Array.from([0x01]), 0x0a));
+    assert.equal(result, 'BinData-reserved');
   });
 
   it('should report an unknown vector dtype byte as BinData-vector[0xNN]', () => {

@@ -178,6 +178,12 @@
         if (subtype === 0x09) {
           return getVectorDtypeLabel(thing);
         }
+        if (subtype >= 0x80) {
+          return `BinData-user[0x${subtype.toString(16).padStart(2, '0')}]`;
+        }
+        if (subtype >= 0x0a) {
+          return 'BinData-reserved';
+        }
         const binDataTypes = {
           0x00: 'generic',
           0x01: 'function',
@@ -188,7 +194,6 @@
           0x06: 'encrypted',
           0x07: 'compressed-column',
           0x08: 'sensitive',
-          0x80: 'user',
         };
         return `BinData-${binDataTypes[subtype]}`;
       } else if (typeof specialType !== 'undefined') {

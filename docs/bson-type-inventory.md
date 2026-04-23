@@ -50,12 +50,13 @@ type mapping; [V6] tests every standard binary subtype plus custom subtype
 each deprecated top-level BSON type.
 Current tests recognize BSON `Double` and `Int32` as Variety `Number`, BSON
 JavaScript code and JavaScript-with-scope as Variety `Code`, BSON `Symbol`
-(type 14) as Variety `String` in mongosh, standard binary subtypes plus custom
-subtype `0x80` under their `BinData-{subtype}` labels, and vector binary
-subtype `9` values under dtype-specific labels (`BinData-vector[FLOAT32]`,
-`BinData-vector[INT8]`, `BinData-vector[PACKED_BIT]`), with unknown dtypes
-reported as `BinData-vector[0xNN]` and malformed payloads as
-`BinData-vector[malformed]`.
+(type 14) as Variety `String` in mongosh, standard binary subtypes under their
+`BinData-{subtype}` labels, user-defined binary subtypes `0x80` through `0xFF`
+as `BinData-user[0xNN]`, BSON-reserved binary subtypes `0x0A` through `0x7F`
+as `BinData-reserved`, and vector binary subtype `9` values under dtype-specific
+labels (`BinData-vector[FLOAT32]`, `BinData-vector[INT8]`,
+`BinData-vector[PACKED_BIT]`), with unknown dtypes reported as
+`BinData-vector[0xNN]` and malformed payloads as `BinData-vector[malformed]`.
 
 ## Top-Level BSON Value Types
 
@@ -106,7 +107,8 @@ specification is the broader authority for the whole user-defined range.
 | `7` / `0x07` | Compressed BSON column / compressed time series data | Current | Tested | BSON spec calls this "Compressed BSON column"; MongoDB docs describe it as compressed time series data and mark it new in MongoDB 5.2. The format uses delta, delta-of-delta, run-length encoding, and sparse-array missing-value encoding. Variety reports this as `BinData-compressed-column`. Coverage is analyzer-level because MongoDB validates compressed-column payloads. | [S1], [S2], [V6] |
 | `8` / `0x08` | Sensitive | Current | Tested | Sensitive data such as a key or secret. MongoDB logs a placeholder rather than the literal binary value. Variety reports this as `BinData-sensitive`. | [S1], [S2], [V6] |
 | `9` / `0x09` | Vector | Current | Tested | Dense numeric vector storage. The binary payload starts with a dtype byte and padding byte before the packed elements. Variety inspects the dtype byte and reports dtype-specific labels: `BinData-vector[FLOAT32]`, `BinData-vector[INT8]`, `BinData-vector[PACKED_BIT]`. Unknown dtypes produce `BinData-vector[0xNN]`; unreadable payloads produce `BinData-vector[malformed]`. See "Vector Subtype 9 Dtypes". | [S1], [S2], [S6], [V6] |
-| `128` / `0x80` through `255` / `0xFF` | User-defined / custom | Current | Partial | User-defined binary subtype range. MongoDB's BSON Types page lists `128` as custom data; the BSON spec reserves the full `128` through `255` range for user-defined subtypes. Variety maps subtype `0x80` to `BinData-user` and that subtype is test-backed. Subtypes `0x81` through `0xFF` have no intentional Variety mapping and produce `BinData-undefined`. | [S1], [S2], [V6] |
+| `10` / `0x0A` through `127` / `0x7F` | Reserved | Reserved by BSON spec | Tested | Subtype range not assigned by the BSON specification. These subtypes cannot be inserted into MongoDB. Variety reports any value with a subtype in this range as `BinData-reserved`. Coverage is analyzer-level. | [S1], [V6] |
+| `128` / `0x80` through `255` / `0xFF` | User-defined / custom | Current | Tested | User-defined binary subtype range. MongoDB's BSON Types page lists `128` as custom data; the BSON spec reserves the full `128` through `255` range for user-defined subtypes. Variety reports each subtype in this range as `BinData-user[0xNN]` where `NN` is the subtype byte in lowercase zero-padded hex (e.g. `BinData-user[0x80]`, `BinData-user[0x81]`). The former flat label `BinData-user` is retired. Integration coverage for `0x80` and `0x81`; analyzer-level coverage for `0xff`. | [S1], [S2], [V6] |
 
 ## Vector Subtype 9 Dtypes
 
@@ -259,9 +261,10 @@ round-trip tests, but they are not extra top-level BSON types.
   [test/cases/analysis/BinarySubtypeTest.js](../test/cases/analysis/BinarySubtypeTest.js).
   Added 2026-04-21; updated and inspected in the current working tree on
   2026-04-23. Essential metadata: integration and analyzer-level tests for
-  every standard BSON binary subtype plus custom subtype `0x80` and vector
-  dtype-specific labels: generic, function, old, UUID-old, UUID, MD5,
-  encrypted, compressed column, sensitive, user-defined `0x80`, and vector
+  every standard BSON binary subtype, user-defined subtypes `0x80` and `0x81`
+  (integration) and `0xff` (analyzer-level), spec-reserved subtype `0x0a`
+  (analyzer-level), and vector dtype-specific labels: generic, function, old,
+  UUID-old, UUID, MD5, encrypted, compressed column, sensitive, and vector
   binary with dtype labels for INT8, PACKED_BIT, and FLOAT32, unknown dtype
   fallback, and malformed payload handling.
 - [V7] Variety local test file,
