@@ -169,6 +169,7 @@
 
   // Clean up the implementation handoffs so repeated loads remain idempotent
   // and no ad hoc internals leak onto globalThis after execution.
+  delete shellContext.__varietyEngine;
   delete shellContext.__varietyImpl;
   delete shellContext.__varietyFormatters;
 }(this)); // end strict mode
