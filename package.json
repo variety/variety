@@ -73,16 +73,16 @@
     "@prantlf/jsonlint": "^17.0.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "^25.6.0",
-    "eslint": "^10.2.0",
+    "eslint": "^10.2.1",
     "fast-check": "^4.7.0",
     "globals": "^17.5.0",
     "husky": "^9.1.7",
     "js-yaml": "^4.1.1",
     "markdownlint-cli": "^0.48.0",
     "mocha": "^11.7.5",
-    "mongodb": "^7.1.1",
+    "mongodb": "^7.2.0",
     "promisify-child-process": "^5.0.1",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.58.2"
+    "typescript-eslint": "^8.59.0"
   }
 }
