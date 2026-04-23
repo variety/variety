@@ -33,6 +33,7 @@ describe('Shared analysis config', () => {
       'maxDepth',
       'sort',
       'outputFormat',
+      'hideFrequencyColumns',
       'persistResults',
       'resultsDatabase',
       'resultsCollection',
@@ -50,6 +51,7 @@ describe('Shared analysis config', () => {
       arrayEscape: 'XX',
       compactArrayTypes: false,
       excludeSubkeys: ['meta.tags'],
+      hideFrequencyColumns: false,
       lastValue: false,
       limit: 5,
       logKeysContinuously: false,
@@ -70,6 +72,7 @@ describe('Shared analysis config', () => {
       arrayEscape: 'XX',
       compactArrayTypes: false,
       excludeSubkeys: { 'meta.tags.': true },
+      hideFrequencyColumns: false,
       lastValue: false,
       limit: 5,
       logKeysContinuously: false,
@@ -112,6 +115,13 @@ describe('Shared analysis config', () => {
         validateAnalysisOptions({ maxExamples: -1 });
       },
       /maxExamples must be a non-negative integer/
+    );
+
+    assert.throws(
+      () => {
+        validateAnalysisOptions(/** @type {any} */ ({ hideFrequencyColumns: 'yes' }));
+      },
+      /hideFrequencyColumns must be a boolean/
     );
 
     assert.throws(

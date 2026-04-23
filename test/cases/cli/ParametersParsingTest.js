@@ -17,6 +17,7 @@ const mongodbPort = Number(process.env['MONGODB_PORT'] || 27017);
  *   maxExamples?: unknown,
  *   sort?: unknown,
  *   outputFormat?: unknown,
+ *   hideFrequencyColumns?: unknown,
  *   persistResults?: unknown,
  *   resultsDatabase?: unknown,
  *   resultsCollection?: unknown,
@@ -43,6 +44,7 @@ const setParsedParam = (params, key, parsedValue) => {
   case 'maxExamples':
   case 'sort':
   case 'outputFormat':
+  case 'hideFrequencyColumns':
   case 'persistResults':
   case 'resultsDatabase':
   case 'resultsCollection':
@@ -96,6 +98,7 @@ describe('Parameters parsing', () => {
     assert.equal(params.maxExamples, 0);
     assert.deepEqual(params.sort, {'_id':-1});
     assert.equal(params.outputFormat, 'ascii');
+    assert.equal(params.hideFrequencyColumns, false);
     assert.equal(params.persistResults, false);
     assert.equal(params.resultsDatabase, 'varietyResults');
     assert.equal(params.resultsCollection, 'usersKeys');
@@ -122,6 +125,12 @@ describe('Parameters parsing', () => {
     assert.equal(params.maxDepth, 5);
     assert.deepEqual(params.sort, {name:1});
     assert.deepEqual(params.query, {name:'Harry'});
+  });
+
+  it('should parse hideFrequencyColumns when enabled', async () => {
+    const results = await test.runAnalysis({collection: 'users', hideFrequencyColumns: true});
+    const params = parseParams(results);
+    assert.equal(params.hideFrequencyColumns, true);
   });
 
   it('should recognize unknown collection', async () => {

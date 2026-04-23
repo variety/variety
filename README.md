@@ -269,6 +269,33 @@ Select a format with the `outputFormat` option:
 
 Passing an unrecognised value throws an error listing the valid options.
 
+### Hide Frequency Columns in ASCII Output
+
+If you only care about schema shape and type coverage, set `hideFrequencyColumns`
+to `true` to remove the `occurrences` and `percents` columns from the built-in
+ASCII table:
+
+    $ mongosh test --eval "var collection = 'users', hideFrequencyColumns = true" variety.js
+
+Via the first-party CLI:
+
+    $ variety test/users --hide-frequency-columns
+
+    +-------------------------------------------+
+    | key                | types                |
+    | ------------------ | -------------------- |
+    | _id                | ObjectId             |
+    | name               | String               |
+    | bio                | String               |
+    | birthday           | Date                 |
+    | pets               | String (1),Array (1) |
+    | someBinData        | BinData-old          |
+    | someWeirdLegacyKey | String               |
+    +-------------------------------------------+
+
+This option affects only built-in ASCII output. JSON output and persisted
+results still include `totalOccurrences` and `percentContaining`.
+
 ### Plugins
 
 A plugin is a `.js` file that exports a plain object with lifecycle hooks. Load one with the `plugins` option (comma-separated for multiple):

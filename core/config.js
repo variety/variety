@@ -14,6 +14,7 @@
    *   arrayEscape?: string,
    *   compactArrayTypes?: boolean,
    *   excludeSubkeys?: string[],
+   *   hideFrequencyColumns?: boolean,
    *   lastValue?: boolean,
    *   limit?: number,
    *   logKeysContinuously?: boolean,
@@ -36,6 +37,7 @@
    *   arrayEscape: string,
    *   compactArrayTypes: boolean,
    *   excludeSubkeys: string[],
+   *   hideFrequencyColumns: boolean,
    *   lastValue: boolean,
    *   limit: number,
    *   logKeysContinuously: boolean,
@@ -95,6 +97,7 @@
     'maxDepth',
     'sort',
     'outputFormat',
+    'hideFrequencyColumns',
     'persistResults',
     'resultsDatabase',
     'resultsCollection',
@@ -259,6 +262,10 @@
       validated.maxExamples = validateNonNegativeIntegerOption('maxExamples', source['maxExamples']);
     }
 
+    if (hasOwn(source, 'hideFrequencyColumns') && typeof source['hideFrequencyColumns'] !== 'undefined') {
+      validated.hideFrequencyColumns = validateBooleanOption('hideFrequencyColumns', source['hideFrequencyColumns']);
+    }
+
     if (hasOwn(source, 'lastValue') && typeof source['lastValue'] !== 'undefined') {
       validated.lastValue = validateBooleanOption('lastValue', source['lastValue']);
     }
@@ -352,6 +359,9 @@
       arrayEscape: hasOwn(validated, 'arrayEscape') ? /** @type {string} */ (validated.arrayEscape) : 'XX',
       compactArrayTypes: hasOwn(validated, 'compactArrayTypes') ? /** @type {boolean} */ (validated.compactArrayTypes) : false,
       excludeSubkeys: hasOwn(validated, 'excludeSubkeys') ? /** @type {string[]} */ (validated.excludeSubkeys) : [],
+      hideFrequencyColumns: hasOwn(validated, 'hideFrequencyColumns')
+        ? /** @type {boolean} */ (validated.hideFrequencyColumns)
+        : false,
       lastValue: hasOwn(validated, 'lastValue') ? /** @type {boolean} */ (validated.lastValue) : false,
       limit: hasOwn(validated, 'limit') ? /** @type {number} */ (validated.limit) : resolveDefaultLimit(query, context),
       logKeysContinuously: hasOwn(validated, 'logKeysContinuously') ? /** @type {boolean} */ (validated.logKeysContinuously) : false,
@@ -395,6 +405,7 @@
       arrayEscape: resolved.arrayEscape,
       compactArrayTypes: resolved.compactArrayTypes,
       excludeSubkeys: createExcludeSubkeysMap(resolved.excludeSubkeys),
+      hideFrequencyColumns: resolved.hideFrequencyColumns,
       lastValue: resolved.lastValue,
       limit: resolved.limit,
       logKeysContinuously: resolved.logKeysContinuously,
