@@ -80,7 +80,7 @@
     "js-yaml": "^4.1.1",
     "markdownlint-cli": "^0.48.0",
     "mocha": "^11.7.5",
-    "mongodb": "^7.1.1",
+    "mongodb": "^7.2.0",
     "promisify-child-process": "^5.0.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.58.2"
