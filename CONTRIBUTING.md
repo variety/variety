@@ -2,6 +2,14 @@
 
 This document covers setup, repo layout, testing, linting, and how to report issues or send patches. For user-facing usage and features, see [README.md](README.md).
 
+## Documentation Sync Checks
+
+When BSON type support changes in code or tests, or when
+`docs/bson-type-inventory.md` changes, also review the README's "BSON Type
+Support Snapshot" subsection. `docs/bson-type-inventory.md` is the detailed
+source of truth; the README section should stay aligned as the quick
+user-facing summary.
+
 ## Setup
 
 This project is NPM based and provides standard NPM functionality. Development and testing add local npm dev dependencies, which you install as usual:

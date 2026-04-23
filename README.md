@@ -29,6 +29,22 @@ Also featured on the [official MongoDB blog](https://web.archive.org/web/2023100
 | MongoDB shell | `mongosh`: MongoDB >= 6.0<br />`mongo`: MongoDB < 6.0 |
 | Node.js | latest 22.x, plus a latest 24.x smoke test |
 
+## BSON Type Support Snapshot
+
+The detailed BSON support inventory lives in
+[docs/bson-type-inventory.md](docs/bson-type-inventory.md). At a glance,
+Variety has intentional, test-backed behavior for every storage-level BSON
+value type, though some values are intentionally reported under broader
+Variety labels such as `Number`, `Code`, `String`, `DBRef`, or subtype-specific
+`BinData-*` labels rather than one BSON name per output label.
+
+| Area | Current snapshot |
+| --- | --- |
+| Top-level BSON value types | `21 / 21` storage-level BSON value types have intentional, test-backed Variety behavior. Some intentionally merge into broader output labels such as `Number`, `Code`, `String`, `DBRef`, or per-subtype `BinData-*` labels. |
+| Standard BSON binary subtypes | `10 / 10` standard binary subtypes (`0x00` through `0x09`) have intentional, test-backed Variety behavior. |
+| User-defined binary subtypes | `128 / 128` user-defined subtypes (`0x80` through `0xFF`) are intentionally mapped as `BinData-user[0xNN]`, with representative test coverage for `0x80`, `0x81`, and `0xff`. |
+| Vector subtype `9` dtypes | `3 / 3` documented dtypes currently get dtype-specific labels: `BinData-vector[INT8]`, `BinData-vector[PACKED_BIT]`, and `BinData-vector[FLOAT32]`. Unknown dtype bytes and malformed payloads also have explicit fallback labels. |
+
 ## An Easy Example
 
 We'll make a collection:
