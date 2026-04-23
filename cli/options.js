@@ -3,6 +3,11 @@
 'use strict';
 
 const path = require('path');
+const varietyConfigModule = /** @type {typeof import('../core/config.js')} */ (require('../core/config.js'));
+const {
+  ANALYSIS_OPTION_NAMES,
+  validateAnalysisOptions,
+} = varietyConfigModule;
 
 /**
  * @typedef {{
@@ -30,13 +35,14 @@ const path = require('path');
  *   query?: Record<string, unknown>,
  *   resultsCollection?: string,
  *   resultsDatabase?: string,
- *   resultsPass?: string,
- *   resultsUser?: string,
- *   secondaryOk?: boolean,
+ *   resultsPass?: string | null,
+ *   resultsUser?: string | null,
  *   showArrayElements?: boolean,
  *   sort?: Record<string, unknown>,
- * }} VarietyOptions
+ * }} AnalysisOptionsInput
  */
+
+/** @typedef {{ secondaryOk?: boolean }} ShellRuntimeOptions */
 
 /**
  * @typedef {{
@@ -50,9 +56,10 @@ const path = require('path');
  *   extraEval: string[],
  *   help?: boolean,
  *   pluginEntries: string[],
+ *   runtimeOptions: ShellRuntimeOptions,
  *   shellOptions: ShellOptions,
  *   target: TargetSelection | null,
- *   varietyOptions: VarietyOptions,
+ *   varietyOptions: AnalysisOptionsInput,
  *   version?: boolean,
  * }} ParsedCliArguments
  */
@@ -92,12 +99,6 @@ class CliUsageError extends Error {
 }
 
 const COMPATIBILITY_ENV_KEYS = ['DB', 'EVAL_CMDS', 'VARIETYJS_DIR'];
-/** @type {Array<keyof VarietyOptions>} */
-const TARGET_OPTION_NAMES = [
-  'query', 'sort', 'limit', 'maxDepth', 'outputFormat', 'maxExamples',
-  'lastValue', 'secondaryOk', 'showArrayElements', 'compactArrayTypes', 'arrayEscape', 'excludeSubkeys', 'logKeysContinuously',
-  'persistResults', 'resultsDatabase', 'resultsCollection', 'resultsUser', 'resultsPass',
-];
 /** @type {Record<string, string>} */
 const FLAG_ALIASES = {
   'array-escape': 'arrayEscape',
@@ -307,6 +308,7 @@ const parseCliArguments = (argv) => {
   const parsed = {
     extraEval: [],
     pluginEntries: [],
+    runtimeOptions: {},
     shellOptions: {},
     target: null,
     varietyOptions: {},
@@ -383,7 +385,7 @@ const parseCliArguments = (argv) => {
       parsed.varietyOptions.lastValue = parseBooleanValue(optionName, inlineValue);
       break;
     case 'secondaryOk':
-      parsed.varietyOptions.secondaryOk = parseBooleanValue(optionName, inlineValue);
+      parsed.runtimeOptions.secondaryOk = parseBooleanValue(optionName, inlineValue);
       break;
     case 'showArrayElements':
       parsed.varietyOptions.showArrayElements = parseBooleanValue(optionName, inlineValue);
@@ -487,6 +489,13 @@ const parseCliArguments = (argv) => {
     throw new CliUsageError('Missing required DB/COLLECTION target.');
   }
 
+  try {
+    parsed.varietyOptions = validateAnalysisOptions(parsed.varietyOptions);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new CliUsageError(errorMessage);
+  }
+
   return parsed;
 };
 
@@ -509,11 +518,14 @@ const buildEvalCode = (parsedCliArguments) => {
   }
 
   const statements = [renderVarAssignment('collection', parsedCliArguments.target.collection)];
-  TARGET_OPTION_NAMES.forEach((name) => {
+  ANALYSIS_OPTION_NAMES.forEach((name) => {
     if (Object.hasOwn(parsedCliArguments.varietyOptions, name)) {
       statements.push(renderVarAssignment(name, parsedCliArguments.varietyOptions[name]));
     }
   });
+  if (Object.hasOwn(parsedCliArguments.runtimeOptions, 'secondaryOk')) {
+    statements.push(renderVarAssignment('secondaryOk', parsedCliArguments.runtimeOptions.secondaryOk));
+  }
 
   if (parsedCliArguments.pluginEntries.length > 0) {
     const pluginsValue = parsedCliArguments.pluginEntries
