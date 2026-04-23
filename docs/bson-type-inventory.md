@@ -48,15 +48,19 @@ and [V4] cover common application values and arrays; [V5] defines the current
 type mapping; [V6] tests every standard binary subtype, representative
 reserved/user-defined-range cases, and vector dtype-specific labels; and [V7]
 proves the Variety label for each deprecated top-level BSON type.
-Current tests recognize BSON `Double` and `Int32` as Variety `Number`, BSON
-JavaScript code and JavaScript-with-scope as Variety `Code`, BSON `Symbol`
-(type 14) as Variety `String` in mongosh, standard binary subtypes under their
+Current tests recognize BSON `Double` and `Int32` as Variety `Number` because
+the current shell-backed retrieval path receives both as plain JavaScript
+numbers before Variety inspects them. BSON JavaScript code and
+JavaScript-with-scope report as Variety `Code`, BSON `Symbol` (type 14) reports
+as Variety `String` in mongosh, standard binary subtypes report under their
 `BinData-{subtype}` labels, user-defined binary subtypes `0x80` through `0xFF`
-as `BinData-user[0xNN]`, BSON-reserved binary subtypes `0x0A` through `0x7F`
-as `BinData-reserved`, and vector binary subtype `9` values under dtype-specific
-labels (`BinData-vector[FLOAT32]`, `BinData-vector[INT8]`,
-`BinData-vector[PACKED_BIT]`), with unknown dtypes reported as
-`BinData-vector[0xNN]` and malformed payloads as `BinData-vector[malformed]`.
+report as `BinData-user[0xNN]`, BSON-reserved binary subtypes `0x0A` through
+`0x7F` report as `BinData-reserved`, and vector binary subtype `9` values
+report under dtype-specific labels (`BinData-vector[FLOAT32]`,
+`BinData-vector[INT8]`, `BinData-vector[PACKED_BIT]`), with unknown dtypes
+reported as `BinData-vector[0xNN]` and malformed payloads as
+`BinData-vector[malformed]`. Distinguishing `Double` from `Int32` would require
+a different retrieval architecture, not just a new Variety label.
 
 ## Top-Level BSON Value Types
 
@@ -67,7 +71,7 @@ column is the string alias accepted by MongoDB `$type` where documented.
 | Type code | BSON value type | Query alias | Status | Variety | Storage shape and notes | Sources |
 | --- | --- | --- | --- | --- | --- | --- |
 | `-1` | Min key | `minKey` | Current | Tested | Special value that compares lower than every other possible BSON element value. No payload beyond the element type and field name. | [S1], [S2] |
-| `1` | Double | `double` | Current | Tested merged | 64-bit IEEE 754 binary floating point. Variety's integration test currently observes this as `Number`. | [S1], [S2] |
+| `1` | Double | `double` | Current | Tested merged | 64-bit IEEE 754 binary floating point. Variety's current shell-backed integration path sees this as a plain JavaScript number, so Variety reports it under the merged label `Number`. | [S1], [S2] |
 | `2` | String | `string` | Current | Tested | Length-prefixed UTF-8 string. MongoDB drivers generally convert language strings to UTF-8. | [S1], [S2] |
 | `3` | Object / embedded document | `object` | Current | Tested | Embedded BSON document. A top-level MongoDB record is also a BSON document, but it is not preceded by an element type byte unless nested as a value. | [S1], [S2] |
 | `4` | Array | `array` | Current | Tested | Encoded as a BSON document whose keys are sequential integer strings starting at `0`. | [S1], [S2] |
@@ -82,7 +86,7 @@ column is the string alias accepted by MongoDB `$type` where documented.
 | `13` | JavaScript code | `javascript` | Current BSON type, operationally discouraged | Tested merged | JavaScript source code stored as a string. Variety reports this as `Code`, the same label used for JavaScript code with scope (type `15`). Server-side JavaScript functions are deprecated starting in MongoDB 8.0, but this BSON storage type remains in the BSON type inventory. | [S1], [S2], [S10], [V1] |
 | `14` | Symbol | `symbol` | Deprecated | Tested merged | Historical symbol value stored as a string. Deprecated. Mongosh promotes stored type-14 values to plain JavaScript strings; Variety reports these as `String`, the broader label shared with BSON String (type 2). The analyzer also has a `BSONSymbol` path for BSONSymbol objects. | [S1], [S2], [V1], [V7] |
 | `15` | JavaScript code with scope | `javascriptWithScope` | Deprecated | Tested merged | Code-with-scope value containing total length, JavaScript source string, and a scope document. Variety reports this as `Code`. `$where` no longer supports this type; its use with `$where` was deprecated since MongoDB 4.2.1. `mapReduce` function support was removed in MongoDB 4.4 after the same deprecation. | [S1], [S2], [S9], [S10], [V1], [V7] |
-| `16` | 32-bit integer | `int` | Current | Tested merged | Signed 32-bit integer. Variety's integration test currently observes this as `Number`. | [S1], [S2] |
+| `16` | 32-bit integer | `int` | Current | Tested merged | Signed 32-bit integer. Variety's current shell-backed integration path sees this as a plain JavaScript number, so Variety reports it under the merged label `Number`. | [S1], [S2] |
 | `17` | Timestamp | `timestamp` | Current, mostly internal | Tested | 64-bit timestamp used internally by MongoDB replication and sharding. MongoDB compares the time portion before the increment portion. Use BSON Date for application timestamps in most cases. | [S1], [S2] |
 | `18` | 64-bit integer | `long` | Current | Tested | Signed 64-bit integer. Variety reports this as `NumberLong`. | [S1], [S2] |
 | `19` | Decimal128 | `decimal` | Current, introduced with MongoDB 3.4 | Tested | 128-bit IEEE 754-2008 decimal floating point. MongoDB documents 34 decimal digits of precision and an exponent range of `-6143` to `+6144`. Variety reports this as `Decimal128`. | [S1], [S2], [S8] |
