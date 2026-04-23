@@ -14,7 +14,7 @@ Please see https://github.com/variety/variety for details. */
 //
 // Assembled by build.js from:
 //   core/formatters/ascii.js, core/formatters/json.js,
-//   core/analyzer.js, mongo-shell/adapter.js.
+//   core/engine.js, core/analyzer.js, mongo-shell/adapter.js.
 // To change behavior, edit those source files and run `npm run build`. The
 // build output is committed so `mongosh variety.js` works from a fresh clone
 // without a build step; CI verifies the committed file matches its sources.
@@ -30,20 +30,27 @@ Please see https://github.com/variety/variety for details. */
 // See .eslint.config.js for the enforced rule set.
 
 // -----------------------------------------------------------------------------
-// This file is organized in four sections, sourced from four separate files:
+// This file is organized in four sections, sourced from five separate files:
 //
 //   1. FORMATTER SECTION (core/formatters/ascii.js, core/formatters/json.js) —
 //      built-in output formatters. Each is a self-contained IIFE that registers
 //      a factory function on `shellContext.__varietyFormatters`. Third-party
 //      formatters can be supplied as plugins instead (see README).
 //
-//   2. IMPLEMENTATION SECTION (core/analyzer.js) — pure, transport-agnostic
-//      analysis logic. Functions take their dependencies (config, and where
-//      needed a `log` function or a `deps` bag holding shell primitives)
-//      as explicit parameters. The section hands a bundle of functions to
-//      the interface section via `shellContext.__varietyImpl`.
+//   2. ENGINE SECTION (core/engine.js) — reusable analysis logic that keeps
+//      persistence, formatter dispatch, and output side effects out of the
+//      engine. It still tolerates shell/runtime helpers when they are
+//      available. Functions take their dependencies (config, and where needed
+//      a `log` function) as explicit parameters and return structured
+//      analysis rows. The section hands a reusable engine to later sections
+//      via `shellContext.__varietyEngine`.
 //
-//   3. INTERFACE SECTION (mongo-shell/adapter.js) — everything that touches
+//   3. ANALYZER SECTION (core/analyzer.js) — shell-adjacent orchestration for
+//      cursor traversal, optional persistence, and formatter dispatch. Depends
+//      on the engine and hands the combined internal API to the interface
+//      section via `shellContext.__varietyImpl`.
+//
+//   4. INTERFACE SECTION (mongo-shell/adapter.js) — everything that touches
 //      shell globals: reading input (`collection`, `plugins`, `__quiet`,
 //      `secondaryOk`, etc.), the config-echo logging, plugin loading via
 //      `load()`, input validation, and constructing the dependency bag
@@ -147,7 +154,7 @@ Please see https://github.com/variety/variety for details. */
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
 // =============================================================================
-// IMPLEMENTATION SECTION
+// ENGINE SECTION
 // =============================================================================
 (function (shellContext) {
   'use strict';
@@ -479,19 +486,13 @@ Please see https://github.com/variety/variety for details. */
     return varietyResults;
   };
 
+  const createAnalysisState = () => createKeyMap();
+
   // Merge the keys and types of current object into accumulator object.
-  const reduceDocuments = (config, accumulator, object, log) => {
+  const ingestDocument = (config, accumulator, object, log) => {
     const docResult = analyseDocument(config, serializeDoc(config, object));
     mergeDocument(config, docResult, accumulator, log);
     return accumulator;
-  };
-
-  const reduceCursor = (cursor, callback, initialValue) => {
-    let result = initialValue;
-    cursor.forEach((obj) => {
-      result = callback(result, obj);
-    });
-    return result;
   };
 
   // By default, keys ending in an array index (e.g. "tags.XX") are suppressed,
@@ -508,57 +509,41 @@ Please see https://github.com/variety/variety for details. */
     return countsDiff !== 0 ? countsDiff : a._id.key.localeCompare(b._id.key);
   };
 
-  // Orchestrates a Variety analysis from a parsed config and constructed
-  // pluginsRunner, pulling every shell primitive it needs from `deps`.
-  const run = (config, pluginsRunner, deps) => {
-    const {db, connect, log, print, countMatchingDocuments} = deps;
-
-    // limit(0) meant "no limit" in MongoDB ≤7 but is rejected by MongoDB 8+; guard against it.
-    let cursor = db.getCollection(config.collection).find(config.query).sort(config.sort);
-    if (config.limit > 0) { cursor = cursor.limit(config.limit); }
-    const interimResults = reduceCursor(
-      cursor,
-      (acc, obj) => reduceDocuments(config, acc, obj, log),
-      createKeyMap()
-    );
-    const varietyResults = convertResults(
-      config,
-      interimResults,
-      countMatchingDocuments(config.collection, config.query, config.limit)
-    )
+  const finalizeResults = (config, interimResults, documentsCount) => {
+    return convertResults(config, interimResults, documentsCount)
       .filter(buildResultFilter(config))
       .sort(compareResults);
-
-    if (config.persistResults) {
-      const resultsCollectionName = config.resultsCollection;
-      const resultsDB = !config.resultsDatabase.includes('/')
-        // Local database; don't reconnect.
-        ? db.getMongo().getDB(config.resultsDatabase)
-        // Remote database, establish new connection.
-        : connect(config.resultsDatabase);
-
-      if (config.resultsUser !== null && config.resultsPass !== null) {
-        resultsDB.auth(config.resultsUser, config.resultsPass);
-      }
-
-      // Replace results collection.
-      log(`replacing results collection: ${resultsCollectionName}`);
-      resultsDB.getCollection(resultsCollectionName).drop();
-      resultsDB.getCollection(resultsCollectionName).insert(varietyResults);
-    }
-
-    const formatterFactory = shellContext.__varietyFormatters[config.outputFormat];
-    if (typeof formatterFactory !== 'function') {
-      throw new Error(`Unknown outputFormat "${config.outputFormat}". Valid values are: ${Object.keys(shellContext.__varietyFormatters).join(', ')}.`);
-    }
-    const builtInFormatter = formatterFactory(config);
-
-    const pluginsOutput = pluginsRunner.execute('formatResults', varietyResults);
-    const outputs = pluginsOutput.length > 0 ? pluginsOutput : [builtInFormatter.formatResults(varietyResults)];
-    outputs.forEach((output) => print(output));
   };
 
-  shellContext.__varietyImpl = {
+  /**
+   * @param {Record<string, unknown>} config
+   * @param {Iterable<Record<string, unknown>>} documents
+   * @param {{
+   *   documentsCount?: number,
+   *   log?: (message: string) => void
+   * }} [options] When documentsCount is provided, percentContaining uses that
+   * value instead of the number of iterated documents.
+   */
+  const analyzeDocuments = (config, documents, options) => {
+    const analysisOptions = options || {};
+    const log = typeof analysisOptions.log === 'function' ? analysisOptions.log : () => {};
+    const interimResults = createAnalysisState();
+    let documentsCount = 0;
+
+    for (const document of documents) {
+      ingestDocument(config, interimResults, document, log);
+      documentsCount += 1;
+    }
+
+    if (typeof analysisOptions.documentsCount === 'number') {
+      documentsCount = analysisOptions.documentsCount;
+    }
+
+    return finalizeResults(config, interimResults, documentsCount);
+  };
+
+  const engine = {
+    createAnalysisState,
     createKeyMap,
     shellToJson,
     getBinDataSubtype,
@@ -573,10 +558,102 @@ Please see https://github.com/variety/variety for details. */
     analyseDocument,
     mergeDocument,
     convertResults,
-    reduceDocuments,
-    reduceCursor,
-    run,
+    ingestDocument,
+    buildResultFilter,
+    compareResults,
+    finalizeResults,
+    analyzeDocuments,
   };
+
+  shellContext.__varietyEngine = engine;
+
+  if (typeof module !== 'undefined' && module && module.exports) {
+    module.exports = engine;
+  }
+}(this));
+
+
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
+// =============================================================================
+// ANALYZER SECTION
+// =============================================================================
+(function (shellContext) {
+  'use strict';
+
+  shellContext = typeof globalThis !== 'undefined' ? globalThis : shellContext;
+
+  const engine = shellContext.__varietyEngine ||
+    (typeof module !== 'undefined' && module && module.exports && typeof require === 'function'
+      ? require('./engine.js')
+      : undefined);
+  if (!engine) {
+    throw new Error('Expected core/engine.js to register __varietyEngine.');
+  }
+
+  const persistResults = (config, varietyResults, deps) => {
+    const {db, connect, log} = deps;
+
+    const resultsCollectionName = config.resultsCollection;
+    const resultsDB = !config.resultsDatabase.includes('/')
+      // Local database; don't reconnect.
+      ? db.getMongo().getDB(config.resultsDatabase)
+      // Remote database, establish new connection.
+      : connect(config.resultsDatabase);
+
+    if (config.resultsUser !== null && config.resultsPass !== null) {
+      resultsDB.auth(config.resultsUser, config.resultsPass);
+    }
+
+    // Replace results collection.
+    log(`replacing results collection: ${resultsCollectionName}`);
+    resultsDB.getCollection(resultsCollectionName).drop();
+    resultsDB.getCollection(resultsCollectionName).insert(varietyResults);
+  };
+
+  const formatResults = (config, pluginsRunner, varietyResults, print) => {
+    const formatterFactory = shellContext.__varietyFormatters[config.outputFormat];
+    if (typeof formatterFactory !== 'function') {
+      throw new Error(`Unknown outputFormat "${config.outputFormat}". Valid values are: ${Object.keys(shellContext.__varietyFormatters).join(', ')}.`);
+    }
+    const builtInFormatter = formatterFactory(config);
+
+    const pluginsOutput = pluginsRunner.execute('formatResults', varietyResults);
+    const outputs = pluginsOutput.length > 0 ? pluginsOutput : [builtInFormatter.formatResults(varietyResults)];
+    outputs.forEach((output) => print(output));
+  };
+
+  // Orchestrates a Variety analysis from a parsed config and constructed
+  // pluginsRunner, pulling every shell primitive it needs from `deps`.
+  const run = (config, pluginsRunner, deps) => {
+    const {db, connect, log, print, countMatchingDocuments} = deps;
+
+    // limit(0) meant "no limit" in MongoDB ≤7 but is rejected by MongoDB 8+; guard against it.
+    let cursor = db.getCollection(config.collection).find(config.query).sort(config.sort);
+    if (config.limit > 0) { cursor = cursor.limit(config.limit); }
+    const interimResults = engine.createAnalysisState();
+    cursor.forEach((obj) => {
+      engine.ingestDocument(config, interimResults, obj, log);
+    });
+    const varietyResults = engine.finalizeResults(
+      config,
+      interimResults,
+      countMatchingDocuments(config.collection, config.query, config.limit)
+    );
+
+    if (config.persistResults) {
+      persistResults(config, varietyResults, {db, connect, log});
+    }
+
+    formatResults(config, pluginsRunner, varietyResults, print);
+  };
+
+  const impl = Object.assign({}, engine, { run });
+  shellContext.__varietyImpl = impl;
+
+  if (typeof module !== 'undefined' && module && module.exports) {
+    module.exports = impl;
+  }
 }(this));
 
 
@@ -751,6 +828,7 @@ Please see https://github.com/variety/variety for details. */
 
   // Clean up the implementation handoffs so repeated loads remain idempotent
   // and no ad hoc internals leak onto globalThis after execution.
+  delete shellContext.__varietyEngine;
   delete shellContext.__varietyImpl;
   delete shellContext.__varietyFormatters;
 }(this)); // end strict mode

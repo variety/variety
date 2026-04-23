@@ -6,8 +6,7 @@ import { fileURLToPath } from 'url';
 import fc from 'fast-check';
 
 const require = createRequire(import.meta.url);
-const analyzerPath = fileURLToPath(new URL('../../../core/analyzer.js', import.meta.url));
-require(analyzerPath);
+const enginePath = fileURLToPath(new URL('../../../core/engine.js', import.meta.url));
 
 /**
  * @typedef {Record<string, unknown>} FuzzDocument
@@ -22,26 +21,28 @@ require(analyzerPath);
  *   logKeysContinuously: boolean
  * }} AnalyzerConfig
  * @typedef {{
- *   createKeyMap: () => Record<string, InterimResult>,
- *   reduceDocuments: (
+ *   createAnalysisState: () => Record<string, InterimResult>,
+ *   ingestDocument: (
  *     config: AnalyzerConfig,
  *     accumulator: Record<string, InterimResult>,
  *     object: FuzzDocument,
  *     log: (message: string) => void
  *   ) => Record<string, InterimResult>,
- *   convertResults: (
+ *   finalizeResults: (
  *     config: AnalyzerConfig,
  *     interimResults: Record<string, InterimResult>,
  *     documentsCount: number
+ *   ) => VarietyResultRow[],
+ *   analyzeDocuments: (
+ *     config: AnalyzerConfig,
+ *     documents: Iterable<FuzzDocument>,
+ *     options?: { documentsCount?: number, log?: (message: string) => void }
  *   ) => VarietyResultRow[]
  * }} VarietyImpl
  */
 
-const analyzerGlobal = /** @type {typeof globalThis & { __varietyImpl?: VarietyImpl }} */ (globalThis);
-const impl = analyzerGlobal.__varietyImpl;
-if (typeof impl === 'undefined') {
-  throw new Error('Expected core/analyzer.js to register __varietyImpl.');
-}
+const rawImpl = /** @type {unknown} */ (require(enginePath));
+const impl = /** @type {VarietyImpl} */ (rawImpl);
 
 const noop = () => {};
 
@@ -89,11 +90,11 @@ const makeConfig = (options) => ({
  * @returns {VarietyResultRow[]}
  */
 const analyzeDocuments = (documents, config) => {
-  const accumulator = impl.createKeyMap();
+  const accumulator = impl.createAnalysisState();
   for (const document of documents) {
-    impl.reduceDocuments(config, accumulator, document, noop);
+    impl.ingestDocument(config, accumulator, document, noop);
   }
-  return impl.convertResults(config, accumulator, documents.length);
+  return impl.finalizeResults(config, accumulator, documents.length);
 };
 
 /**
@@ -172,6 +173,36 @@ describe('Analyzer property fuzzing', () => {
       }),
       { numRuns: 200, seed: 29104 }
     );
+  });
+
+  it('should infer the document count for non-array iterables', () => {
+    /** @type {FuzzDocument[]} */
+    const documents = [
+      { common: 1, onlyFirst: true },
+      { common: 2 },
+    ];
+    const config = makeConfig({ compactArrayTypes: false, maxDepth: 5 });
+    function* generator() {
+      yield* documents;
+    }
+
+    const results = impl.analyzeDocuments(config, generator(), { log: noop });
+    const normalized = normalizeResults(results);
+
+    assert.deepEqual(normalized, [
+      {
+        key: 'common',
+        totalOccurrences: 2,
+        percentContaining: 100,
+        types: { Number: 2 },
+      },
+      {
+        key: 'onlyFirst',
+        totalOccurrences: 1,
+        percentContaining: 50,
+        types: { Boolean: 1 },
+      },
+    ]);
   });
 
 });

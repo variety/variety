@@ -7,8 +7,7 @@ import { Binary, UUID } from 'mongodb';
 import VarietyHarness from '../../helpers/VarietyHarness.js';
 
 const require = createRequire(import.meta.url);
-const analyzerPath = fileURLToPath(new URL('../../../core/analyzer.js', import.meta.url));
-require(analyzerPath);
+const enginePath = fileURLToPath(new URL('../../../core/engine.js', import.meta.url));
 
 /**
  * @typedef {{
@@ -25,11 +24,8 @@ require(analyzerPath);
  * }} VarietyImpl
  */
 
-const analyzerGlobal = /** @type {typeof globalThis & { __varietyImpl?: VarietyImpl }} */ (globalThis);
-const impl = analyzerGlobal.__varietyImpl;
-if (typeof impl === 'undefined') {
-  throw new Error('Expected core/analyzer.js to register __varietyImpl.');
-}
+const rawImpl = /** @type {unknown} */ (require(enginePath));
+const impl = /** @type {VarietyImpl} */ (rawImpl);
 
 /** @type {AnalyzerConfig} */
 const config = {
