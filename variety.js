@@ -189,6 +189,39 @@ Please see https://github.com/variety/variety for details. */
     return shellToJson(binData);
   };
 
+  const getVectorDtypeByte = (binData) => {
+    if (!binData) { return undefined; }
+    if (typeof binData.hex === 'function') {
+      const hex = binData.hex();
+      if (typeof hex === 'string' && hex.length >= 2 && /^[0-9a-f]{2}/i.test(hex)) {
+        return parseInt(hex.slice(0, 2), 16);
+      }
+      return undefined;
+    }
+    if (typeof Buffer !== 'undefined' && binData.buffer) {
+      const buf = Buffer.from(binData.buffer);
+      return buf.length > 0 ? buf[0] : undefined;
+    }
+    return undefined;
+  };
+
+  const getVectorDtypeLabel = (binData) => {
+    const dtypeByte = getVectorDtypeByte(binData);
+    if (typeof dtypeByte === 'undefined') {
+      return 'BinData-vector[malformed]';
+    }
+    const dtypeAliases = {
+      0x03: 'INT8',
+      0x10: 'PACKED_BIT',
+      0x27: 'FLOAT32',
+    };
+    const alias = dtypeAliases[dtypeByte];
+    if (alias) {
+      return `BinData-vector[${alias}]`;
+    }
+    return `BinData-vector[0x${dtypeByte.toString(16).padStart(2, '0')}]`;
+  };
+
   const getRawBsonTypeName = (thing) => {
     if (!thing || typeof thing !== 'object') {
       return undefined;
@@ -287,6 +320,10 @@ Please see https://github.com/variety/variety for details. */
       } else if (thing instanceof Date) {
         return 'Date';
       } else if (specialType === 'Binary') {
+        const subtype = getBinDataSubtype(thing);
+        if (subtype === 0x09) {
+          return getVectorDtypeLabel(thing);
+        }
         const binDataTypes = {
           0x00: 'generic',
           0x01: 'function',
@@ -297,10 +334,9 @@ Please see https://github.com/variety/variety for details. */
           0x06: 'encrypted',
           0x07: 'compressed-column',
           0x08: 'sensitive',
-          0x09: 'vector',
           0x80: 'user',
         };
-        return `BinData-${binDataTypes[getBinDataSubtype(thing)]}`;
+        return `BinData-${binDataTypes[subtype]}`;
       } else if (typeof specialType !== 'undefined') {
         return specialType;
       } else {
@@ -527,6 +563,8 @@ Please see https://github.com/variety/variety for details. */
     shellToJson,
     getBinDataSubtype,
     getBinDataHex,
+    getVectorDtypeByte,
+    getVectorDtypeLabel,
     getRawBsonTypeName,
     normalizeBsonTypeName,
     getSpecialTypeName,

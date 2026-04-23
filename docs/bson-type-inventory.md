@@ -1,7 +1,7 @@
 # MongoDB BSON Type Inventory
 
 External sources retrieved: 2026-04-21
-Local evidence inspected: 2026-04-22
+Local evidence inspected: 2026-04-23
 
 This document inventories the BSON value types that MongoDB can store or has
 historically recognized, including deprecated types, `$type` aliases, binary
@@ -46,12 +46,16 @@ and test evidence inspected on 2026-04-22.
 Primary local evidence: [V1] tests most BSON-wrapper recognition; [V2], [V3],
 and [V4] cover common application values and arrays; [V5] defines the current
 type mapping; [V6] tests every standard binary subtype plus custom subtype
-`0x80`; and [V7] proves the Variety label for each deprecated top-level BSON
-type.
+`0x80` and vector dtype-specific labels; and [V7] proves the Variety label for
+each deprecated top-level BSON type.
 Current tests recognize BSON `Double` and `Int32` as Variety `Number`, BSON
 JavaScript code and JavaScript-with-scope as Variety `Code`, BSON `Symbol`
-(type 14) as Variety `String` in mongosh, and standard binary subtypes plus
-custom subtype `0x80` under their `BinData-{subtype}` labels.
+(type 14) as Variety `String` in mongosh, standard binary subtypes plus custom
+subtype `0x80` under their `BinData-{subtype}` labels, and vector binary
+subtype `9` values under dtype-specific labels (`BinData-vector[FLOAT32]`,
+`BinData-vector[INT8]`, `BinData-vector[PACKED_BIT]`), with unknown dtypes
+reported as `BinData-vector[0xNN]` and malformed payloads as
+`BinData-vector[malformed]`.
 
 ## Top-Level BSON Value Types
 
@@ -101,7 +105,7 @@ specification is the broader authority for the whole user-defined range.
 | `6` / `0x06` | Encrypted BSON value | Current | Tested | Encrypted BSON value, used by MongoDB encryption features. Variety reports this as `BinData-encrypted`. | [S1], [S2], [V6] |
 | `7` / `0x07` | Compressed BSON column / compressed time series data | Current | Tested | BSON spec calls this "Compressed BSON column"; MongoDB docs describe it as compressed time series data and mark it new in MongoDB 5.2. The format uses delta, delta-of-delta, run-length encoding, and sparse-array missing-value encoding. Variety reports this as `BinData-compressed-column`. Coverage is analyzer-level because MongoDB validates compressed-column payloads. | [S1], [S2], [V6] |
 | `8` / `0x08` | Sensitive | Current | Tested | Sensitive data such as a key or secret. MongoDB logs a placeholder rather than the literal binary value. Variety reports this as `BinData-sensitive`. | [S1], [S2], [V6] |
-| `9` / `0x09` | Vector | Current | Tested | Dense numeric vector storage. The binary payload starts with vector metadata bytes before the packed elements. Variety reports this as `BinData-vector`; it does not currently parse dtype-specific vector labels. See "Vector Subtype 9 Dtypes". | [S1], [S2], [S6], [V6] |
+| `9` / `0x09` | Vector | Current | Tested | Dense numeric vector storage. The binary payload starts with a dtype byte and padding byte before the packed elements. Variety inspects the dtype byte and reports dtype-specific labels: `BinData-vector[FLOAT32]`, `BinData-vector[INT8]`, `BinData-vector[PACKED_BIT]`. Unknown dtypes produce `BinData-vector[0xNN]`; unreadable payloads produce `BinData-vector[malformed]`. See "Vector Subtype 9 Dtypes". | [S1], [S2], [S6], [V6] |
 | `128` / `0x80` through `255` / `0xFF` | User-defined / custom | Current | Partial | User-defined binary subtype range. MongoDB's BSON Types page lists `128` as custom data; the BSON spec reserves the full `128` through `255` range for user-defined subtypes. Variety maps subtype `0x80` to `BinData-user` and that subtype is test-backed. Subtypes `0x81` through `0xFF` have no intentional Variety mapping and produce `BinData-undefined`. | [S1], [S2], [V6] |
 
 ## Vector Subtype 9 Dtypes
@@ -117,9 +121,11 @@ validation updates through 2025-06-23.
 
 | Dtype byte | Alias | Bits per vector element | Variety | Meaning | Sources |
 | --- | --- | --- | --- | --- | --- |
-| `0x03` | `INT8` | 8 | Unmapped | Signed 8-bit integer vector elements in the range `-128` through `127`. | [S6] |
-| `0x10` | `PACKED_BIT` | 1 | Unmapped | Binary quantized vector. Logical values are bits, packed into bytes. The padding byte says how many least-significant bits in the final byte should be ignored. | [S6] |
-| `0x27` | `FLOAT32` | 32 | Unmapped | 32-bit floating point vector elements. Payload length after metadata must be a multiple of 4 bytes. | [S6] |
+| `0x03` | `INT8` | 8 | Tested | Signed 8-bit integer vector elements in the range `-128` through `127`. Variety reports this as `BinData-vector[INT8]`. | [S6], [V6] |
+| `0x10` | `PACKED_BIT` | 1 | Tested | Binary quantized vector. Logical values are bits, packed into bytes. The padding byte says how many least-significant bits in the final byte should be ignored. Variety reports this as `BinData-vector[PACKED_BIT]`. | [S6], [V6] |
+| `0x27` | `FLOAT32` | 32 | Tested | 32-bit floating point vector elements. Payload length after metadata must be a multiple of 4 bytes. Variety reports this as `BinData-vector[FLOAT32]`. | [S6], [V6] |
+| any unrecognized byte | — | N/A | Tested | Dtype byte not defined in the current spec. Variety reports this as `BinData-vector[0xNN]` where `NN` is the dtype byte in lowercase zero-padded hex. Coverage is analyzer-level. | [V6] |
+| (no payload) | — | N/A | Tested | Payload too short to contain a dtype byte. Variety reports this as `BinData-vector[malformed]`. Coverage is analyzer-level. | [V6] |
 
 ## Legacy UUID Interpretations
 
@@ -155,7 +161,7 @@ round-trip tests, but they are not extra top-level BSON types.
 | Regular expression, type `11` | Tested | Pattern cstring and options cstring. Options must be stored alphabetically. Supported option characters are `i`, `m`, `s`, `x`, and `u`. | [S1] |
 | String, type `2` | Tested | `int32` byte length, UTF-8 bytes, and trailing null byte. | [S1], [S2] |
 | Timestamp, type `17` | Tested | Serialized as a BSON `uint64`. BSON spec describes the first serialized 4 bytes as increment and the second as timestamp; MongoDB describes the logical value as high 32 bits `time_t` and low 32 bits ordinal, and compares time before ordinal. | [S1], [S2] |
-| Vector binary, subtype `9` | Tested | First byte is dtype, second byte is padding, and the rest is packed vector data using little-endian format. Variety reports this at the subtype level as `BinData-vector`; dtype-specific labels remain unmapped. | [S6], [V6] |
+| Vector binary, subtype `9` | Tested | First byte is dtype, second byte is padding, and the rest is packed vector data using little-endian format. Variety inspects the dtype byte and reports `BinData-vector[FLOAT32]`, `BinData-vector[INT8]`, or `BinData-vector[PACKED_BIT]` for recognized dtypes; `BinData-vector[0xNN]` for unknown dtypes; and `BinData-vector[malformed]` for payloads too short to contain a dtype byte. | [S6], [V6] |
 
 ## Query and Operator Aliases That Are Not Storage Types
 
@@ -186,7 +192,7 @@ round-trip tests, but they are not extra top-level BSON types.
 | Binary subtype `7` | Tested | MongoDB's BSON Types page marks compressed time series data as new in MongoDB 5.2. BSON spec names the subtype "Compressed BSON column". Variety reports this as `BinData-compressed-column`. | [S1], [S2], [V6] |
 | JavaScript code with scope in server-side JavaScript operations | Tested merged | Use of type `15` for `$where` and `mapReduce` functions was deprecated since MongoDB 4.2.1. MongoDB 4.4 removed `mapReduce` support for type `15`; current `$where` docs say `$where` no longer supports it. Variety reports code-with-scope values as `Code`. | [S9], [S10] |
 | Server-side JavaScript functions | Out of scope | Starting in MongoDB 8.0, server-side JavaScript functions such as `$accumulator`, `$function`, and `$where` are deprecated. This is an operational JavaScript execution caveat, not the removal of BSON type `13` from the storage inventory. | [S10] |
-| Vector binary subtype `9` | Tested | The vector subtype specification is accepted, has no minimum server version, and records acceptance on 2024-11-01. It has dtype validation updates through 2025-06-23. Variety reports vector binary values as `BinData-vector`; dtype-specific labels remain unmapped. | [S6], [V6] |
+| Vector binary subtype `9` | Tested | The vector subtype specification is accepted, has no minimum server version, and records acceptance on 2024-11-01. It has dtype validation updates through 2025-06-23. Variety inspects the dtype byte and reports dtype-specific labels: `BinData-vector[FLOAT32]`, `BinData-vector[INT8]`, `BinData-vector[PACKED_BIT]`. Unknown dtypes produce `BinData-vector[0xNN]`; malformed payloads produce `BinData-vector[malformed]`. | [S6], [V6] |
 
 ## Source Register
 
@@ -252,10 +258,12 @@ round-trip tests, but they are not extra top-level BSON types.
 - [V6] Variety local test file,
   [test/cases/analysis/BinarySubtypeTest.js](../test/cases/analysis/BinarySubtypeTest.js).
   Added 2026-04-21; updated and inspected in the current working tree on
-  2026-04-22. Essential metadata: integration and analyzer-level tests for
-  every standard BSON binary subtype plus custom subtype `0x80`: generic,
-  function, old, UUID-old, UUID, MD5, encrypted, compressed column, sensitive,
-  vector, and user-defined `0x80`.
+  2026-04-23. Essential metadata: integration and analyzer-level tests for
+  every standard BSON binary subtype plus custom subtype `0x80` and vector
+  dtype-specific labels: generic, function, old, UUID-old, UUID, MD5,
+  encrypted, compressed column, sensitive, user-defined `0x80`, and vector
+  binary with dtype labels for INT8, PACKED_BIT, and FLOAT32, unknown dtype
+  fallback, and malformed payload handling.
 - [V7] Variety local test file,
   [test/cases/analysis/DeprecatedBsonTypesTest.js](../test/cases/analysis/DeprecatedBsonTypesTest.js).
   Added 2026-04-21 and inspected in the current working tree on 2026-04-22.
