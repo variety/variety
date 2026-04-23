@@ -45,9 +45,9 @@ and test evidence inspected on 2026-04-22.
 
 Primary local evidence: [V1] tests most BSON-wrapper recognition; [V2], [V3],
 and [V4] cover common application values and arrays; [V5] defines the current
-type mapping; [V6] tests every standard binary subtype plus custom subtype
-`0x80` and vector dtype-specific labels; and [V7] proves the Variety label for
-each deprecated top-level BSON type.
+type mapping; [V6] tests every standard binary subtype, representative
+reserved/user-defined-range cases, and vector dtype-specific labels; and [V7]
+proves the Variety label for each deprecated top-level BSON type.
 Current tests recognize BSON `Double` and `Int32` as Variety `Number`, BSON
 JavaScript code and JavaScript-with-scope as Variety `Code`, BSON `Symbol`
 (type 14) as Variety `String` in mongosh, standard binary subtypes under their
@@ -71,7 +71,7 @@ column is the string alias accepted by MongoDB `$type` where documented.
 | `2` | String | `string` | Current | Tested | Length-prefixed UTF-8 string. MongoDB drivers generally convert language strings to UTF-8. | [S1], [S2] |
 | `3` | Object / embedded document | `object` | Current | Tested | Embedded BSON document. A top-level MongoDB record is also a BSON document, but it is not preceded by an element type byte unless nested as a value. | [S1], [S2] |
 | `4` | Array | `array` | Current | Tested | Encoded as a BSON document whose keys are sequential integer strings starting at `0`. | [S1], [S2] |
-| `5` | Binary data | `binData` | Current | Tested merged | Length-prefixed byte array plus a binary subtype byte. Variety has no single `Binary data` label; every binary value is reported under a `BinData-{subtype}` label instead. Every standard binary subtype plus custom subtype `0x80` is test-backed; see "BSON Binary Subtypes" for per-subtype details and partially mapped custom subtypes. | [S1], [S2], [V6] |
+| `5` | Binary data | `binData` | Current | Tested merged | Length-prefixed byte array plus a binary subtype byte. Variety has no single `Binary data` label; every binary value is reported under a `BinData-{subtype}` label instead. Every standard binary subtype is test-backed, and the reserved/user-defined ranges now have representative test coverage with intentional range-wide mappings; see "BSON Binary Subtypes" for per-subtype details. | [S1], [S2], [V6] |
 | `6` | Undefined | `undefined` | Deprecated | Tested | Historical undefined value with no payload. It remains a recognized BSON type and `$type` alias, but should not be used for new data. The BSON library deserializes stored type-6 values as JavaScript `undefined`; Variety reports these as `undefined`. Coverage is analyzer-level test evidence against the deserialized value. | [S1], [S2], [V7] |
 | `7` | ObjectId | `objectId` | Current | Tested | 12-byte object identifier. See "Internal Structures and Interpretation Schemes". | [S1], [S2] |
 | `8` | Boolean | `bool` | Current | Tested | One byte: `0` for false, `1` for true. | [S1], [S2] |
