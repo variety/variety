@@ -1140,28 +1140,35 @@ Please see https://github.com/variety/variety for details. */
     resolveAnalysisOptions,
   } = configApi;
 
+  const getShellProcess = (context) => typeof process !== 'undefined' ? process : context.process;
+  const getShellPrint = (context) => typeof print !== 'undefined' ? print : context.print;
+  const getShellDb = (context) => typeof db !== 'undefined' ? db : context.db;
+  const getShellConnect = (context) => typeof connect !== 'undefined' ? connect : context.connect;
+  const getShellLoad = (context) => typeof load !== 'undefined' ? load : context.load;
+
   const shellIsQuiet = (context) => {
     if (typeof context.__quiet !== 'undefined' && context.__quiet) {
       return true;
     }
 
-    return typeof context.process !== 'undefined' &&
-      context.process &&
-      context.process.argv &&
-      context.process.argv.includes('--quiet');
+    const shellProcess = getShellProcess(context);
+    return shellProcess &&
+      shellProcess.argv &&
+      shellProcess.argv.includes('--quiet');
   };
 
   const createLogger = (context) => {
+    const shellPrint = getShellPrint(context);
     return (message) => {
       if (!shellIsQuiet(context)) {
-        context.print(message);
+        shellPrint(message);
       }
     };
   };
 
-  const createCountMatchingDocuments = (context) => {
+  const createCountMatchingDocuments = (shellDb) => {
     return (collectionName, query, limit) => {
-      const coll = context.db.getCollection(collectionName);
+      const coll = shellDb.getCollection(collectionName);
       const options = (typeof limit === 'number' && limit > 0) ? {limit} : undefined;
       return coll.countDocuments(query, options);
     };
@@ -1173,16 +1180,18 @@ Please see https://github.com/variety/variety for details. */
   };
 
   const applySecondaryReadPreference = (context) => {
+    const shellDb = getShellDb(context);
     if (typeof context.secondaryOk !== 'undefined') {
       if (context.secondaryOk === true) {
-        context.db.getMongo().setReadPref('secondary');
+        shellDb.getMongo().setReadPref('secondary');
       }
     }
   };
 
   const validateShellStartup = (context, countMatchingDocuments) => {
-    const selectedDatabaseName = context.db.getName();
-    const knownDatabases = context.db.adminCommand('listDatabases').databases;
+    const shellDb = getShellDb(context);
+    const selectedDatabaseName = shellDb.getName();
+    const knownDatabases = shellDb.adminCommand('listDatabases').databases;
     const knownDatabaseNames = [];
     if (typeof knownDatabases !== 'undefined') { // not authorized user receives error response (json) without databases key
       // Keep validation scoped to the selected database. Issue #145
@@ -1200,7 +1209,7 @@ Please see https://github.com/variety/variety for details. */
       }
     }
 
-    const collectionNames = context.db.getCollectionNames();
+    const collectionNames = shellDb.getCollectionNames();
     const collNames = collectionNames.join(', ');
     if (collectionNames.length === 0) {
       throw new Error(`The database specified (${selectedDatabaseName}) is empty.\n` +
@@ -1215,11 +1224,11 @@ Please see https://github.com/variety/variety for details. */
     }
 
     if (countMatchingDocuments(collectionName, {}) === 0) {
-      throw new Error(`The collection specified (${collectionName}) in the database specified (${context.db.getName()}) does not exist or is empty.\n` +
+      throw new Error(`The collection specified (${collectionName}) in the database specified (${shellDb.getName()}) does not exist or is empty.\n` +
           `Possible collection options for database specified: ${collNames}.`);
     }
 
-    return { collectionName };
+    return collectionName;
   };
 
   const resolveShellConfig = (context, collectionName, countMatchingDocuments, log) => {
@@ -1239,6 +1248,7 @@ Please see https://github.com/variety/variety for details. */
   };
 
   const createPluginsRunner = (context, log) => {
+    const shellLoad = getShellLoad(context);
     const parsePath = (val) => val.slice(-3) !== '.js' ? `${val}.js` : val;
     const parseConfig = (val) => {
       const cfg = {};
@@ -1257,7 +1267,7 @@ Please see https://github.com/variety/variety for details. */
           const path = parsePath(definition.split('|')[0]);
           const cfg = parseConfig(definition.split('|')[1] || '');
           context.module = {exports: {}};
-          context.load(path);
+          shellLoad(path);
           const plugin = context.module.exports;
           delete context.module;
           plugin.path = path;
@@ -1279,36 +1289,35 @@ Please see https://github.com/variety/variety for details. */
   };
 
   const prepareShellExecution = (context) => {
+    const shellDb = getShellDb(context);
     const log = createLogger(context);
-    const countMatchingDocuments = createCountMatchingDocuments(context);
+    const countMatchingDocuments = createCountMatchingDocuments(shellDb);
 
     logBanner(log);
     applySecondaryReadPreference(context);
 
-    const { collectionName } = validateShellStartup(context, countMatchingDocuments);
+    const collectionName = validateShellStartup(context, countMatchingDocuments);
     const config = resolveShellConfig(context, collectionName, countMatchingDocuments, log);
     const pluginsRunner = createPluginsRunner(context, log);
-    pluginsRunner.execute('onConfig', config);
 
     return {
       config,
       deps: {
-        db: context.db,
-        connect: typeof context.connect !== 'undefined' ? context.connect : undefined,
+        db: shellDb,
+        connect: getShellConnect(context),
         log,
-        print: context.print,
+        print: getShellPrint(context),
         countMatchingDocuments,
       },
       pluginsRunner,
     };
   };
 
-  const executePreparedShellExecution = (preparedExecution) => {
-    impl.run(preparedExecution.config, preparedExecution.pluginsRunner, preparedExecution.deps);
-  };
-
   const preparedExecution = prepareShellExecution(shellContext);
-  executePreparedShellExecution(preparedExecution);
+  // Keep plugin onConfig dispatch with the run phase so a future callable shell
+  // API can prepare shell state without invoking plugin hooks yet.
+  preparedExecution.pluginsRunner.execute('onConfig', preparedExecution.config);
+  impl.run(preparedExecution.config, preparedExecution.pluginsRunner, preparedExecution.deps);
 
   // Clean up the implementation handoffs so repeated loads remain idempotent
   // and no ad hoc internals leak onto globalThis after execution.
