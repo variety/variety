@@ -57,7 +57,7 @@ module.exports = (async () => {
   const markdown = (await import('@eslint/markdown')).default;
 
   return [
-    { ignores: ['.claude/'] },
+    { ignores: ['.claude/', '.worktrees/'] },
     js.configs.recommended,
     {
       files: ['**/*.js', 'bin/variety'],
