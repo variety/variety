@@ -1179,8 +1179,7 @@ Please see https://github.com/variety/variety for details. */
     log('Version 1.5.2, released 30 September 2025');
   };
 
-  const applySecondaryReadPreference = (context) => {
-    const shellDb = getShellDb(context);
+  const applySecondaryReadPreference = (shellDb, context) => {
     if (typeof context.secondaryOk !== 'undefined') {
       if (context.secondaryOk === true) {
         shellDb.getMongo().setReadPref('secondary');
@@ -1188,8 +1187,7 @@ Please see https://github.com/variety/variety for details. */
     }
   };
 
-  const validateShellStartup = (context, countMatchingDocuments) => {
-    const shellDb = getShellDb(context);
+  const validateShellStartup = (shellDb, context, countMatchingDocuments) => {
     const selectedDatabaseName = shellDb.getName();
     const knownDatabases = shellDb.adminCommand('listDatabases').databases;
     const knownDatabaseNames = [];
@@ -1294,9 +1292,9 @@ Please see https://github.com/variety/variety for details. */
     const countMatchingDocuments = createCountMatchingDocuments(shellDb);
 
     logBanner(log);
-    applySecondaryReadPreference(context);
+    applySecondaryReadPreference(shellDb, context);
 
-    const collectionName = validateShellStartup(context, countMatchingDocuments);
+    const collectionName = validateShellStartup(shellDb, context, countMatchingDocuments);
     const config = resolveShellConfig(context, collectionName, countMatchingDocuments, log);
     const pluginsRunner = createPluginsRunner(context, log);
 
