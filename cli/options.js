@@ -101,6 +101,21 @@ const FLAG_ALIASES = {
   'secondary-ok': 'secondaryOk',
   'show-array-elements': 'showArrayElements',
 };
+const KNOWN_OPTION_NAMES = new Set([
+  ...ANALYSIS_OPTION_NAMES,
+  'authenticationDatabase',
+  'eval',
+  'help',
+  'host',
+  'password',
+  'plugin',
+  'port',
+  'quiet',
+  'secondaryOk',
+  'uri',
+  'username',
+  'version',
+]);
 
 /**
  * @param {NodeJS.ProcessEnv} env
@@ -258,6 +273,27 @@ const parseMongoUri = (optionName, rawValue) => {
 };
 
 /**
+ * @param {string} rawOptionName
+ * @returns {string}
+ */
+const normalizeOptionName = (rawOptionName) => {
+  return FLAG_ALIASES[rawOptionName] || rawOptionName;
+};
+
+/**
+ * @param {string} value
+ * @returns {boolean}
+ */
+const isKnownOptionToken = (value) => {
+  if (!value.startsWith('--')) {
+    return false;
+  }
+
+  const rawOptionName = value.slice(2).split('=', 2)[0] || '';
+  return rawOptionName.length > 0 && KNOWN_OPTION_NAMES.has(normalizeOptionName(rawOptionName));
+};
+
+/**
  * @param {string[]} argv
  * @param {number} currentIndex
  * @param {string | undefined} inlineValue
@@ -272,6 +308,36 @@ const readOptionValue = (argv, currentIndex, inlineValue, optionName) => {
   const nextValue = argv[currentIndex + 1];
   if (typeof nextValue !== 'string' || nextValue.startsWith('--')) {
     throw new CliUsageError(`--${optionName} requires a value.`);
+  }
+
+  return {
+    nextIndex: currentIndex + 1,
+    value: nextValue,
+  };
+};
+
+/**
+ * @param {string[]} argv
+ * @param {number} currentIndex
+ * @param {string | undefined} inlineValue
+ * @returns {ReadOptionValueResult}
+ */
+const readEvalValue = (argv, currentIndex, inlineValue) => {
+  if (typeof inlineValue !== 'undefined') {
+    return { nextIndex: currentIndex, value: inlineValue };
+  }
+
+  const nextValue = argv[currentIndex + 1];
+  if (typeof nextValue !== 'string') {
+    throw new CliUsageError('--eval requires a value.');
+  }
+
+  if (isKnownOptionToken(nextValue)) {
+    throw new CliUsageError(
+      `--eval expected JavaScript, but received Variety CLI flag ${JSON.stringify(nextValue)}. ` +
+      'If you meant the flag, place it before --eval. ' +
+      `If you meant literal JavaScript starting with --, use --eval=${nextValue}.`
+    );
   }
 
   return {
@@ -439,7 +505,7 @@ const parseCliArguments = (argv) => {
     if (typeof rawOptionName !== 'string' || rawOptionName.length === 0) {
       throw new CliUsageError(`Unknown option ${JSON.stringify(argument)}.`);
     }
-    const optionName = FLAG_ALIASES[rawOptionName] || rawOptionName;
+    const optionName = normalizeOptionName(rawOptionName);
 
     switch (optionName) {
     case 'help':
@@ -584,7 +650,7 @@ const parseCliArguments = (argv) => {
       break;
     }
     case 'eval': {
-      const result = readOptionValue(argv, index, inlineValue, optionName);
+      const result = readEvalValue(argv, index, inlineValue);
       index = result.nextIndex;
       parsed.extraEval.push(result.value);
       break;
@@ -749,6 +815,7 @@ const formatUsage = () => {
     '  --authenticationDatabase <value> Authentication database',
     '  --plugin <path[?cfg]>            Plugin file to load; repeat for multiple plugins',
     '  --eval <javascript>              Extra JavaScript appended after CLI assignments',
+    '                                   Use --eval=... when the code starts with --',
     '  --help                           Show this help',
     '  --version                        Show the Variety package version',
     '',

@@ -203,6 +203,25 @@ describe('CLI option parsing', () => {
     );
   });
 
+  it('passes through --eval values that start with -- when they are not known CLI flags', () => {
+    const plan = createExecutionPlan(['test/users', '--eval', '--custom-eval-token'], {});
+    assert.equal(evalCodeOf(plan), 'var collection = "users"; --custom-eval-token');
+  });
+
+  it('accepts inline --eval values even when they look like known CLI flags', () => {
+    const plan = createExecutionPlan(['test/users', '--eval=--quiet'], {});
+    assert.equal(evalCodeOf(plan), 'var collection = "users"; --quiet');
+  });
+
+  it('rejects known CLI flags immediately after --eval with guidance', () => {
+    assert.throws(
+      () => {
+        createExecutionPlan(['test/users', '--eval', '--quiet'], {});
+      },
+      /--eval expected JavaScript, but received Variety CLI flag "--quiet".*place it before --eval.*--eval=--quiet/s
+    );
+  });
+
   it('strips only matching outer quotes in compatibility eval input', () => {
     assert.equal(stripMatchingOuterQuotes('"hello"'), 'hello');
     assert.equal(stripMatchingOuterQuotes('\'hello\''), 'hello');
