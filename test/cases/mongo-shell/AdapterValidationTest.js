@@ -17,6 +17,19 @@ const configModule = /** @type {typeof import('../../../core/config.js')} */ (re
  * @typedef {{ name: string }} FakeDatabaseInfo
  * @typedef {{ databases?: FakeDatabaseInfo[] }} FakeListDatabasesResult
  * @typedef {{
+ *   countMatchingDocuments(collectionName: string, query: Record<string, unknown>, limit?: number): number,
+ *   db: FakeDb,
+ *   log(message: string): void,
+ *   print(message?: string): void,
+ * }} FakeRunDeps
+ * @typedef {{ execute(methodName: string, ...args: unknown[]): unknown[] }} FakePluginsRunner
+ * @typedef {{
+ *   formatResults(results: unknown[]): string,
+ *   init(pluginConfig: Record<string, string>): void,
+ *   onConfig(config: { collection: string }): void,
+ *   path?: string,
+ * }} FakeLoadedPlugin
+ * @typedef {{
  *   adminCommand(command: string): FakeListDatabasesResult,
  *   getCollection(name: string): FakeCollection,
  *   getCollectionNames(): string[],
@@ -101,6 +114,86 @@ describe('Mongo shell adapter validation', () => {
     assert.equal(analyzerRan, true);
   });
 
+  it('runs plugin lifecycle hooks during preparation before invoking the analyzer', () => {
+    /** @type {string[]} */
+    const events = [];
+    /** @type {string[]} */
+    const sisterDbCalls = [];
+
+    /** @type {{
+     *   __varietyConfig: typeof import('../../../core/config.js'),
+     *   __varietyEngine: { marker: string },
+     *   __varietyFormatters: { ascii: { marker: string } },
+     *   __varietyImpl: {
+     *     run(config: { collection: string }, pluginsRunner: FakePluginsRunner, deps: FakeRunDeps): void,
+     *     shellToJson: typeof JSON.stringify,
+     *   },
+     *   collection: string,
+     *   db: FakeDb,
+     *   load(path: string): void,
+     *   module?: { exports: FakeLoadedPlugin },
+     *   plugins: string,
+     *   print(message?: string): void,
+     * }} */
+    const context = {
+      __varietyConfig: configModule,
+      __varietyEngine: { marker: 'engine' },
+      __varietyFormatters: { ascii: { marker: 'formatter' } },
+      __varietyImpl: {
+        run(config, pluginsRunner, deps) {
+          events.push('run');
+          assert.equal(config.collection, 'users');
+          assert.equal(typeof deps.countMatchingDocuments, 'function');
+          assert.equal(typeof deps.log, 'function');
+          assert.equal(deps.db, context.db);
+          assert.equal(typeof deps.print, 'function');
+          assert.deepEqual(
+            pluginsRunner.execute('formatResults', [{ _id: { key: 'users.name' } }]),
+            ['formatted output']
+          );
+        },
+        shellToJson: JSON.stringify,
+      },
+      collection: 'users',
+      db: createDb(sisterDbCalls),
+      /**
+       * @param {string} path
+      */
+      load(path) {
+        events.push(`load:${path}`);
+        if (!context.module) {
+          throw new Error('Expected the adapter to install a CommonJS module shim before load().');
+        }
+        context.module.exports = {
+          formatResults() {
+            events.push('formatResults');
+            return 'formatted output';
+          },
+          init(pluginConfig) {
+            events.push(`init:${JSON.stringify(pluginConfig)}`);
+          },
+          onConfig(config) {
+            events.push(`onConfig:${config.collection}`);
+          },
+        };
+      },
+      plugins: 'test-plugin|delimiter=;&mode=full',
+      print: () => {},
+    };
+
+    vm.createContext(context);
+    vm.runInContext(adapterSource, context, { filename: adapterPath });
+
+    assert.deepEqual(sisterDbCalls, []);
+    assert.deepEqual(events, [
+      'load:test-plugin.js',
+      'init:{"delimiter":";","mode":"full"}',
+      'onConfig:users',
+      'run',
+      'formatResults',
+    ]);
+  });
+
   it('does not enumerate collections for unrelated databases during startup', () => {
     /** @type {unknown[]} */
     const runConfigs = [];
@@ -138,5 +231,32 @@ describe('Mongo shell adapter validation', () => {
     assert.equal(typedConfig.limit, 1);
     assert.deepEqual(typedConfig.excludeSubkeys, { 'meta.tags.': true });
     assert.equal(typedConfig.resultsCollection, 'usersKeys');
+  });
+
+  it('cleans up shell handoff globals after successful execution', () => {
+    /** @type {string[]} */
+    const sisterDbCalls = [];
+
+    const context = {
+      __varietyConfig: configModule,
+      __varietyEngine: { marker: 'engine' },
+      __varietyFormatters: { ascii: { marker: 'formatter' } },
+      __varietyImpl: {
+        run() {},
+        shellToJson: JSON.stringify,
+      },
+      collection: 'users',
+      db: createDb(sisterDbCalls),
+      print: () => {},
+    };
+
+    vm.createContext(context);
+    vm.runInContext(adapterSource, context, { filename: adapterPath });
+
+    assert.deepEqual(sisterDbCalls, []);
+    assert.equal(Object.hasOwn(context, '__varietyConfig'), false);
+    assert.equal(Object.hasOwn(context, '__varietyEngine'), false);
+    assert.equal(Object.hasOwn(context, '__varietyImpl'), false);
+    assert.equal(Object.hasOwn(context, '__varietyFormatters'), false);
   });
 });
