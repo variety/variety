@@ -86,6 +86,7 @@ const FLAG_ALIASES = {
   'last-value': 'lastValue',
   'compact-array-types': 'compactArrayTypes',
   'exclude-subkeys': 'excludeSubkeys',
+  'hide-frequency-columns': 'hideFrequencyColumns',
   'log-keys-continuously': 'logKeysContinuously',
   'max-depth': 'maxDepth',
   'max-examples': 'maxExamples',
@@ -361,6 +362,9 @@ const parseCliArguments = (argv) => {
       parsed.varietyOptions.outputFormat = result.value;
       break;
     }
+    case 'hideFrequencyColumns':
+      parsed.varietyOptions.hideFrequencyColumns = parseBooleanValue(optionName, inlineValue);
+      break;
     case 'lastValue':
       parsed.varietyOptions.lastValue = parseBooleanValue(optionName, inlineValue);
       break;
@@ -594,6 +598,7 @@ const formatUsage = () => {
     '  --lastValue                      Capture one representative value per key',
     '  --secondary-ok                   Read from a secondary by setting read preference',
     '  --outputFormat <value>           Output format, e.g. ascii or json',
+    '  --hideFrequencyColumns           Hide the occurrences and percents columns in ASCII output',
     '  --showArrayElements              Include array element keys in output',
     '  --compactArrayTypes              Render Array(Type) instead of plain Array',
     '  --arrayEscape <value>            Custom escape for array index keys (default XX)',

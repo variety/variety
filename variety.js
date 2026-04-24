@@ -79,12 +79,16 @@ Please see https://github.com/variety/variety for details. */
 
   /**
    * Returns a formatter that renders results as a padded ASCII table.
-   * @param {object} config - The parsed Variety config (uses config.lastValue, config.maxExamples, and config.arrayEscape).
+   * @param {object} config - The parsed Variety config (uses config.hideFrequencyColumns, config.lastValue, config.maxExamples, and config.arrayEscape).
    * @returns {{ formatResults: function(Array): string }}
    */
   shellContext.__varietyFormatters.ascii = (config) => {
     const formatResults = (results) => {
-      const headers = ['key', 'types', 'occurrences', 'percents'];
+      const showFrequencyColumns = !config.hideFrequencyColumns;
+      const headers = ['key', 'types'];
+      if (showFrequencyColumns) {
+        headers.push('occurrences', 'percents');
+      }
       if (config.lastValue) {
         headers.push('lastValue');
       }
@@ -108,7 +112,10 @@ Please see https://github.com/variety/variety for details. */
           ? typeKeys.map((type) => `${type} (${row.value.types[type]})`)
           : typeKeys;
 
-        const rawArray = [row._id.key, types, row.totalOccurrences, row.percentContaining.toFixed(Math.min(maxDigits, 20))];
+        const rawArray = [row._id.key, types];
+        if (showFrequencyColumns) {
+          rawArray.push(row.totalOccurrences, row.percentContaining.toFixed(Math.min(maxDigits, 20)));
+        }
         if (config.lastValue && row.lastValue) {
           rawArray.push(row.lastValue);
         }
@@ -171,6 +178,7 @@ Please see https://github.com/variety/variety for details. */
    *   arrayEscape?: string,
    *   compactArrayTypes?: boolean,
    *   excludeSubkeys?: string[],
+   *   hideFrequencyColumns?: boolean,
    *   lastValue?: boolean,
    *   limit?: number,
    *   logKeysContinuously?: boolean,
@@ -193,6 +201,7 @@ Please see https://github.com/variety/variety for details. */
    *   arrayEscape: string,
    *   compactArrayTypes: boolean,
    *   excludeSubkeys: string[],
+   *   hideFrequencyColumns: boolean,
    *   lastValue: boolean,
    *   limit: number,
    *   logKeysContinuously: boolean,
@@ -252,6 +261,7 @@ Please see https://github.com/variety/variety for details. */
     'maxDepth',
     'sort',
     'outputFormat',
+    'hideFrequencyColumns',
     'persistResults',
     'resultsDatabase',
     'resultsCollection',
@@ -416,6 +426,10 @@ Please see https://github.com/variety/variety for details. */
       validated.maxExamples = validateNonNegativeIntegerOption('maxExamples', source['maxExamples']);
     }
 
+    if (hasOwn(source, 'hideFrequencyColumns') && typeof source['hideFrequencyColumns'] !== 'undefined') {
+      validated.hideFrequencyColumns = validateBooleanOption('hideFrequencyColumns', source['hideFrequencyColumns']);
+    }
+
     if (hasOwn(source, 'lastValue') && typeof source['lastValue'] !== 'undefined') {
       validated.lastValue = validateBooleanOption('lastValue', source['lastValue']);
     }
@@ -509,6 +523,9 @@ Please see https://github.com/variety/variety for details. */
       arrayEscape: hasOwn(validated, 'arrayEscape') ? /** @type {string} */ (validated.arrayEscape) : 'XX',
       compactArrayTypes: hasOwn(validated, 'compactArrayTypes') ? /** @type {boolean} */ (validated.compactArrayTypes) : false,
       excludeSubkeys: hasOwn(validated, 'excludeSubkeys') ? /** @type {string[]} */ (validated.excludeSubkeys) : [],
+      hideFrequencyColumns: hasOwn(validated, 'hideFrequencyColumns')
+        ? /** @type {boolean} */ (validated.hideFrequencyColumns)
+        : false,
       lastValue: hasOwn(validated, 'lastValue') ? /** @type {boolean} */ (validated.lastValue) : false,
       limit: hasOwn(validated, 'limit') ? /** @type {number} */ (validated.limit) : resolveDefaultLimit(query, context),
       logKeysContinuously: hasOwn(validated, 'logKeysContinuously') ? /** @type {boolean} */ (validated.logKeysContinuously) : false,
@@ -552,6 +569,7 @@ Please see https://github.com/variety/variety for details. */
       arrayEscape: resolved.arrayEscape,
       compactArrayTypes: resolved.compactArrayTypes,
       excludeSubkeys: createExcludeSubkeysMap(resolved.excludeSubkeys),
+      hideFrequencyColumns: resolved.hideFrequencyColumns,
       lastValue: resolved.lastValue,
       limit: resolved.limit,
       logKeysContinuously: resolved.logKeysContinuously,

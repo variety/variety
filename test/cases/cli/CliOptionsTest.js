@@ -189,6 +189,11 @@ describe('CLI option parsing', () => {
     assert.equal(evalCodeOf(plan), 'var collection = "users"; var showArrayElements = true');
   });
 
+  it('emits hideFrequencyColumns when the flag is passed', () => {
+    const plan = createExecutionPlan(['test/users', '--hide-frequency-columns'], {});
+    assert.equal(evalCodeOf(plan), 'var collection = "users"; var hideFrequencyColumns = true');
+  });
+
   it('emits compactArrayTypes when the flag is passed', () => {
     const plan = createExecutionPlan(['test/users', '--compact-array-types'], {});
     assert.equal(evalCodeOf(plan), 'var collection = "users"; var compactArrayTypes = true');
@@ -204,6 +209,13 @@ describe('CLI option parsing', () => {
     const camel = createExecutionPlan(['test/users', '--showArrayElements=false'], {});
     assert.equal(evalCodeOf(kebab), evalCodeOf(camel));
     assert.equal(evalCodeOf(kebab), 'var collection = "users"; var showArrayElements = false');
+  });
+
+  it('accepts --hideFrequencyColumns camelCase alias', () => {
+    const kebab = createExecutionPlan(['test/users', '--hide-frequency-columns=false'], {});
+    const camel = createExecutionPlan(['test/users', '--hideFrequencyColumns=false'], {});
+    assert.equal(evalCodeOf(kebab), evalCodeOf(camel));
+    assert.equal(evalCodeOf(kebab), 'var collection = "users"; var hideFrequencyColumns = false');
   });
 
   it('emits arrayEscape with the supplied value', () => {

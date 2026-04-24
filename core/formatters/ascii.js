@@ -12,12 +12,16 @@
 
   /**
    * Returns a formatter that renders results as a padded ASCII table.
-   * @param {object} config - The parsed Variety config (uses config.lastValue, config.maxExamples, and config.arrayEscape).
+   * @param {object} config - The parsed Variety config (uses config.hideFrequencyColumns, config.lastValue, config.maxExamples, and config.arrayEscape).
    * @returns {{ formatResults: function(Array): string }}
    */
   shellContext.__varietyFormatters.ascii = (config) => {
     const formatResults = (results) => {
-      const headers = ['key', 'types', 'occurrences', 'percents'];
+      const showFrequencyColumns = !config.hideFrequencyColumns;
+      const headers = ['key', 'types'];
+      if (showFrequencyColumns) {
+        headers.push('occurrences', 'percents');
+      }
       if (config.lastValue) {
         headers.push('lastValue');
       }
@@ -41,7 +45,10 @@
           ? typeKeys.map((type) => `${type} (${row.value.types[type]})`)
           : typeKeys;
 
-        const rawArray = [row._id.key, types, row.totalOccurrences, row.percentContaining.toFixed(Math.min(maxDigits, 20))];
+        const rawArray = [row._id.key, types];
+        if (showFrequencyColumns) {
+          rawArray.push(row.totalOccurrences, row.percentContaining.toFixed(Math.min(maxDigits, 20)));
+        }
         if (config.lastValue && row.lastValue) {
           rawArray.push(row.lastValue);
         }

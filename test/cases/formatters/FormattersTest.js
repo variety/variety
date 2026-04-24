@@ -6,6 +6,19 @@ import sampleData from '../../fixtures/seed-data.js';
 import expectedAscii from '../../fixtures/ascii-output-fixture.js';
 
 const test = new VarietyHarness('test', 'users');
+const expectedAsciiWithoutFrequencyColumns = [
+  `+${'-'.repeat(43)}+`,
+  '| key                | types                |',
+  '| ------------------ | -------------------- |',
+  '| _id                | ObjectId             |',
+  '| name               | String               |',
+  '| bio                | String               |',
+  '| birthday           | Date                 |',
+  '| pets               | String (1),Array (1) |',
+  '| someBinData        | BinData-generic      |',
+  '| someWeirdLegacyKey | String               |',
+  `+${'-'.repeat(43)}+`,
+].join('\n');
 
 describe('Formatter registry dispatch', () => {
 
@@ -21,6 +34,11 @@ describe('Formatter registry dispatch', () => {
     const results = await test.runJsonAnalysis({collection: 'users'}, true);
     results.validateResultsCount(7);
     results.validate('_id', 5, 100.0, {ObjectId: 5});
+  });
+
+  it('hides the frequency columns in ASCII output when requested', async () => {
+    const output = await test.runAnalysis({collection: 'users', hideFrequencyColumns: true}, true);
+    assert.equal(output, expectedAsciiWithoutFrequencyColumns);
   });
 
   it('throws for an unknown outputFormat', async () => {
