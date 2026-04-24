@@ -49,7 +49,7 @@ describe('CLI option parsing', () => {
 
     assert.deepEqual(plan, {
       database: 'sales',
-      evalCode: 'var collection = "orders"; var query = {"status":"open"}; var sort = {"updatedAt":-1}; var limit = 25; var maxDepth = 4; var outputFormat = "json"; var plugins = "csv"',
+      evalCode: 'var collection = "orders"; var query = {"status":"open"}; var limit = 25; var maxDepth = 4; var sort = {"updatedAt":-1}; var outputFormat = "json"; var plugins = "csv"',
       mode: 'cli',
       scriptPath: path.join(repoRoot, 'variety.js'),
       shellOptions: {},

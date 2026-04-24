@@ -8,7 +8,20 @@
 
   shellContext = typeof globalThis !== 'undefined' ? globalThis : shellContext;
 
+  const configApi = shellContext.__varietyConfig ||
+    (typeof module !== 'undefined' && module && module.exports && typeof require === 'function'
+      ? require('../core/config.js')
+      : undefined);
+  if (!configApi) {
+    throw new Error('Expected core/config.js to register __varietyConfig.');
+  }
+
   const impl = shellContext.__varietyImpl;
+  const {
+    ANALYSIS_OPTION_NAMES,
+    materializeAnalysisConfig,
+    resolveAnalysisOptions,
+  } = configApi;
 
   const shellIsQuiet = () => {
     if (typeof __quiet !== 'undefined' && __quiet) {
@@ -79,42 +92,19 @@
         `Possible collection options for database specified: ${collNames}.`);
   }
 
-  const readConfig = (configProvider) => {
-    const config = {};
-    const read = (name, defaultValue) => {
-      const value = typeof configProvider[name] !== 'undefined' ? configProvider[name] : defaultValue;
-      config[name] = value;
-      log(`Using ${name} of ${impl.shellToJson(value)}`);
-    };
-    read('collection', null);
-    read('query', {});
-    read('limit', countMatchingDocuments(config.collection, config.query));
-    read('maxDepth', 99);
-    read('sort', {_id: -1});
-    read('outputFormat', 'ascii');
-    read('persistResults', false);
-    read('resultsDatabase', 'varietyResults');
-    read('resultsCollection', `${collection}Keys`);
-    read('resultsUser', null);
-    read('resultsPass', null);
-    read('logKeysContinuously', false);
-    read('excludeSubkeys', []);
-    read('arrayEscape', 'XX');
-    read('showArrayElements', false);
-    read('compactArrayTypes', false);
-    read('lastValue', false);
-    read('maxExamples', 0);
+  const resolvedOptions = resolveAnalysisOptions(shellContext, {
+    collectionName: collection,
+    getDefaultLimit(query) {
+      return countMatchingDocuments(collection, query);
+    },
+  });
 
-    // Translate excludeSubkeys into a set-like object for compatibility.
-    config.excludeSubkeys = config.excludeSubkeys.reduce((result, item) => {
-      result[`${item}.`] = true;
-      return result;
-    }, impl.createKeyMap());
+  log(`Using collection of ${impl.shellToJson(collection)}`);
+  ANALYSIS_OPTION_NAMES.forEach((name) => {
+    log(`Using ${name} of ${impl.shellToJson(resolvedOptions[name])}`);
+  });
 
-    return config;
-  };
-
-  const config = readConfig(shellContext);
+  const config = Object.assign({ collection }, materializeAnalysisConfig(resolvedOptions));
 
   const createPluginsRunner = (context) => {
     const parsePath = (val) => val.slice(-3) !== '.js' ? `${val}.js` : val;
@@ -169,6 +159,7 @@
 
   // Clean up the implementation handoffs so repeated loads remain idempotent
   // and no ad hoc internals leak onto globalThis after execution.
+  delete shellContext.__varietyConfig;
   delete shellContext.__varietyEngine;
   delete shellContext.__varietyImpl;
   delete shellContext.__varietyFormatters;

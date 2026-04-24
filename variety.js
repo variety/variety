@@ -14,7 +14,7 @@ Please see https://github.com/variety/variety for details. */
 //
 // Assembled by build.js from:
 //   core/formatters/ascii.js, core/formatters/json.js,
-//   core/engine.js, core/analyzer.js, mongo-shell/adapter.js.
+//   core/config.js, core/engine.js, core/analyzer.js, mongo-shell/adapter.js.
 // To change behavior, edit those source files and run `npm run build`. The
 // build output is committed so `mongosh variety.js` works from a fresh clone
 // without a build step; CI verifies the committed file matches its sources.
@@ -30,14 +30,18 @@ Please see https://github.com/variety/variety for details. */
 // See .eslint.config.js for the enforced rule set.
 
 // -----------------------------------------------------------------------------
-// This file is organized in four sections, sourced from five separate files:
+// This file is organized in five sections, sourced from six separate files:
 //
 //   1. FORMATTER SECTION (core/formatters/ascii.js, core/formatters/json.js) —
 //      built-in output formatters. Each is a self-contained IIFE that registers
 //      a factory function on `shellContext.__varietyFormatters`. Third-party
 //      formatters can be supplied as plugins instead (see README).
 //
-//   2. ENGINE SECTION (core/engine.js) — reusable analysis logic that keeps
+//   2. CONFIG SECTION (core/config.js) — shared analysis-option validation,
+//      default resolution, and engine-facing materialization. Future callable
+//      APIs can reuse this boundary without inheriting shell-launch details.
+//
+//   3. ENGINE SECTION (core/engine.js) — reusable analysis logic that keeps
 //      persistence, formatter dispatch, and output side effects out of the
 //      engine. It still tolerates shell/runtime helpers when they are
 //      available. Functions take their dependencies (config, and where needed
@@ -45,12 +49,12 @@ Please see https://github.com/variety/variety for details. */
 //      analysis rows. The section hands a reusable engine to later sections
 //      via `shellContext.__varietyEngine`.
 //
-//   3. ANALYZER SECTION (core/analyzer.js) — shell-adjacent orchestration for
+//   4. ANALYZER SECTION (core/analyzer.js) — shell-adjacent orchestration for
 //      cursor traversal, optional persistence, and formatter dispatch. Depends
 //      on the engine and hands the combined internal API to the interface
 //      section via `shellContext.__varietyImpl`.
 //
-//   4. INTERFACE SECTION (mongo-shell/adapter.js) — everything that touches
+//   5. INTERFACE SECTION (mongo-shell/adapter.js) — everything that touches
 //      shell globals: reading input (`collection`, `plugins`, `__quiet`,
 //      `secondaryOk`, etc.), the config-echo logging, plugin loading via
 //      `load()`, input validation, and constructing the dependency bag
@@ -148,6 +152,435 @@ Please see https://github.com/variety/variety for details. */
   shellContext.__varietyFormatters.json = () => ({
     formatResults: (results) => JSON.stringify(results, null, 2),
   });
+}(this));
+
+
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
+// =============================================================================
+// CONFIG SECTION
+// =============================================================================
+/**
+ * @param {typeof globalThis} shellContext
+ */
+(function (shellContext) {
+  'use strict';
+
+  /**
+   * @typedef {{
+   *   arrayEscape?: string,
+   *   compactArrayTypes?: boolean,
+   *   excludeSubkeys?: string[],
+   *   lastValue?: boolean,
+   *   limit?: number,
+   *   logKeysContinuously?: boolean,
+   *   maxDepth?: number,
+   *   maxExamples?: number,
+   *   outputFormat?: string,
+   *   persistResults?: boolean,
+   *   query?: Record<string, unknown>,
+   *   resultsCollection?: string,
+   *   resultsDatabase?: string,
+   *   resultsPass?: string | null,
+   *   resultsUser?: string | null,
+   *   showArrayElements?: boolean,
+   *   sort?: Record<string, unknown>,
+   * }} AnalysisOptionsInput
+   */
+
+  /**
+   * @typedef {{
+   *   arrayEscape: string,
+   *   compactArrayTypes: boolean,
+   *   excludeSubkeys: string[],
+   *   lastValue: boolean,
+   *   limit: number,
+   *   logKeysContinuously: boolean,
+   *   maxDepth: number,
+   *   maxExamples: number,
+   *   outputFormat: string,
+   *   persistResults: boolean,
+   *   query: Record<string, unknown>,
+   *   resultsCollection: string,
+   *   resultsDatabase: string,
+   *   resultsPass: string | null,
+   *   resultsUser: string | null,
+   *   showArrayElements: boolean,
+   *   sort: Record<string, unknown>,
+   * }} ResolvedAnalysisOptions
+   */
+
+  /**
+   * @typedef {Omit<ResolvedAnalysisOptions, 'excludeSubkeys'> & {
+   *   excludeSubkeys: Record<string, boolean>,
+   * }} MaterializedAnalysisConfig
+   */
+
+  /** @typedef {keyof ResolvedAnalysisOptions} AnalysisOptionName */
+
+  /**
+   * @typedef {{
+   *   collectionName?: string,
+   *   getDefaultLimit?: (query: Record<string, unknown>) => number,
+   * }} AnalysisConfigContext
+   */
+
+  /**
+   * @typedef {{
+   *   ANALYSIS_OPTION_NAMES: AnalysisOptionName[],
+   *   materializeAnalysisConfig: (resolvedOptions: ResolvedAnalysisOptions) => MaterializedAnalysisConfig,
+   *   resolveAnalysisOptions: (input: AnalysisOptionsInput | undefined, context?: AnalysisConfigContext) => ResolvedAnalysisOptions,
+   *   validateAnalysisOptions: (input: AnalysisOptionsInput | undefined) => AnalysisOptionsInput,
+   * }} VarietyConfigApi
+   */
+
+  const root = /** @type {typeof globalThis & { __varietyConfig?: VarietyConfigApi }} */ (
+    typeof globalThis !== 'undefined' ? globalThis : shellContext
+  );
+
+  /**
+   * @param {object} value
+   * @param {string} key
+   * @returns {boolean}
+   */
+  const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
+
+  /** @type {AnalysisOptionName[]} */
+  const ANALYSIS_OPTION_NAMES = [
+    'query',
+    'limit',
+    'maxDepth',
+    'sort',
+    'outputFormat',
+    'persistResults',
+    'resultsDatabase',
+    'resultsCollection',
+    'resultsUser',
+    'resultsPass',
+    'logKeysContinuously',
+    'excludeSubkeys',
+    'arrayEscape',
+    'showArrayElements',
+    'compactArrayTypes',
+    'lastValue',
+    'maxExamples',
+  ];
+
+  /**
+   * @param {unknown} value
+   * @returns {value is Record<string, unknown>}
+   */
+  const isPlainObject = (value) => {
+    return value !== null && !Array.isArray(value) && typeof value === 'object';
+  };
+
+  /**
+   * @param {Record<string, unknown>} value
+   * @returns {Record<string, unknown>}
+   */
+  const cloneObject = (value) => ({ ...value });
+
+  /**
+   * @param {AnalysisOptionsInput | undefined} value
+   * @returns {Record<string, unknown>}
+   */
+  const ensureInputObject = (value) => {
+    if (typeof value === 'undefined') {
+      return {};
+    }
+
+    if (!isPlainObject(value)) {
+      throw new Error('Analysis options must be an object.');
+    }
+
+    return value;
+  };
+
+  /**
+   * @param {string} name
+   * @param {unknown} value
+   * @returns {boolean}
+   */
+  const validateBooleanOption = (name, value) => {
+    if (typeof value !== 'boolean') {
+      throw new Error(`${name} must be a boolean.`);
+    }
+
+    return value;
+  };
+
+  /**
+   * @param {string} name
+   * @param {unknown} value
+   * @param {boolean} allowNull
+   * @param {boolean} requireNonEmpty
+   * @returns {string | null}
+   */
+  const validateStringOption = (name, value, allowNull, requireNonEmpty) => {
+    if (allowNull && value === null) {
+      return value;
+    }
+
+    if (typeof value !== 'string') {
+      const nullClause = allowNull ? ' or null' : '';
+      throw new Error(`${name} must be a string${nullClause}.`);
+    }
+
+    if (requireNonEmpty && value.length === 0) {
+      throw new Error(`${name} must not be empty.`);
+    }
+
+    return value;
+  };
+
+  /**
+   * @param {string} name
+   * @param {unknown} value
+   * @returns {string[]}
+   */
+  const validateStringArrayOption = (name, value) => {
+    if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) {
+      throw new Error(`${name} must be an array of strings.`);
+    }
+
+    return value.slice();
+  };
+
+  /**
+   * @param {string} name
+   * @param {unknown} value
+   * @returns {Record<string, unknown>}
+   */
+  const validateObjectOption = (name, value) => {
+    if (!isPlainObject(value)) {
+      throw new Error(`${name} must be an object.`);
+    }
+
+    return cloneObject(value);
+  };
+
+  /**
+   * @param {string} name
+   * @param {unknown} value
+   * @returns {number}
+   */
+  const validateNonNegativeIntegerOption = (name, value) => {
+    if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) {
+      throw new Error(`${name} must be a non-negative integer.`);
+    }
+
+    return value;
+  };
+
+  /**
+   * @param {string[]} excludeSubkeys
+   * @returns {Record<string, boolean>}
+   */
+  const createExcludeSubkeysMap = (excludeSubkeys) => {
+    return excludeSubkeys.reduce((result, item) => {
+      result[`${item}.`] = true;
+      return result;
+    }, Object.create(null));
+  };
+
+  /**
+   * @param {AnalysisOptionsInput | undefined} input
+   * @returns {AnalysisOptionsInput}
+   */
+  const validateAnalysisOptions = (input) => {
+    const source = ensureInputObject(input);
+    /** @type {AnalysisOptionsInput} */
+    const validated = {};
+
+    if (hasOwn(source, 'query') && typeof source['query'] !== 'undefined') {
+      validated.query = validateObjectOption('query', source['query']);
+    }
+
+    if (hasOwn(source, 'sort') && typeof source['sort'] !== 'undefined') {
+      validated.sort = validateObjectOption('sort', source['sort']);
+    }
+
+    if (hasOwn(source, 'limit') && typeof source['limit'] !== 'undefined') {
+      validated.limit = validateNonNegativeIntegerOption('limit', source['limit']);
+    }
+
+    if (hasOwn(source, 'maxDepth') && typeof source['maxDepth'] !== 'undefined') {
+      validated.maxDepth = validateNonNegativeIntegerOption('maxDepth', source['maxDepth']);
+    }
+
+    if (hasOwn(source, 'outputFormat') && typeof source['outputFormat'] !== 'undefined') {
+      validated.outputFormat = /** @type {string} */ (validateStringOption('outputFormat', source['outputFormat'], false, false));
+    }
+
+    if (hasOwn(source, 'maxExamples') && typeof source['maxExamples'] !== 'undefined') {
+      validated.maxExamples = validateNonNegativeIntegerOption('maxExamples', source['maxExamples']);
+    }
+
+    if (hasOwn(source, 'lastValue') && typeof source['lastValue'] !== 'undefined') {
+      validated.lastValue = validateBooleanOption('lastValue', source['lastValue']);
+    }
+
+    if (hasOwn(source, 'showArrayElements') && typeof source['showArrayElements'] !== 'undefined') {
+      validated.showArrayElements = validateBooleanOption('showArrayElements', source['showArrayElements']);
+    }
+
+    if (hasOwn(source, 'compactArrayTypes') && typeof source['compactArrayTypes'] !== 'undefined') {
+      validated.compactArrayTypes = validateBooleanOption('compactArrayTypes', source['compactArrayTypes']);
+    }
+
+    if (hasOwn(source, 'arrayEscape') && typeof source['arrayEscape'] !== 'undefined') {
+      validated.arrayEscape = /** @type {string} */ (validateStringOption('arrayEscape', source['arrayEscape'], false, true));
+    }
+
+    if (hasOwn(source, 'excludeSubkeys') && typeof source['excludeSubkeys'] !== 'undefined') {
+      validated.excludeSubkeys = validateStringArrayOption('excludeSubkeys', source['excludeSubkeys']);
+    }
+
+    if (hasOwn(source, 'logKeysContinuously') && typeof source['logKeysContinuously'] !== 'undefined') {
+      validated.logKeysContinuously = validateBooleanOption('logKeysContinuously', source['logKeysContinuously']);
+    }
+
+    if (hasOwn(source, 'persistResults') && typeof source['persistResults'] !== 'undefined') {
+      validated.persistResults = validateBooleanOption('persistResults', source['persistResults']);
+    }
+
+    if (hasOwn(source, 'resultsDatabase') && typeof source['resultsDatabase'] !== 'undefined') {
+      validated.resultsDatabase = /** @type {string} */ (validateStringOption('resultsDatabase', source['resultsDatabase'], false, false));
+    }
+
+    if (hasOwn(source, 'resultsCollection') && typeof source['resultsCollection'] !== 'undefined') {
+      validated.resultsCollection = /** @type {string} */ (validateStringOption('resultsCollection', source['resultsCollection'], false, false));
+    }
+
+    if (hasOwn(source, 'resultsUser') && typeof source['resultsUser'] !== 'undefined') {
+      validated.resultsUser = validateStringOption('resultsUser', source['resultsUser'], true, false);
+    }
+
+    if (hasOwn(source, 'resultsPass') && typeof source['resultsPass'] !== 'undefined') {
+      validated.resultsPass = validateStringOption('resultsPass', source['resultsPass'], true, false);
+    }
+
+    return validated;
+  };
+
+  /**
+   * @param {AnalysisOptionsInput} validated
+   * @returns {Record<string, unknown>}
+   */
+  const readQuery = (validated) => {
+    return hasOwn(validated, 'query') ? /** @type {Record<string, unknown>} */ (validated.query) : {};
+  };
+
+  /**
+   * @param {Record<string, unknown>} query
+   * @param {AnalysisConfigContext | undefined} context
+   * @returns {number}
+   */
+  const resolveDefaultLimit = (query, context) => {
+    if (!context || typeof context.getDefaultLimit !== 'function') {
+      throw new Error('getDefaultLimit context is required to derive the default limit.');
+    }
+
+    return validateNonNegativeIntegerOption('limit', context.getDefaultLimit(query));
+  };
+
+  /**
+   * @param {AnalysisConfigContext | undefined} context
+   * @returns {string}
+   */
+  const resolveDefaultResultsCollection = (context) => {
+    if (!context || typeof context.collectionName !== 'string' || context.collectionName.length === 0) {
+      throw new Error('collectionName context is required to derive the default resultsCollection.');
+    }
+
+    return `${context.collectionName}Keys`;
+  };
+
+  /**
+   * @param {AnalysisOptionsInput | undefined} input
+   * @param {AnalysisConfigContext} [context]
+   * @returns {ResolvedAnalysisOptions}
+   */
+  const resolveAnalysisOptions = (input, context) => {
+    const validated = validateAnalysisOptions(input);
+    const query = readQuery(validated);
+
+    return {
+      arrayEscape: hasOwn(validated, 'arrayEscape') ? /** @type {string} */ (validated.arrayEscape) : 'XX',
+      compactArrayTypes: hasOwn(validated, 'compactArrayTypes') ? /** @type {boolean} */ (validated.compactArrayTypes) : false,
+      excludeSubkeys: hasOwn(validated, 'excludeSubkeys') ? /** @type {string[]} */ (validated.excludeSubkeys) : [],
+      lastValue: hasOwn(validated, 'lastValue') ? /** @type {boolean} */ (validated.lastValue) : false,
+      limit: hasOwn(validated, 'limit') ? /** @type {number} */ (validated.limit) : resolveDefaultLimit(query, context),
+      logKeysContinuously: hasOwn(validated, 'logKeysContinuously') ? /** @type {boolean} */ (validated.logKeysContinuously) : false,
+      maxDepth: hasOwn(validated, 'maxDepth') ? /** @type {number} */ (validated.maxDepth) : 99,
+      maxExamples: hasOwn(validated, 'maxExamples') ? /** @type {number} */ (validated.maxExamples) : 0,
+      outputFormat: hasOwn(validated, 'outputFormat') ? /** @type {string} */ (validated.outputFormat) : 'ascii',
+      persistResults: hasOwn(validated, 'persistResults') ? /** @type {boolean} */ (validated.persistResults) : false,
+      query,
+      resultsCollection: hasOwn(validated, 'resultsCollection')
+        ? /** @type {string} */ (validated.resultsCollection)
+        : resolveDefaultResultsCollection(context),
+      resultsDatabase: hasOwn(validated, 'resultsDatabase') ? /** @type {string} */ (validated.resultsDatabase) : 'varietyResults',
+      resultsPass: hasOwn(validated, 'resultsPass') ? /** @type {string | null} */ (validated.resultsPass) : null,
+      resultsUser: hasOwn(validated, 'resultsUser') ? /** @type {string | null} */ (validated.resultsUser) : null,
+      showArrayElements: hasOwn(validated, 'showArrayElements') ? /** @type {boolean} */ (validated.showArrayElements) : false,
+      sort: hasOwn(validated, 'sort') ? /** @type {Record<string, unknown>} */ (validated.sort) : { _id: -1 },
+    };
+  };
+
+  /**
+   * @param {AnalysisOptionsInput | ResolvedAnalysisOptions} value
+   * @returns {ResolvedAnalysisOptions}
+   */
+  const ensureResolvedAnalysisOptions = (value) => {
+    const resolved = ensureInputObject(value);
+    if (ANALYSIS_OPTION_NAMES.some((name) => !hasOwn(resolved, name))) {
+      throw new Error('Resolved analysis options are required before materialization.');
+    }
+
+    return /** @type {ResolvedAnalysisOptions} */ (resolved);
+  };
+
+  /**
+   * @param {ResolvedAnalysisOptions} resolvedOptions
+   * @returns {MaterializedAnalysisConfig}
+   */
+  const materializeAnalysisConfig = (resolvedOptions) => {
+    const resolved = ensureResolvedAnalysisOptions(resolvedOptions);
+
+    return {
+      arrayEscape: resolved.arrayEscape,
+      compactArrayTypes: resolved.compactArrayTypes,
+      excludeSubkeys: createExcludeSubkeysMap(resolved.excludeSubkeys),
+      lastValue: resolved.lastValue,
+      limit: resolved.limit,
+      logKeysContinuously: resolved.logKeysContinuously,
+      maxDepth: resolved.maxDepth,
+      maxExamples: resolved.maxExamples,
+      outputFormat: resolved.outputFormat,
+      persistResults: resolved.persistResults,
+      query: cloneObject(resolved.query),
+      resultsCollection: resolved.resultsCollection,
+      resultsDatabase: resolved.resultsDatabase,
+      resultsPass: resolved.resultsPass,
+      resultsUser: resolved.resultsUser,
+      showArrayElements: resolved.showArrayElements,
+      sort: cloneObject(resolved.sort),
+    };
+  };
+
+  const configApi = {
+    ANALYSIS_OPTION_NAMES,
+    materializeAnalysisConfig,
+    resolveAnalysisOptions,
+    validateAnalysisOptions,
+  };
+
+  root.__varietyConfig = configApi;
+
+  if (typeof module !== 'undefined' && module && module.exports) {
+    module.exports = configApi;
+  }
 }(this));
 
 
@@ -674,7 +1107,20 @@ Please see https://github.com/variety/variety for details. */
 
   shellContext = typeof globalThis !== 'undefined' ? globalThis : shellContext;
 
+  const configApi = shellContext.__varietyConfig ||
+    (typeof module !== 'undefined' && module && module.exports && typeof require === 'function'
+      ? require('../core/config.js')
+      : undefined);
+  if (!configApi) {
+    throw new Error('Expected core/config.js to register __varietyConfig.');
+  }
+
   const impl = shellContext.__varietyImpl;
+  const {
+    ANALYSIS_OPTION_NAMES,
+    materializeAnalysisConfig,
+    resolveAnalysisOptions,
+  } = configApi;
 
   const shellIsQuiet = () => {
     if (typeof __quiet !== 'undefined' && __quiet) {
@@ -745,42 +1191,19 @@ Please see https://github.com/variety/variety for details. */
         `Possible collection options for database specified: ${collNames}.`);
   }
 
-  const readConfig = (configProvider) => {
-    const config = {};
-    const read = (name, defaultValue) => {
-      const value = typeof configProvider[name] !== 'undefined' ? configProvider[name] : defaultValue;
-      config[name] = value;
-      log(`Using ${name} of ${impl.shellToJson(value)}`);
-    };
-    read('collection', null);
-    read('query', {});
-    read('limit', countMatchingDocuments(config.collection, config.query));
-    read('maxDepth', 99);
-    read('sort', {_id: -1});
-    read('outputFormat', 'ascii');
-    read('persistResults', false);
-    read('resultsDatabase', 'varietyResults');
-    read('resultsCollection', `${collection}Keys`);
-    read('resultsUser', null);
-    read('resultsPass', null);
-    read('logKeysContinuously', false);
-    read('excludeSubkeys', []);
-    read('arrayEscape', 'XX');
-    read('showArrayElements', false);
-    read('compactArrayTypes', false);
-    read('lastValue', false);
-    read('maxExamples', 0);
+  const resolvedOptions = resolveAnalysisOptions(shellContext, {
+    collectionName: collection,
+    getDefaultLimit(query) {
+      return countMatchingDocuments(collection, query);
+    },
+  });
 
-    // Translate excludeSubkeys into a set-like object for compatibility.
-    config.excludeSubkeys = config.excludeSubkeys.reduce((result, item) => {
-      result[`${item}.`] = true;
-      return result;
-    }, impl.createKeyMap());
+  log(`Using collection of ${impl.shellToJson(collection)}`);
+  ANALYSIS_OPTION_NAMES.forEach((name) => {
+    log(`Using ${name} of ${impl.shellToJson(resolvedOptions[name])}`);
+  });
 
-    return config;
-  };
-
-  const config = readConfig(shellContext);
+  const config = Object.assign({ collection }, materializeAnalysisConfig(resolvedOptions));
 
   const createPluginsRunner = (context) => {
     const parsePath = (val) => val.slice(-3) !== '.js' ? `${val}.js` : val;
@@ -835,6 +1258,7 @@ Please see https://github.com/variety/variety for details. */
 
   // Clean up the implementation handoffs so repeated loads remain idempotent
   // and no ad hoc internals leak onto globalThis after execution.
+  delete shellContext.__varietyConfig;
   delete shellContext.__varietyEngine;
   delete shellContext.__varietyImpl;
   delete shellContext.__varietyFormatters;

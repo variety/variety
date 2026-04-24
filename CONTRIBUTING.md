@@ -22,12 +22,16 @@ As an additional (not required) dependency, [Docker](https://www.docker.com/) or
 
 ## Repo Layout and the `variety.js` Build
 
-`variety.js` at the repo root is a generated file, assembled from five sources in this order:
+`variety.js` at the repo root is a generated file, assembled from six sources in this order:
 
 - `core/formatters/ascii.js` — built-in ASCII table formatter. Self-contained
   IIFE; registers an `ascii` factory on `shellContext.__varietyFormatters`.
 - `core/formatters/json.js` — built-in JSON formatter. Self-contained IIFE;
   registers a `json` factory on `shellContext.__varietyFormatters`.
+- `core/config.js` — shared analysis-option validation, default resolution,
+  and engine-facing materialization. This is the reusable config boundary for
+  follow-up work on callable APIs, while shell transport and launch settings
+  remain entrypoint concerns.
 - `core/engine.js` — reusable analysis logic that keeps persistence,
   formatter dispatch, and output side effects out of the engine. It still
   tolerates shell/runtime helpers when they are available. Exports the
@@ -38,10 +42,10 @@ As an additional (not required) dependency, [Docker](https://www.docker.com/) or
   on top of `core/engine.js`. Depends on `core/formatters/` and `core/engine.js`.
 - `mongo-shell/adapter.js` — the shell-facing layer that reads shell
   globals (`collection`, `plugins`, `secondaryOk`, etc.), loads plugins, and
-  hands dependencies to `impl.run()`. The only place in the build that
-  touches `db`, `print`, and `load`. Cleans up `__varietyEngine`,
-  `__varietyImpl`, and `__varietyFormatters` after execution so repeated loads
-  are idempotent.
+  resolves analysis options through `core/config.js`, and hands dependencies to
+  `impl.run()`. The only place in the build that touches `db`, `print`, and
+  `load`. Cleans up `__varietyConfig`, `__varietyEngine`, `__varietyImpl`, and
+  `__varietyFormatters` after execution so repeated loads are idempotent.
   Depends on `core`; compiled into `variety.js` by `build.js` (not a
   separately published package).
 - `bin/variety` — the published Node entrypoint that implements the main
@@ -55,12 +59,14 @@ As an additional (not required) dependency, [Docker](https://www.docker.com/) or
   `@variety/cli` package boundary.
 
 **Dependency directions:** `core/formatters/` has no runtime deps on any other
-layer. `core/engine.js` has no runtime deps on any other layer. `core/analyzer.js`
-depends on `core/engine.js` plus `core/formatters/`. `mongo-shell/adapter.js`
-depends on `core/analyzer.js`. `mongo-shell/launcher.js` is Node-only (no `core`
-dep). `cli` depends on `mongo-shell/` and the built script path, not on the
-engine directly. `build.js` composes `core/formatters/` + `core/engine.js` +
-`core/analyzer.js` + `mongo-shell/adapter.js` → `variety.js`.
+layer. `core/config.js` has no runtime deps on any other layer. `core/engine.js`
+has no runtime deps on any other layer. `core/analyzer.js` depends on
+`core/engine.js` plus `core/formatters/`. `mongo-shell/adapter.js` depends on
+`core/config.js` and `core/analyzer.js`. `mongo-shell/launcher.js` is Node-only
+(no `core` dep). `cli/options.js` depends on `core/config.js`; `cli/main.js`
+depends on `cli/options.js` and `mongo-shell/launcher.js`. `build.js` composes
+`core/formatters/` + `core/config.js` + `core/engine.js` + `core/analyzer.js` +
+`mongo-shell/adapter.js` → `variety.js`.
 
 `build.js` concatenates those source files under a generated-file banner.
 Edit the sources in `core/` or `mongo-shell/adapter.js`, then run:
@@ -156,7 +162,7 @@ Otherwise all of the following run:
 - `npm run lint:dockerfile` — hadolint (`docker/Dockerfile.template`)
 - `npm run lint:shell` — shellcheck (shell scripts)
 - `npm run lint:spdx` — verifies `SPDX-License-Identifier: MIT` headers in all tracked source files
-- `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for `bin/variety`, `cli/**/*.js`, `.eslint.config.js`, `build.js`, and Node-side test code under `test`
+- `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for `bin/variety`, `cli/**/*.js`, `core/config.js`, `.eslint.config.js`, `build.js`, and Node-side test code under `test`
 
 Markdownlint allows only one inline HTML element, `<br />`, for intentional line breaks inside compact Markdown tables.
 
@@ -178,7 +184,7 @@ Node-side JavaScript such as `bin/variety`, `cli/**/*.js`, `mongo-shell/launcher
 
 #### Checked Files
 
-`npm run typecheck` runs TypeScript `checkJs` over the published Node CLI surface (`bin/variety` plus `cli/**/*.js` and `mongo-shell/launcher.js`), `.eslint.config.js`, `build.js`, and the Node-side test code via `.tsconfig.checkjs.json`. The `test` tree also uses type-aware `typescript-eslint` rules, while shell-executed fixtures under `test/fixtures` stay on the shared baseline.
+`npm run typecheck` runs TypeScript `checkJs` over the published Node CLI surface (`bin/variety` plus `cli/**/*.js`, `core/config.js`, and `mongo-shell/launcher.js`), `.eslint.config.js`, `build.js`, and the Node-side test code via `.tsconfig.checkjs.json`. The `test` tree also uses type-aware `typescript-eslint` rules, while shell-executed fixtures under `test/fixtures` stay on the shared baseline.
 
 #### Extra Strictness
 

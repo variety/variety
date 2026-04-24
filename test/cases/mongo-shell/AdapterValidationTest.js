@@ -2,11 +2,15 @@
 // SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
 import assert from 'assert';
 import fs from 'fs';
+import { createRequire } from 'module';
 import vm from 'vm';
 import { fileURLToPath } from 'url';
 
+const require = createRequire(import.meta.url);
 const adapterPath = fileURLToPath(new URL('../../../mongo-shell/adapter.js', import.meta.url));
 const adapterSource = fs.readFileSync(adapterPath, 'utf8');
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+const configModule = /** @type {typeof import('../../../core/config.js')} */ (require('../../../core/config.js'));
 
 /**
  * @typedef {{ countDocuments(query: Record<string, unknown>, options?: { limit: number }): number }} FakeCollection
@@ -72,8 +76,8 @@ describe('Mongo shell adapter validation', () => {
     let analyzerRan = false;
 
     const context = {
+      __varietyConfig: configModule,
       __varietyImpl: {
-        createKeyMap: () => ({}),
         run: () => {
           analyzerRan = true;
         },
@@ -103,10 +107,6 @@ describe('Mongo shell adapter validation', () => {
     /** @type {string[]} */
     const sisterDbCalls = [];
     /**
-     * @returns {Record<string, unknown>}
-     */
-    const createKeyMap = () => ({});
-    /**
      * @param {unknown} config
      */
     const captureRunConfig = (config) => {
@@ -114,13 +114,14 @@ describe('Mongo shell adapter validation', () => {
     };
 
     const context = {
+      __varietyConfig: configModule,
       __varietyImpl: {
-        createKeyMap,
         run: captureRunConfig,
         shellToJson: JSON.stringify,
       },
       collection: 'users',
       db: createDb(sisterDbCalls),
+      excludeSubkeys: ['meta.tags'],
       print: () => {},
     };
 
@@ -132,8 +133,10 @@ describe('Mongo shell adapter validation', () => {
 
     const [config] = runConfigs;
     assert.ok(config && typeof config === 'object');
-    const typedConfig = /** @type {{ collection?: unknown, limit?: unknown }} */ (config);
+    const typedConfig = /** @type {{ collection?: unknown, limit?: unknown, excludeSubkeys?: unknown, resultsCollection?: unknown }} */ (config);
     assert.equal(typedConfig.collection, 'users');
     assert.equal(typedConfig.limit, 1);
+    assert.deepEqual(typedConfig.excludeSubkeys, { 'meta.tags.': true });
+    assert.equal(typedConfig.resultsCollection, 'usersKeys');
   });
 });
