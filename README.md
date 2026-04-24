@@ -518,6 +518,8 @@ flags such as `--host`, `--port`, `--username`, `--password`, `--authenticationD
 `--uri`, and `--quiet` shape the Mongo shell invocation. `--eval` remains
 available as an escape hatch when you need to append raw JavaScript assignments.
 
+If the JavaScript you need to append begins with `--` and also matches a Variety CLI flag name, use the inline form `--eval=...` so the parser does not treat it as another option.
+
 When you invoke `variety` with no CLI arguments, the documented compatibility environment variables remain supported:
 
 | Variable | Description |

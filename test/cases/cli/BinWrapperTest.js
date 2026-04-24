@@ -185,6 +185,46 @@ describe('bin/variety wrapper', () => {
     });
   });
 
+  it('passes through --eval values that start with -- when they are not known CLI flags', async () => {
+    const { invocation, stderr } = await runBinVariety({
+      args: [
+        'analytics/events',
+        '--eval', '--custom-eval-token',
+      ],
+    });
+
+    if (!invocation) {
+      throw new Error('Expected the fake shell invocation to be recorded.');
+    }
+    assert.deepEqual(invocation, {
+      command: 'mongosh',
+      args: [
+        'analytics',
+        '--eval',
+        'var collection = "events"; --custom-eval-token',
+        path.join(repoRoot, 'variety.js'),
+      ],
+    });
+    assert.equal(stderr, '');
+  });
+
+  it('prints a helpful usage error when --eval is followed by a known CLI flag', async () => {
+    await assert.rejects(
+      () => runBinVariety({
+        args: ['analytics/events', '--eval', '--quiet'],
+      }),
+      /** @param {NodeJS.ErrnoException & { stderr?: string | Buffer }} error */
+      (error) => {
+        assert.equal(error.code, 2);
+        assert.match(
+          String(error.stderr || ''),
+          /Error: --eval expected JavaScript, but received Variety CLI flag "--quiet".*place it before --eval.*--eval=--quiet/s
+        );
+        return true;
+      }
+    );
+  });
+
   it('prefers mongosh and preserves the documented DB plus EVAL_CMDS compatibility mode', async () => {
     const { invocation, stdout, stderr } = await runBinVariety({
       shells: ['mongosh', 'mongo'],
