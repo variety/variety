@@ -71,7 +71,7 @@
   /**
    * @typedef {{
    *   ANALYSIS_OPTION_NAMES: AnalysisOptionName[],
-   *   materializeAnalysisConfig: (resolvedOptions: AnalysisOptionsInput | ResolvedAnalysisOptions) => MaterializedAnalysisConfig,
+   *   materializeAnalysisConfig: (resolvedOptions: ResolvedAnalysisOptions) => MaterializedAnalysisConfig,
    *   resolveAnalysisOptions: (input: AnalysisOptionsInput | undefined, context?: AnalysisConfigContext) => ResolvedAnalysisOptions,
    *   validateAnalysisOptions: (input: AnalysisOptionsInput | undefined) => AnalysisOptionsInput,
    * }} VarietyConfigApi
@@ -91,22 +91,22 @@
   /** @type {AnalysisOptionName[]} */
   const ANALYSIS_OPTION_NAMES = [
     'query',
-    'sort',
     'limit',
     'maxDepth',
+    'sort',
     'outputFormat',
-    'maxExamples',
-    'lastValue',
-    'showArrayElements',
-    'compactArrayTypes',
-    'arrayEscape',
-    'excludeSubkeys',
-    'logKeysContinuously',
     'persistResults',
     'resultsDatabase',
     'resultsCollection',
     'resultsUser',
     'resultsPass',
+    'logKeysContinuously',
+    'excludeSubkeys',
+    'arrayEscape',
+    'showArrayElements',
+    'compactArrayTypes',
+    'lastValue',
+    'maxExamples',
   ];
 
   /**
@@ -372,40 +372,43 @@
   };
 
   /**
-   * @param {AnalysisOptionsInput | ResolvedAnalysisOptions} resolvedOptions
-   * @returns {MaterializedAnalysisConfig}
+   * @param {AnalysisOptionsInput | ResolvedAnalysisOptions} value
+   * @returns {ResolvedAnalysisOptions}
    */
-  const materializeAnalysisConfig = (resolvedOptions) => {
-    const validated = validateAnalysisOptions(resolvedOptions);
-    if (!hasOwn(validated, 'query') || !hasOwn(validated, 'sort') || !hasOwn(validated, 'limit') ||
-      !hasOwn(validated, 'maxDepth') || !hasOwn(validated, 'outputFormat') || !hasOwn(validated, 'maxExamples') ||
-      !hasOwn(validated, 'lastValue') || !hasOwn(validated, 'showArrayElements') ||
-      !hasOwn(validated, 'compactArrayTypes') || !hasOwn(validated, 'arrayEscape') ||
-      !hasOwn(validated, 'excludeSubkeys') || !hasOwn(validated, 'logKeysContinuously') ||
-      !hasOwn(validated, 'persistResults') || !hasOwn(validated, 'resultsDatabase') ||
-      !hasOwn(validated, 'resultsCollection') || !hasOwn(validated, 'resultsUser') ||
-      !hasOwn(validated, 'resultsPass')) {
+  const ensureResolvedAnalysisOptions = (value) => {
+    const resolved = ensureInputObject(value);
+    if (ANALYSIS_OPTION_NAMES.some((name) => !hasOwn(resolved, name))) {
       throw new Error('Resolved analysis options are required before materialization.');
     }
 
+    return /** @type {ResolvedAnalysisOptions} */ (resolved);
+  };
+
+  /**
+   * @param {ResolvedAnalysisOptions} resolvedOptions
+   * @returns {MaterializedAnalysisConfig}
+   */
+  const materializeAnalysisConfig = (resolvedOptions) => {
+    const resolved = ensureResolvedAnalysisOptions(resolvedOptions);
+
     return {
-      arrayEscape: /** @type {string} */ (validated.arrayEscape),
-      compactArrayTypes: /** @type {boolean} */ (validated.compactArrayTypes),
-      excludeSubkeys: createExcludeSubkeysMap(/** @type {string[]} */ (validated.excludeSubkeys)),
-      lastValue: /** @type {boolean} */ (validated.lastValue),
-      limit: /** @type {number} */ (validated.limit),
-      logKeysContinuously: /** @type {boolean} */ (validated.logKeysContinuously),
-      maxDepth: /** @type {number} */ (validated.maxDepth),
-      maxExamples: /** @type {number} */ (validated.maxExamples),
-      outputFormat: /** @type {string} */ (validated.outputFormat),
-      persistResults: /** @type {boolean} */ (validated.persistResults),
-      query: /** @type {Record<string, unknown>} */ (validated.query),
-      resultsCollection: /** @type {string} */ (validated.resultsCollection),
-      resultsDatabase: /** @type {string} */ (validated.resultsDatabase),
-      resultsPass: /** @type {string | null} */ (validated.resultsPass),
-      resultsUser: /** @type {string | null} */ (validated.resultsUser),
-      showArrayElements: /** @type {boolean} */ (validated.showArrayElements),
-      sort: /** @type {Record<string, unknown>} */ (validated.sort),
+      arrayEscape: resolved.arrayEscape,
+      compactArrayTypes: resolved.compactArrayTypes,
+      excludeSubkeys: createExcludeSubkeysMap(resolved.excludeSubkeys),
+      lastValue: resolved.lastValue,
+      limit: resolved.limit,
+      logKeysContinuously: resolved.logKeysContinuously,
+      maxDepth: resolved.maxDepth,
+      maxExamples: resolved.maxExamples,
+      outputFormat: resolved.outputFormat,
+      persistResults: resolved.persistResults,
+      query: cloneObject(resolved.query),
+      resultsCollection: resolved.resultsCollection,
+      resultsDatabase: resolved.resultsDatabase,
+      resultsPass: resolved.resultsPass,
+      resultsUser: resolved.resultsUser,
+      showArrayElements: resolved.showArrayElements,
+      sort: cloneObject(resolved.sort),
     };
   };
 

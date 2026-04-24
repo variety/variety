@@ -20,27 +20,7 @@ const {
  * }} ShellOptions
  */
 
-/**
- * @typedef {{
- *   arrayEscape?: string,
- *   compactArrayTypes?: boolean,
- *   excludeSubkeys?: string[],
- *   lastValue?: boolean,
- *   limit?: number,
- *   logKeysContinuously?: boolean,
- *   maxDepth?: number,
- *   maxExamples?: number,
- *   outputFormat?: string,
- *   persistResults?: boolean,
- *   query?: Record<string, unknown>,
- *   resultsCollection?: string,
- *   resultsDatabase?: string,
- *   resultsPass?: string | null,
- *   resultsUser?: string | null,
- *   showArrayElements?: boolean,
- *   sort?: Record<string, unknown>,
- * }} AnalysisOptionsInput
- */
+/** @typedef {NonNullable<Parameters<typeof validateAnalysisOptions>[0]>} AnalysisOptionsInput */
 
 /** @typedef {{ secondaryOk?: boolean }} ShellRuntimeOptions */
 

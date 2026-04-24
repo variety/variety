@@ -299,7 +299,7 @@ describe('bin/variety wrapper', () => {
       args: [
         'testdb',
         '--eval',
-        'var collection = "events"; var showArrayElements = true; var compactArrayTypes = true; var arrayEscape = "YY"; var excludeSubkeys = ["meta.tags","audit.log"]; var logKeysContinuously = true',
+        'var collection = "events"; var logKeysContinuously = true; var excludeSubkeys = ["meta.tags","audit.log"]; var arrayEscape = "YY"; var showArrayElements = true; var compactArrayTypes = true',
         path.join(repoRoot, 'variety.js'),
       ],
     });

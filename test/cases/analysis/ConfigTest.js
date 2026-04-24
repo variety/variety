@@ -29,22 +29,22 @@ describe('Shared analysis config', () => {
 
     assert.deepEqual(ANALYSIS_OPTION_NAMES, [
       'query',
-      'sort',
       'limit',
       'maxDepth',
+      'sort',
       'outputFormat',
-      'maxExamples',
-      'lastValue',
-      'showArrayElements',
-      'compactArrayTypes',
-      'arrayEscape',
-      'excludeSubkeys',
-      'logKeysContinuously',
       'persistResults',
       'resultsDatabase',
       'resultsCollection',
       'resultsUser',
       'resultsPass',
+      'logKeysContinuously',
+      'excludeSubkeys',
+      'arrayEscape',
+      'showArrayElements',
+      'compactArrayTypes',
+      'lastValue',
+      'maxExamples',
     ]);
     assert.deepEqual(resolved, {
       arrayEscape: 'XX',
@@ -119,6 +119,74 @@ describe('Shared analysis config', () => {
         validateAnalysisOptions(/** @type {any} */ ({ excludeSubkeys: 'meta.tags' }));
       },
       /excludeSubkeys must be an array of strings/
+    );
+  });
+
+  it('accepts null persistence credentials and rejects invalid string and boolean option types', () => {
+    assert.deepEqual(validateAnalysisOptions({
+      resultsPass: null,
+      resultsUser: null,
+    }), {
+      resultsPass: null,
+      resultsUser: null,
+    });
+
+    assert.throws(
+      () => {
+        validateAnalysisOptions(/** @type {any} */ ({ outputFormat: 42 }));
+      },
+      /outputFormat must be a string/
+    );
+
+    assert.throws(
+      () => {
+        validateAnalysisOptions(/** @type {any} */ ({ arrayEscape: 42 }));
+      },
+      /arrayEscape must be a string/
+    );
+
+    assert.throws(
+      () => {
+        validateAnalysisOptions(/** @type {any} */ ({ resultsDatabase: 42 }));
+      },
+      /resultsDatabase must be a string/
+    );
+
+    assert.throws(
+      () => {
+        validateAnalysisOptions(/** @type {any} */ ({ resultsCollection: 42 }));
+      },
+      /resultsCollection must be a string/
+    );
+
+    assert.throws(
+      () => {
+        validateAnalysisOptions(/** @type {any} */ ({ lastValue: 'true' }));
+      },
+      /lastValue must be a boolean/
+    );
+
+    assert.throws(
+      () => {
+        validateAnalysisOptions(/** @type {any} */ ({ showArrayElements: 'true' }));
+      },
+      /showArrayElements must be a boolean/
+    );
+
+    assert.throws(
+      () => {
+        validateAnalysisOptions(/** @type {any} */ ({ compactArrayTypes: 'true' }));
+      },
+      /compactArrayTypes must be a boolean/
+    );
+  });
+
+  it('requires resolved analysis options before materialization', () => {
+    assert.throws(
+      () => {
+        materializeAnalysisConfig(/** @type {any} */ ({ limit: 5 }));
+      },
+      /Resolved analysis options are required before materialization/
     );
   });
 
