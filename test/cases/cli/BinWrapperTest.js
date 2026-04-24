@@ -161,6 +161,30 @@ describe('bin/variety wrapper', () => {
     });
   });
 
+  it('passes --uri through to the shell target and injects the positional database', async () => {
+    const { invocation } = await runBinVariety({
+      args: [
+        'app/users',
+        '--uri', 'mongodb://db.example.com/?authSource=admin',
+        '--quiet',
+      ],
+    });
+
+    if (!invocation) {
+      throw new Error('Expected the fake shell invocation to be recorded.');
+    }
+    assert.deepEqual(invocation, {
+      command: 'mongosh',
+      args: [
+        'mongodb://db.example.com/app?authSource=admin',
+        '--quiet',
+        '--eval',
+        'var collection = "users"',
+        path.join(repoRoot, 'variety.js'),
+      ],
+    });
+  });
+
   it('prefers mongosh and preserves the documented DB plus EVAL_CMDS compatibility mode', async () => {
     const { invocation, stdout, stderr } = await runBinVariety({
       shells: ['mongosh', 'mongo'],
@@ -401,6 +425,34 @@ describe('bin/variety wrapper', () => {
       (error) => {
         assert.equal(error.code, 2);
         assert.match(String(error.stderr || ''), /--query must be strict JSON/);
+        return true;
+      }
+    );
+  });
+
+  it('fails fast when --uri names a different database than the positional target', async () => {
+    await assert.rejects(
+      () => runBinVariety({
+        args: ['app/users', '--uri', 'mongodb://db.example.com/other'],
+      }),
+      /** @param {NodeJS.ErrnoException & { stderr?: string | Buffer }} error */
+      (error) => {
+        assert.equal(error.code, 2);
+        assert.match(String(error.stderr || ''), /does not match positional DB "app"/);
+        return true;
+      }
+    );
+  });
+
+  it('fails fast when --uri is combined with host flags', async () => {
+    await assert.rejects(
+      () => runBinVariety({
+        args: ['app/users', '--uri', 'mongodb://db.example.com/app', '--host', 'localhost'],
+      }),
+      /** @param {NodeJS.ErrnoException & { stderr?: string | Buffer }} error */
+      (error) => {
+        assert.equal(error.code, 2);
+        assert.match(String(error.stderr || ''), /--uri cannot be combined with --host/);
         return true;
       }
     );

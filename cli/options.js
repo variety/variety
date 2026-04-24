@@ -16,6 +16,7 @@ const {
  *   password?: string,
  *   port?: number,
  *   quiet?: boolean,
+ *   uri?: string,
  *   username?: string,
  * }} ShellOptions
  */
@@ -79,6 +80,7 @@ class CliUsageError extends Error {
 }
 
 const COMPATIBILITY_ENV_KEYS = ['DB', 'EVAL_CMDS', 'VARIETYJS_DIR'];
+const MONGODB_URI_PREFIXES = ['mongodb://', 'mongodb+srv://'];
 /** @type {Record<string, string>} */
 const FLAG_ALIASES = {
   'array-escape': 'arrayEscape',
@@ -242,6 +244,20 @@ const parseNonEmptyString = (optionName, rawValue) => {
 };
 
 /**
+ * @param {string} optionName
+ * @param {string} rawValue
+ * @returns {string}
+ */
+const parseMongoUri = (optionName, rawValue) => {
+  const value = parseNonEmptyString(optionName, rawValue);
+  if (!MONGODB_URI_PREFIXES.some((prefix) => value.startsWith(prefix))) {
+    throw new CliUsageError(`--${optionName} must start with "mongodb://" or "mongodb+srv://".`);
+  }
+
+  return value;
+};
+
+/**
  * @param {string[]} argv
  * @param {number} currentIndex
  * @param {string | undefined} inlineValue
@@ -278,6 +294,115 @@ const parseTarget = (rawTarget) => {
     collection: rawTarget.slice(separatorIndex + 1),
     database: rawTarget.slice(0, separatorIndex),
   };
+};
+
+/**
+ * @typedef {{
+ *   beforePath: string,
+ *   database: string | null,
+ *   suffix: string,
+ * }} ParsedMongoUri
+ */
+
+/**
+ * @param {string} rawUri
+ * @returns {ParsedMongoUri}
+ */
+const parseMongoUriParts = (rawUri) => {
+  const authorityStart = rawUri.indexOf('://') + 3;
+  const queryIndex = rawUri.indexOf('?', authorityStart);
+  const fragmentIndex = rawUri.indexOf('#', authorityStart);
+  let suffixStart = rawUri.length;
+  if (queryIndex !== -1 && queryIndex < suffixStart) {
+    suffixStart = queryIndex;
+  }
+  if (fragmentIndex !== -1 && fragmentIndex < suffixStart) {
+    suffixStart = fragmentIndex;
+  }
+
+  const pathStart = rawUri.indexOf('/', authorityStart);
+  if (pathStart === -1 || pathStart >= suffixStart) {
+    return {
+      beforePath: rawUri.slice(0, suffixStart),
+      database: null,
+      suffix: rawUri.slice(suffixStart),
+    };
+  }
+
+  const rawDatabase = rawUri.slice(pathStart + 1, suffixStart);
+  if (rawDatabase.length === 0) {
+    return {
+      beforePath: rawUri.slice(0, pathStart),
+      database: null,
+      suffix: rawUri.slice(suffixStart),
+    };
+  }
+
+  try {
+    return {
+      beforePath: rawUri.slice(0, pathStart),
+      database: decodeURIComponent(rawDatabase),
+      suffix: rawUri.slice(suffixStart),
+    };
+  } catch {
+    throw new CliUsageError('--uri contains an invalid percent-encoded database path.');
+  }
+};
+
+/**
+ * @param {string} rawUri
+ * @param {TargetSelection} target
+ * @returns {string}
+ */
+const resolveMongoUriForTarget = (rawUri, target) => {
+  const parsedUri = parseMongoUriParts(rawUri);
+  if (parsedUri.database === null) {
+    return `${parsedUri.beforePath}/${encodeURIComponent(target.database)}${parsedUri.suffix}`;
+  }
+
+  if (parsedUri.database !== target.database) {
+    throw new CliUsageError(`--uri database ${JSON.stringify(parsedUri.database)} does not match positional DB ${JSON.stringify(target.database)}.`);
+  }
+
+  return rawUri;
+};
+
+/**
+ * @param {ShellOptions} shellOptions
+ * @param {TargetSelection} target
+ * @returns {ShellOptions}
+ */
+const resolveShellOptions = (shellOptions, target) => {
+  /** @type {ShellOptions} */
+  const resolved = { ...shellOptions };
+
+  if (typeof resolved.uri === 'undefined') {
+    return resolved;
+  }
+
+  const conflictingFlags = [];
+  if (Object.hasOwn(resolved, 'host')) {
+    conflictingFlags.push('--host');
+  }
+  if (typeof resolved.port === 'number') {
+    conflictingFlags.push('--port');
+  }
+  if (Object.hasOwn(resolved, 'username')) {
+    conflictingFlags.push('--username');
+  }
+  if (Object.hasOwn(resolved, 'password')) {
+    conflictingFlags.push('--password');
+  }
+  if (Object.hasOwn(resolved, 'authenticationDatabase')) {
+    conflictingFlags.push('--authenticationDatabase');
+  }
+
+  if (conflictingFlags.length > 0) {
+    throw new CliUsageError(`--uri cannot be combined with ${conflictingFlags.join(', ')}.`);
+  }
+
+  resolved.uri = resolveMongoUriForTarget(resolved.uri, target);
+  return resolved;
 };
 
 /**
@@ -446,6 +571,12 @@ const parseCliArguments = (argv) => {
       parsed.shellOptions.authenticationDatabase = result.value;
       break;
     }
+    case 'uri': {
+      const result = readOptionValue(argv, index, inlineValue, optionName);
+      index = result.nextIndex;
+      parsed.shellOptions.uri = parseMongoUri(optionName, result.value);
+      break;
+    }
     case 'port': {
       const result = readOptionValue(argv, index, inlineValue, optionName);
       index = result.nextIndex;
@@ -559,7 +690,7 @@ const createCliPlan = (argv, env) => {
     evalCode: buildEvalCode(parsedCliArguments),
     mode: 'cli',
     scriptPath: resolveCliScriptPath(env),
-    shellOptions: parsedCliArguments.shellOptions,
+    shellOptions: resolveShellOptions(parsedCliArguments.shellOptions, parsedCliArguments.target),
   };
 };
 
@@ -612,6 +743,7 @@ const formatUsage = () => {
     '  --quiet                          Pass --quiet through to the Mongo shell',
     '  --host <value>                   Mongo shell host',
     '  --port <number>                  Mongo shell port',
+    '  --uri <mongodb-uri>              MongoDB connection string for the shell target',
     '  --username <value>               MongoDB username',
     '  --password <value>               MongoDB password',
     '  --authenticationDatabase <value> Authentication database',

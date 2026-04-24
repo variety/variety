@@ -492,19 +492,31 @@ details through the built-in CLI:
 variety app/users --host db.example.com --port 27017 --username report_reader --password secret --authenticationDatabase admin --quiet
 ```
 
-The equivalent direct Mongo shell invocation uses the remote database in the
+The built-in CLI also supports MongoDB connection strings directly:
+
+```bash
+variety app/users --uri "mongodb://report_reader:secret@db.example.com:27017/app?authSource=admin" --quiet
+```
+
+`--uri` accepts both `mongodb://` and `mongodb+srv://` connection strings while
+keeping the existing `DB/COLLECTION` target syntax:
+
+- If the URI omits a database name, Variety uses the positional `DB`.
+- If the URI includes a database name, it must match the positional `DB`.
+- `--uri` cannot be combined with `--host`, `--port`, `--username`,
+  `--password`, or `--authenticationDatabase`.
+
+The equivalent direct Mongo shell invocation uses the connection string as the
 shell target and sets the collection through `--eval`:
 
 ```bash
-mongosh "mongodb://db.example.com:27017/app" --username "report_reader" --password "secret" --authenticationDatabase "admin" --quiet --eval "var collection = 'users'" variety.js
+mongosh "mongodb://report_reader:secret@db.example.com:27017/app?authSource=admin" --quiet --eval "var collection = 'users'" variety.js
 ```
 
-First-class MongoDB URI support in the built-in CLI is being discussed in
-[issue #270](https://github.com/variety/variety/issues/270). Hat tip:
-[@YNX940214](https://github.com/YNX940214)
-([#152](https://github.com/variety/variety/issues/152)).
-
-Structured flags such as `--query` and `--sort` accept strict JSON. Connection flags such as `--host`, `--port`, `--username`, `--password`, `--authenticationDatabase`, and `--quiet` are passed through to the Mongo shell. `--eval` remains available as an escape hatch when you need to append raw JavaScript assignments.
+Structured flags such as `--query` and `--sort` accept strict JSON. Connection
+flags such as `--host`, `--port`, `--username`, `--password`, `--authenticationDatabase`,
+`--uri`, and `--quiet` shape the Mongo shell invocation. `--eval` remains
+available as an escape hatch when you need to append raw JavaScript assignments.
 
 When you invoke `variety` with no CLI arguments, the documented compatibility environment variables remain supported:
 
