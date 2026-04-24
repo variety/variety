@@ -152,6 +152,39 @@ describe('CLI option parsing', () => {
     })();
   });
 
+  it('renders Mongo shell URI arguments in the expected order', () => {
+    return (async () => {
+      const shellDir = await mkdtemp(path.join(tmpdir(), 'variety-cli-options-uri-'));
+      const shellPath = path.join(shellDir, 'mongosh');
+
+      try {
+        await writeFile(shellPath, '#!/bin/sh\nexit 0\n');
+        await chmod(shellPath, 0o755);
+
+        const invocation = buildShellInvocation({
+          database: 'app',
+          evalCode: 'var collection = "users"',
+          scriptPath: '/tmp/variety.js',
+          shellOptions: {
+            quiet: true,
+            uri: 'mongodb://db.example.com/app?authSource=admin',
+          },
+        }, {
+          PATH: shellDir,
+        });
+
+        assert.deepEqual(invocation.args, [
+          'mongodb://db.example.com/app?authSource=admin',
+          '--quiet',
+          '--eval', 'var collection = "users"',
+          '/tmp/variety.js',
+        ]);
+      } finally {
+        await rm(shellDir, { recursive: true, force: true });
+      }
+    })();
+  });
+
   it('throws a usage error when the target is missing', () => {
     assert.throws(
       () => {
@@ -182,6 +215,81 @@ describe('CLI option parsing', () => {
     assert.match(helpText, /variety DB\/COLLECTION \[options\]/);
     assert.match(helpText, /DB=test EVAL_CMDS=/);
     assert.match(helpText, /backwards compatibility/);
+    assert.match(helpText, /--uri <mongodb-uri>/);
+  });
+
+  it('supports --uri and injects the positional database when the URI omits one', () => {
+    const plan = createExecutionPlan([
+      'app/users',
+      '--uri', 'mongodb+srv://cluster.example.com/?retryWrites=true&w=majority',
+      '--quiet',
+    ], {});
+
+    assert.deepEqual(plan, {
+      database: 'app',
+      evalCode: 'var collection = "users"',
+      mode: 'cli',
+      scriptPath: path.join(repoRoot, 'variety.js'),
+      shellOptions: {
+        quiet: true,
+        uri: 'mongodb+srv://cluster.example.com/app?retryWrites=true&w=majority',
+      },
+    });
+  });
+
+  it('accepts a --uri whose database already matches the positional target', () => {
+    const plan = createExecutionPlan([
+      'app/users',
+      '--uri', 'mongodb://db.example.com/app?authSource=admin',
+    ], {});
+
+    assert.deepEqual(plan, {
+      database: 'app',
+      evalCode: 'var collection = "users"',
+      mode: 'cli',
+      scriptPath: path.join(repoRoot, 'variety.js'),
+      shellOptions: {
+        uri: 'mongodb://db.example.com/app?authSource=admin',
+      },
+    });
+  });
+
+  it('rejects --uri when its database disagrees with the positional target', () => {
+    assert.throws(
+      () => {
+        createExecutionPlan([
+          'app/users',
+          '--uri', 'mongodb://db.example.com/other?authSource=admin',
+        ], {});
+      },
+      /does not match positional DB "app"/
+    );
+  });
+
+  it('rejects combining --uri with host or auth flags', () => {
+    assert.throws(
+      () => {
+        createExecutionPlan([
+          'app/users',
+          '--uri', 'mongodb://db.example.com/app',
+          '--host', 'localhost',
+        ], {});
+      },
+      /--uri cannot be combined with --host/
+    );
+
+    assert.throws(
+      () => {
+        createExecutionPlan([
+          'app/users',
+          '--uri', 'mongodb://db.example.com/app',
+          '--username', 'alice',
+          '--password', 'secret',
+          '--authenticationDatabase', 'admin',
+        ], {});
+      },
+      /--uri cannot be combined with --username, --password, --authenticationDatabase/
+    );
   });
 
   it('emits showArrayElements when the flag is passed', () => {

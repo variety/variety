@@ -13,6 +13,7 @@ const path = require('path');
  *   password?: string,
  *   port?: number,
  *   quiet?: boolean,
+ *   uri?: string,
  *   username?: string,
  * }} ShellOptions
  */
@@ -113,7 +114,9 @@ const buildShellInvocation = (plan, env) => {
     args.push('--port', String(shellOptions.port));
   }
 
-  if (plan.database) {
+  if (shellOptions.uri) {
+    args.push(shellOptions.uri);
+  } else if (plan.database) {
     args.push(plan.database);
   }
 
