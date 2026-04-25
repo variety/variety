@@ -3,11 +3,11 @@
 // SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
 'use strict';
 
-// Assembles variety.js by concatenating the formatter files, core/config.js,
-// core/engine.js, core/analyzer.js, and mongo-shell/adapter.js underneath a generated-file banner. The built variety.js
-// is committed to the repository so `mongosh variety.js` works from a fresh clone without
-// running a build step first; CI runs this script and fails if the
-// committed file drifts from its sources.
+// Assembles variety.js by concatenating the formatter files, core/option-validation.js,
+// core/config.js, core/engine.js, core/analyzer.js, and mongo-shell/adapter.js underneath a
+// generated-file banner. The built variety.js is committed to the repository so
+// `mongosh variety.js` works from a fresh clone without running a build step first; CI runs
+// this script and fails if the committed file drifts from its sources.
 
 const fs = require('fs');
 const path = require('path');
@@ -27,7 +27,7 @@ Please see https://github.com/variety/variety for details. */
 // GENERATED FILE — do not edit directly.
 //
 // Assembled by build.js from:
-//   core/formatters/ascii.js, core/formatters/json.js,
+//   core/formatters/ascii.js, core/formatters/json.js, core/option-validation.js,
 //   core/config.js, core/engine.js, core/analyzer.js, mongo-shell/adapter.js.
 // To change behavior, edit those source files and run \`npm run build\`. The
 // build output is committed so \`mongosh variety.js\` works from a fresh clone
@@ -44,18 +44,24 @@ Please see https://github.com/variety/variety for details. */
 // See .eslint.config.js for the enforced rule set.
 
 // -----------------------------------------------------------------------------
-// This file is organized in five sections, sourced from six separate files:
+// This file is organized in six sections, sourced from seven separate files:
 //
 //   1. FORMATTER SECTION (core/formatters/ascii.js, core/formatters/json.js) —
 //      built-in output formatters. Each is a self-contained IIFE that registers
 //      a factory function on \`shellContext.__varietyFormatters\`. Third-party
 //      formatters can be supplied as plugins instead (see README).
 //
-//   2. CONFIG SECTION (core/config.js) — shared analysis-option validation,
+//   2. OPTION VALIDATION SECTION (core/option-validation.js) — shared,
+//      table-driven option validation dispatcher. Registers the dispatcher on
+//      \`shellContext.__varietyOptionValidation\` for consumption by the config
+//      section and any future option-validation boundaries (e.g. transport
+//      options).
+//
+//   3. CONFIG SECTION (core/config.js) — shared analysis-option validation,
 //      default resolution, and engine-facing materialization. Future callable
 //      APIs can reuse this boundary without inheriting shell-launch details.
 //
-//   3. ENGINE SECTION (core/engine.js) — reusable analysis logic that keeps
+//   4. ENGINE SECTION (core/engine.js) — reusable analysis logic that keeps
 //      persistence, formatter dispatch, and output side effects out of the
 //      engine. It still tolerates shell/runtime helpers when they are
 //      available. Functions take their dependencies (config, and where needed
@@ -63,12 +69,12 @@ Please see https://github.com/variety/variety for details. */
 //      analysis rows. The section hands a reusable engine to later sections
 //      via \`shellContext.__varietyEngine\`.
 //
-//   4. ANALYZER SECTION (core/analyzer.js) — shell-adjacent orchestration for
+//   5. ANALYZER SECTION (core/analyzer.js) — shell-adjacent orchestration for
 //      cursor traversal, optional persistence, and formatter dispatch. Depends
 //      on the engine and hands the combined internal API to the interface
 //      section via \`shellContext.__varietyImpl\`.
 //
-//   5. INTERFACE SECTION (mongo-shell/adapter.js) — everything that touches
+//   6. INTERFACE SECTION (mongo-shell/adapter.js) — everything that touches
 //      shell globals: reading input (\`collection\`, \`plugins\`, \`__quiet\`,
 //      \`secondaryOk\`, etc.), the config-echo logging, plugin loading via
 //      \`load()\`, input validation, and constructing the dependency bag
@@ -80,16 +86,17 @@ Please see https://github.com/variety/variety for details. */
 `;
 
 const root = __dirname;
-const fmtAscii = fs.readFileSync(path.join(root, 'core', 'formatters', 'ascii.js'), 'utf8');
-const fmtJson  = fs.readFileSync(path.join(root, 'core', 'formatters', 'json.js'), 'utf8');
-const config   = fs.readFileSync(path.join(root, 'core', 'config.js'), 'utf8');
-const engine   = fs.readFileSync(path.join(root, 'core', 'engine.js'), 'utf8');
-const analyzer = fs.readFileSync(path.join(root, 'core', 'analyzer.js'), 'utf8');
-const iface    = fs.readFileSync(path.join(root, 'mongo-shell', 'adapter.js'), 'utf8');
+const fmtAscii        = fs.readFileSync(path.join(root, 'core', 'formatters', 'ascii.js'), 'utf8');
+const fmtJson         = fs.readFileSync(path.join(root, 'core', 'formatters', 'json.js'), 'utf8');
+const optionValidation = fs.readFileSync(path.join(root, 'core', 'option-validation.js'), 'utf8');
+const config          = fs.readFileSync(path.join(root, 'core', 'config.js'), 'utf8');
+const engine          = fs.readFileSync(path.join(root, 'core', 'engine.js'), 'utf8');
+const analyzer        = fs.readFileSync(path.join(root, 'core', 'analyzer.js'), 'utf8');
+const iface           = fs.readFileSync(path.join(root, 'mongo-shell', 'adapter.js'), 'utf8');
 
 // HEADER ends with a single \n; each source file ends with a single \n. We
 // want two blank lines (three \n total) between each region in the output.
-const output = `${HEADER}\n\n${fmtAscii}\n\n${fmtJson}\n\n${config}\n\n${engine}\n\n${analyzer}\n\n${iface}`;
+const output = `${HEADER}\n\n${fmtAscii}\n\n${fmtJson}\n\n${optionValidation}\n\n${config}\n\n${engine}\n\n${analyzer}\n\n${iface}`;
 
 const outPath = path.join(root, 'variety.js');
 
@@ -98,7 +105,7 @@ if (args.includes('--check')) {
   const existing = fs.readFileSync(outPath, 'utf8');
   if (existing !== output) {
     process.stderr.write(
-      'variety.js is out of date relative to its sources (core/formatters/, core/config.js, core/engine.js, core/analyzer.js, mongo-shell/adapter.js).\n' +
+      'variety.js is out of date relative to its sources (core/formatters/, core/option-validation.js, core/config.js, core/engine.js, core/analyzer.js, mongo-shell/adapter.js).\n' +
       'Run `npm run build` and commit the updated variety.js.\n'
     );
     process.exit(1);

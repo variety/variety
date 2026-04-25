@@ -89,7 +89,7 @@ module.exports = (async () => {
       rules: nodeModernizationRules,
     },
     {
-      files: ['variety.js', 'core/config.js', 'core/engine.js', 'core/analyzer.js', 'mongo-shell/adapter.js'],
+      files: ['variety.js', 'core/option-validation.js', 'core/config.js', 'core/engine.js', 'core/analyzer.js', 'mongo-shell/adapter.js'],
       // Rules safe for the ES6+ compatibility floor declared at the top of variety.js.
       // prefer-object-has-own is excluded because Object.hasOwn() (ES2022) is absent
       // from the legacy mongo shell; see the compatibility comment in variety.js.
