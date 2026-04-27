@@ -1395,6 +1395,7 @@ Please see https://github.com/variety/variety for details. */
 
   // Clean up the implementation handoffs so repeated loads remain idempotent
   // and no ad hoc internals leak onto globalThis after execution.
+  delete shellContext.__varietyOptionValidation;
   delete shellContext.__varietyConfig;
   delete shellContext.__varietyEngine;
   delete shellContext.__varietyImpl;
