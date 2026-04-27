@@ -65,8 +65,13 @@ jobs:
       - run: npm run lint:markdown
       - run: npm run lint:yaml
         if: needs.changes.outputs.only-markdown != 'true'
-      - run: npm run lint:dockerfile
+      - uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
         if: needs.changes.outputs.only-markdown != 'true'
+        with:
+          dockerfile: docker/Dockerfile.template
+      - name: Install shellcheck
+        if: needs.changes.outputs.only-markdown != 'true'
+        run: sudo apt-get install -y shellcheck
       - run: npm run lint:shell
         if: needs.changes.outputs.only-markdown != 'true'
       - run: npm run typecheck
