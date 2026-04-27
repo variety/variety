@@ -10,6 +10,10 @@
 
   const createKeyMap = () => Object.create(null);
 
+  // Keep a local copy here for getBinDataHex()'s fallback path. The analyzer
+  // also carries its own shellToJson helper for logging, but this engine copy
+  // stays file-local so tightening the public engine surface does not have to
+  // expose shell-adjacent helpers again.
   const shellToJson = (value) => {
     if (typeof tojson === 'function') {
       return tojson(value);
@@ -142,7 +146,9 @@
 
   // varietyTypeOf must remain a regular function (not an arrow function) because
   // the no-argument guard below relies on the function's own `arguments` object,
-  // which arrow functions do not have.
+  // which arrow functions do not have. It remains part of the intentional
+  // engine API so direct callers can exercise the type-classification logic
+  // without going through a full document-analysis pass.
   const varietyTypeOf = function(config, thing) {
     if (arguments.length < 2) { throw new Error('varietyTypeOf() requires an argument'); }
 
@@ -395,26 +401,11 @@
   };
 
   const engine = {
-    createAnalysisState,
-    createKeyMap,
-    shellToJson,
-    getBinDataSubtype,
-    getBinDataHex,
-    getVectorDtypeByte,
-    getVectorDtypeLabel,
-    getRawBsonTypeName,
-    normalizeBsonTypeName,
-    getSpecialTypeName,
-    varietyTypeOf,
-    serializeDoc,
-    analyseDocument,
-    mergeDocument,
-    convertResults,
-    ingestDocument,
-    buildResultFilter,
-    compareResults,
-    finalizeResults,
     analyzeDocuments,
+    createAnalysisState,
+    ingestDocument,
+    finalizeResults,
+    varietyTypeOf,
   };
 
   shellContext.__varietyEngine = engine;
