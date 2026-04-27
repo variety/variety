@@ -176,8 +176,8 @@ Otherwise `npm run lint:pre-commit` runs all of the following in parallel via [n
 - `npm run lint:json` — `@prantlf/jsonlint` (JSON files)
 - `npm run lint:markdown` — markdownlint (Markdown files)
 - `npm run lint:yaml` — js-yaml (YAML files)
-- `npm run lint:dockerfile` — hadolint (`docker/Dockerfile.template`)
-- `npm run lint:shell` — shellcheck (shell scripts)
+- `npm run lint:dockerfile` — hadolint (`docker/Dockerfile.template`); requires `hadolint` on `PATH` (`dnf install hadolint` / `brew install hadolint`)
+- `npm run lint:shell` — shellcheck (shell scripts); requires `shellcheck` on `PATH` (`dnf install ShellCheck` / `brew install shellcheck`)
 - `npm run lint:spdx` — verifies `SPDX-License-Identifier: MIT` headers in all tracked source files
 - `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for `bin/variety`, `cli/**/*.js`, `core/option-validation.js`, `core/config.js`, `.eslint.config.js`, `build.js`, and Node-side test code under `test`
 

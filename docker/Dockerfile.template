@@ -24,6 +24,7 @@ RUN curl --silent --show-error --location \
 
 # Keep the npm bundled with the selected Node.js release. Newer npm majors
 # can drop support for older test lanes before Node.js itself does.
+# hadolint ignore=SC1091
 RUN export NVM_DIR="$HOME/.nvm"  && \
     \. "$NVM_DIR/nvm.sh"         && \
     nvm install "${NODEJS_VERSION}"
