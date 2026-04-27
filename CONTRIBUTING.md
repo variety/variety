@@ -165,7 +165,7 @@ If no `package.json` is present in the working tree (e.g. on the `gh-pages` bran
 
 If every staged change is a modification to an existing `.md` file (no new or deleted files), only `npm run lint:markdown` runs — all other checks are skipped as they have nothing to verify.
 
-Otherwise all of the following run:
+Otherwise `npm run lint:pre-commit` runs all of the following in parallel via [npm-run-all2](https://github.com/bcomnes/npm-run-all2):
 
 - `npm run verify:build` — verifies `variety.js` matches what `build.js` would produce from `core/formatters/`, `core/`, and `mongo-shell/adapter.js`
 - `npm run lint` — ESLint (JavaScript, including fenced code blocks in Markdown)
@@ -176,6 +176,8 @@ Otherwise all of the following run:
 - `npm run lint:shell` — shellcheck (shell scripts)
 - `npm run lint:spdx` — verifies `SPDX-License-Identifier: MIT` headers in all tracked source files
 - `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for `bin/variety`, `cli/**/*.js`, `core/option-validation.js`, `core/config.js`, `.eslint.config.js`, `build.js`, and Node-side test code under `test`
+
+All checks run to completion even when one fails, so all errors surface in a single commit attempt.
 
 Markdownlint allows only one inline HTML element, `<br />`, for intentional line breaks inside compact Markdown tables.
 

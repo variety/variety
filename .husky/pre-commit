@@ -13,34 +13,8 @@ non_md=$(printf '%s\n' "$staged" | awk 'NF && ($1 != "M" || $2 !~ /\.md$/)')
 
 if [ -n "$staged" ] && [ -z "$non_md" ]; then
   echo "→ Only existing Markdown files modified — skipping non-Markdown checks"
-  echo "→ markdownlint (Markdown)"
   npm run lint:markdown
   exit 0
 fi
 
-echo "→ build check (variety.js vs src/)"
-npm run verify:build
-
-echo "→ ESLint (JavaScript)"
-npm run lint
-
-echo "→ jsonlint (JSON)"
-npm run lint:json
-
-echo "→ markdownlint (Markdown)"
-npm run lint:markdown
-
-echo "→ js-yaml (YAML)"
-npm run lint:yaml
-
-echo "→ hadolint (Dockerfile.template)"
-npm run lint:dockerfile
-
-echo "→ shellcheck (shell scripts)"
-npm run lint:shell
-
-echo "→ SPDX headers (source files)"
-npm run lint:spdx
-
-echo "→ tsc checkJs (Node-side JS helpers)"
-npm run typecheck
+npm run lint:pre-commit

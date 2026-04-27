@@ -55,6 +55,7 @@
     "lint:dockerfile": "RUNNER=$(command -v docker 2>/dev/null || command -v podman 2>/dev/null) && $RUNNER run --rm -i ghcr.io/hadolint/hadolint < docker/Dockerfile.template",
     "lint:shell": "RUNNER=$(command -v docker 2>/dev/null || command -v podman 2>/dev/null) && $RUNNER run --rm -v \"${PWD}:/mnt:z\" docker.io/koalaman/shellcheck:stable /mnt/docker/init.sh /mnt/test/bin/test-in-container.sh",
     "lint:spdx": "node scripts/check-spdx.js",
+    "lint:pre-commit": "run-p verify:build lint lint:json lint:markdown lint:yaml lint:dockerfile lint:shell lint:spdx typecheck",
     "typecheck": "./node_modules/.bin/tsc --project .tsconfig.checkjs.json",
     "test": "npm run lint && npm run test:container",
     "test:container": "./test/bin/test-in-container.sh",
@@ -81,6 +82,7 @@
     "markdownlint-cli": "^0.48.0",
     "mocha": "^11.7.5",
     "mongodb": "^7.2.0",
+    "npm-run-all2": "^8.0.4",
     "promisify-child-process": "^5.0.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.0"
