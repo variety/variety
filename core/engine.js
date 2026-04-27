@@ -395,26 +395,11 @@
   };
 
   const engine = {
-    createAnalysisState,
-    createKeyMap,
-    shellToJson,
-    getBinDataSubtype,
-    getBinDataHex,
-    getVectorDtypeByte,
-    getVectorDtypeLabel,
-    getRawBsonTypeName,
-    normalizeBsonTypeName,
-    getSpecialTypeName,
-    varietyTypeOf,
-    serializeDoc,
-    analyseDocument,
-    mergeDocument,
-    convertResults,
-    ingestDocument,
-    buildResultFilter,
-    compareResults,
-    finalizeResults,
     analyzeDocuments,
+    createAnalysisState,
+    ingestDocument,
+    finalizeResults,
+    varietyTypeOf,
   };
 
   shellContext.__varietyEngine = engine;

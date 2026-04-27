@@ -1090,26 +1090,11 @@ Please see https://github.com/variety/variety for details. */
   };
 
   const engine = {
-    createAnalysisState,
-    createKeyMap,
-    shellToJson,
-    getBinDataSubtype,
-    getBinDataHex,
-    getVectorDtypeByte,
-    getVectorDtypeLabel,
-    getRawBsonTypeName,
-    normalizeBsonTypeName,
-    getSpecialTypeName,
-    varietyTypeOf,
-    serializeDoc,
-    analyseDocument,
-    mergeDocument,
-    convertResults,
-    ingestDocument,
-    buildResultFilter,
-    compareResults,
-    finalizeResults,
     analyzeDocuments,
+    createAnalysisState,
+    ingestDocument,
+    finalizeResults,
+    varietyTypeOf,
   };
 
   shellContext.__varietyEngine = engine;
@@ -1137,6 +1122,18 @@ Please see https://github.com/variety/variety for details. */
   if (!engine) {
     throw new Error('Expected core/engine.js to register __varietyEngine.');
   }
+
+  const shellToJson = (value) => {
+    if (typeof tojson === 'function') {
+      return tojson(value);
+    }
+
+    if (shellContext.EJSON && typeof shellContext.EJSON.stringify === 'function') {
+      return shellContext.EJSON.stringify(value);
+    }
+
+    return JSON.stringify(value);
+  };
 
   const persistResults = (config, varietyResults, deps) => {
     const {db, connect, log} = deps;
@@ -1197,7 +1194,7 @@ Please see https://github.com/variety/variety for details. */
     formatResults(config, pluginsRunner, varietyResults, print);
   };
 
-  const impl = Object.assign({}, engine, { run });
+  const impl = Object.assign({}, engine, { run, shellToJson });
   shellContext.__varietyImpl = impl;
 
   if (typeof module !== 'undefined' && module && module.exports) {

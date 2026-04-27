@@ -16,6 +16,18 @@
     throw new Error('Expected core/engine.js to register __varietyEngine.');
   }
 
+  const shellToJson = (value) => {
+    if (typeof tojson === 'function') {
+      return tojson(value);
+    }
+
+    if (shellContext.EJSON && typeof shellContext.EJSON.stringify === 'function') {
+      return shellContext.EJSON.stringify(value);
+    }
+
+    return JSON.stringify(value);
+  };
+
   const persistResults = (config, varietyResults, deps) => {
     const {db, connect, log} = deps;
 
@@ -75,7 +87,7 @@
     formatResults(config, pluginsRunner, varietyResults, print);
   };
 
-  const impl = Object.assign({}, engine, { run });
+  const impl = Object.assign({}, engine, { run, shellToJson });
   shellContext.__varietyImpl = impl;
 
   if (typeof module !== 'undefined' && module && module.exports) {

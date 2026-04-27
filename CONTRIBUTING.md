@@ -38,9 +38,12 @@ As an additional (not required) dependency, [Docker](https://www.docker.com/) or
   remain entrypoint concerns. Depends on `core/option-validation.js`.
 - `core/engine.js` — reusable analysis logic that keeps persistence,
   formatter dispatch, and output side effects out of the engine. It still
-  tolerates shell/runtime helpers when they are available. Exports the
-  reducer/finalization engine used by both the shell-facing analyzer and
-  Node-side tests. This is the future `@variety/core` package boundary.
+  tolerates shell/runtime helpers when they are available. Intentionally
+  exports only `analyzeDocuments`, `createAnalysisState`, `ingestDocument`,
+  `finalizeResults`, and `varietyTypeOf`; implementation helpers stay
+  file-local. This reducer/finalization engine is used by both the
+  shell-facing analyzer and Node-side tests, and is the future `@variety/core`
+  package boundary.
 - `core/analyzer.js` — shell-adjacent orchestration that traverses the cursor,
   optionally persists results, dispatches to formatters, and exposes `run()`
   on top of `core/engine.js`. Depends on `core/formatters/` and `core/engine.js`.
