@@ -72,7 +72,6 @@ class CliUsageError extends Error {
 }
 
 const COMPATIBILITY_ENV_KEYS = ['DB', 'EVAL_CMDS', 'VARIETYJS_DIR'];
-const MONGODB_URI_PREFIXES = ['mongodb://', 'mongodb+srv://'];
 /** @type {Record<string, string>} */
 const FLAG_ALIASES = {
   'array-escape': 'arrayEscape',
@@ -248,20 +247,6 @@ const parseNonEmptyString = (optionName, rawValue) => {
   }
 
   return rawValue;
-};
-
-/**
- * @param {string} optionName
- * @param {string} rawValue
- * @returns {string}
- */
-const parseMongoUri = (optionName, rawValue) => {
-  const value = parseNonEmptyString(optionName, rawValue);
-  if (!MONGODB_URI_PREFIXES.some((prefix) => value.startsWith(prefix))) {
-    throw new CliUsageError(`--${optionName} must start with "mongodb://" or "mongodb+srv://".`);
-  }
-
-  return value;
 };
 
 /**
@@ -611,7 +596,7 @@ const parseCliArguments = (argv) => {
     case 'uri': {
       const result = readOptionValue(argv, index, inlineValue, optionName);
       index = result.nextIndex;
-      parsed.shellOptions.uri = parseMongoUri(optionName, result.value);
+      parsed.shellOptions.uri = parseNonEmptyString(optionName, result.value);
       break;
     }
     case 'port': {
