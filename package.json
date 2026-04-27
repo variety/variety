@@ -51,7 +51,7 @@
     "lint:fix": "./node_modules/.bin/eslint --config .eslint.config.js . --fix",
     "lint:json": "find . \\( -name '*.json' ! -name 'package-lock.json' \\) -not -path '*/node_modules/*' -not -path './.git/*' -not -path './.worktrees/*' -print0 | xargs -0 ./node_modules/@prantlf/jsonlint/lib/cli.js -q",
     "lint:markdown": "./node_modules/.bin/markdownlint '**/*.md' '**/*.markdown' --ignore node_modules --ignore .worktrees",
-    "lint:yaml": "find . \\( -name '*.yml' -o -name '*.yaml' \\) -not -path '*/node_modules/*' -not -path './.git/*' -not -path './.worktrees/*' -print0 | xargs -0 -n1 ./node_modules/.bin/js-yaml > /dev/null",
+    "lint:yaml": "node scripts/lint-yaml.js",
     "lint:dockerfile": "hadolint docker/Dockerfile.template",
     "lint:shell": "shellcheck docker/init.sh test/bin/test-in-container.sh",
     "lint:spdx": "node scripts/check-spdx.js",
