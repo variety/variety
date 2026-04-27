@@ -294,7 +294,7 @@ describe('CLI option parsing', () => {
           '--host', 'localhost',
         ], {});
       },
-      /--uri cannot be combined with --host/
+      /uri cannot be combined with host/
     );
 
     assert.throws(
@@ -307,7 +307,7 @@ describe('CLI option parsing', () => {
           '--authenticationDatabase', 'admin',
         ], {});
       },
-      /--uri cannot be combined with --username, --password, --authenticationDatabase/
+      /uri cannot be combined with username, password, authenticationDatabase/
     );
   });
 

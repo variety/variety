@@ -492,7 +492,7 @@ describe('bin/variety wrapper', () => {
       /** @param {NodeJS.ErrnoException & { stderr?: string | Buffer }} error */
       (error) => {
         assert.equal(error.code, 2);
-        assert.match(String(error.stderr || ''), /--uri cannot be combined with --host/);
+        assert.match(String(error.stderr || ''), /uri cannot be combined with host/);
         return true;
       }
     );

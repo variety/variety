@@ -84,7 +84,7 @@ module.exports = (async () => {
       },
     },
     {
-      files: ['.eslint.config.js', 'bin/variety', 'build.js', 'cli/**/*.js', 'mongo-shell/launcher.js', 'test/**/*.js'],
+      files: ['.eslint.config.js', 'bin/variety', 'build.js', 'cli/**/*.js', 'mongo-shell/transport-options.js', 'mongo-shell/launcher.js', 'test/**/*.js'],
       ignores: ['test/fixtures/**/*.js'],
       rules: nodeModernizationRules,
     },

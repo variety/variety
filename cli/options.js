@@ -8,18 +8,10 @@ const {
   ANALYSIS_OPTION_NAMES,
   validateAnalysisOptions,
 } = varietyConfigModule;
+const transportOptionsModule = /** @type {typeof import('../mongo-shell/transport-options.js')} */ (require('../mongo-shell/transport-options.js'));
+const { validateShellOptions } = transportOptionsModule;
 
-/**
- * @typedef {{
- *   authenticationDatabase?: string,
- *   host?: string,
- *   password?: string,
- *   port?: number,
- *   quiet?: boolean,
- *   uri?: string,
- *   username?: string,
- * }} ShellOptions
- */
+/** @typedef {import('../mongo-shell/transport-options.js').ShellOptions} ShellOptions */
 
 /** @typedef {NonNullable<Parameters<typeof validateAnalysisOptions>[0]>} AnalysisOptionsInput */
 
@@ -80,7 +72,6 @@ class CliUsageError extends Error {
 }
 
 const COMPATIBILITY_ENV_KEYS = ['DB', 'EVAL_CMDS', 'VARIETYJS_DIR'];
-const MONGODB_URI_PREFIXES = ['mongodb://', 'mongodb+srv://'];
 /** @type {Record<string, string>} */
 const FLAG_ALIASES = {
   'array-escape': 'arrayEscape',
@@ -259,20 +250,6 @@ const parseNonEmptyString = (optionName, rawValue) => {
 };
 
 /**
- * @param {string} optionName
- * @param {string} rawValue
- * @returns {string}
- */
-const parseMongoUri = (optionName, rawValue) => {
-  const value = parseNonEmptyString(optionName, rawValue);
-  if (!MONGODB_URI_PREFIXES.some((prefix) => value.startsWith(prefix))) {
-    throw new CliUsageError(`--${optionName} must start with "mongodb://" or "mongodb+srv://".`);
-  }
-
-  return value;
-};
-
-/**
  * @param {string} rawOptionName
  * @returns {string}
  */
@@ -444,27 +421,6 @@ const resolveShellOptions = (shellOptions, target) => {
 
   if (typeof resolved.uri === 'undefined') {
     return resolved;
-  }
-
-  const conflictingFlags = [];
-  if (Object.hasOwn(resolved, 'host')) {
-    conflictingFlags.push('--host');
-  }
-  if (typeof resolved.port === 'number') {
-    conflictingFlags.push('--port');
-  }
-  if (Object.hasOwn(resolved, 'username')) {
-    conflictingFlags.push('--username');
-  }
-  if (Object.hasOwn(resolved, 'password')) {
-    conflictingFlags.push('--password');
-  }
-  if (Object.hasOwn(resolved, 'authenticationDatabase')) {
-    conflictingFlags.push('--authenticationDatabase');
-  }
-
-  if (conflictingFlags.length > 0) {
-    throw new CliUsageError(`--uri cannot be combined with ${conflictingFlags.join(', ')}.`);
   }
 
   resolved.uri = resolveMongoUriForTarget(resolved.uri, target);
@@ -640,7 +596,7 @@ const parseCliArguments = (argv) => {
     case 'uri': {
       const result = readOptionValue(argv, index, inlineValue, optionName);
       index = result.nextIndex;
-      parsed.shellOptions.uri = parseMongoUri(optionName, result.value);
+      parsed.shellOptions.uri = parseNonEmptyString(optionName, result.value);
       break;
     }
     case 'port': {
@@ -672,6 +628,13 @@ const parseCliArguments = (argv) => {
 
   try {
     parsed.varietyOptions = validateAnalysisOptions(parsed.varietyOptions);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new CliUsageError(errorMessage);
+  }
+
+  try {
+    parsed.shellOptions = validateShellOptions(parsed.shellOptions);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new CliUsageError(errorMessage);
