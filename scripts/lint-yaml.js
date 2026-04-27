@@ -8,45 +8,12 @@ const path = require('path');
 const yaml = require('js-yaml');
 
 const ROOT = process.cwd();
-const YAML_EXTENSIONS = new Set(['.yml', '.yaml']);
-const IGNORED_DIRECTORY_NAMES = new Set(['.git', '.worktrees', 'node_modules']);
-const IGNORED_RELATIVE_DIRECTORIES = new Set(['.claude/worktrees']);
 
-function isIgnoredDirectory(relativePath, entryName) {
-  if (IGNORED_DIRECTORY_NAMES.has(entryName)) {
-    return true;
-  }
-  if (IGNORED_RELATIVE_DIRECTORIES.has(relativePath)) {
-    return true;
-  }
-  return false;
-}
-
-function findYamlFiles(relativeDirectory = '') {
-  const absoluteDirectory = path.join(ROOT, relativeDirectory);
-  const entries = fs.readdirSync(absoluteDirectory, { withFileTypes: true })
-    .sort((left, right) => left.name.localeCompare(right.name));
-  const files = [];
-
-  for (const entry of entries) {
-    const relativePath = relativeDirectory
-      ? path.posix.join(relativeDirectory, entry.name)
-      : entry.name;
-
-    if (entry.isDirectory()) {
-      if (isIgnoredDirectory(relativePath, entry.name)) {
-        continue;
-      }
-      files.push(...findYamlFiles(relativePath));
-      continue;
-    }
-
-    if (entry.isFile() && YAML_EXTENSIONS.has(path.extname(entry.name))) {
-      files.push(relativePath);
-    }
-  }
-
-  return files;
+function findYamlFiles() {
+  return fs.readFileSync(0, 'utf8')
+    .split('\0')
+    .filter(Boolean)
+    .sort((left, right) => left.localeCompare(right));
 }
 
 function reportFailure(file, error) {
@@ -59,7 +26,7 @@ function reportFailure(file, error) {
 let failures = 0;
 for (const file of findYamlFiles()) {
   try {
-    yaml.loadAll(fs.readFileSync(path.join(ROOT, file), 'utf8'), () => {}, {});
+    yaml.loadAll(fs.readFileSync(path.join(ROOT, file), 'utf8'), () => {});
   } catch (error) {
     reportFailure(file, error);
     failures++;
