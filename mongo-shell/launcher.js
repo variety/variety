@@ -6,17 +6,7 @@ const { spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-/**
- * @typedef {{
- *   authenticationDatabase?: string,
- *   host?: string,
- *   password?: string,
- *   port?: number,
- *   quiet?: boolean,
- *   uri?: string,
- *   username?: string,
- * }} ShellOptions
- */
+/** @typedef {import('./transport-options.js').ShellOptions} ShellOptions */
 
 /**
  * @typedef {{

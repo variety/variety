@@ -180,7 +180,7 @@ Please see https://github.com/variety/variety for details. */
   'use strict';
 
   /**
-   * @typedef {'boolean' | 'nonNegativeInteger' | 'object' | 'string' | 'stringArray'} OptionKind
+   * @typedef {'boolean' | 'nonNegativeInteger' | 'object' | 'positiveInteger' | 'string' | 'stringArray'} OptionKind
    */
 
   /**
@@ -293,6 +293,18 @@ Please see https://github.com/variety/variety for details. */
   };
 
   /**
+   * @param {string} name
+   * @param {unknown} value
+   * @returns {number}
+   */
+  const validatePositiveIntegerOption = (name, value) => {
+    if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 1) {
+      throw new Error(`${name} must be a positive integer.`);
+    }
+    return value;
+  };
+
+  /**
    * Validates a set of named options against a descriptor table, dispatching each
    * present key to the appropriate validator by kind. Unknown keys are ignored;
    * undefined-valued keys are skipped (treated as absent).
@@ -319,6 +331,9 @@ Please see https://github.com/variety/variety for details. */
         break;
       case 'nonNegativeInteger':
         result[name] = validateNonNegativeIntegerOption(name, value);
+        break;
+      case 'positiveInteger':
+        result[name] = validatePositiveIntegerOption(name, value);
         break;
       case 'object':
         result[name] = validateObjectOption(name, value);

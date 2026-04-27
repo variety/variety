@@ -8,18 +8,10 @@ const {
   ANALYSIS_OPTION_NAMES,
   validateAnalysisOptions,
 } = varietyConfigModule;
+const transportOptionsModule = /** @type {typeof import('../mongo-shell/transport-options.js')} */ (require('../mongo-shell/transport-options.js'));
+const { validateShellOptions } = transportOptionsModule;
 
-/**
- * @typedef {{
- *   authenticationDatabase?: string,
- *   host?: string,
- *   password?: string,
- *   port?: number,
- *   quiet?: boolean,
- *   uri?: string,
- *   username?: string,
- * }} ShellOptions
- */
+/** @typedef {import('../mongo-shell/transport-options.js').ShellOptions} ShellOptions */
 
 /** @typedef {NonNullable<Parameters<typeof validateAnalysisOptions>[0]>} AnalysisOptionsInput */
 
@@ -672,6 +664,13 @@ const parseCliArguments = (argv) => {
 
   try {
     parsed.varietyOptions = validateAnalysisOptions(parsed.varietyOptions);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new CliUsageError(errorMessage);
+  }
+
+  try {
+    parsed.shellOptions = validateShellOptions(parsed.shellOptions);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new CliUsageError(errorMessage);

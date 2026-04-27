@@ -31,8 +31,7 @@ As an additional (not required) dependency, [Docker](https://www.docker.com/) or
 - `core/option-validation.js` — shared, table-driven option validation
   dispatcher. Registers `validateOptions` on
   `shellContext.__varietyOptionValidation` for use by `core/config.js` and any
-  future option-validation boundaries (e.g. transport options in #337). Has no
-  deps on any other layer.
+  other option-validation boundaries. Has no deps on any other layer.
 - `core/config.js` — shared analysis-option validation, default resolution,
   and engine-facing materialization. This is the reusable config boundary for
   follow-up work on callable APIs, while shell transport and launch settings
@@ -55,6 +54,12 @@ As an additional (not required) dependency, [Docker](https://www.docker.com/) or
   separately published package).
 - `bin/variety` — the published Node entrypoint that implements the main
   CLI surface.
+- `mongo-shell/transport-options.js` — dedicated normalization and validation
+  boundary for shell transport options (`host`, `port`, `username`, `password`,
+  `authenticationDatabase`, `quiet`, `uri`). Reuses the `validateOptions`
+  dispatcher from `core/option-validation.js` with its own descriptor table.
+  The canonical definition of `ShellOptions`. Node-only; not compiled into
+  `variety.js`.
 - `mongo-shell/launcher.js` — Node-side Mongo shell invocation helpers.
   The only place that touches Node `spawnSync` for spawning `mongosh`/`mongo`.
   Future interfaces (MCP, etc.) can import from `mongo-shell/` without
@@ -68,11 +73,13 @@ layer. `core/option-validation.js` has no runtime deps on any other layer.
 `core/config.js` depends on `core/option-validation.js`. `core/engine.js`
 has no runtime deps on any other layer. `core/analyzer.js` depends on
 `core/engine.js` plus `core/formatters/`. `mongo-shell/adapter.js` depends on
-`core/config.js` and `core/analyzer.js`. `mongo-shell/launcher.js` is Node-only
-(no `core` dep). `cli/options.js` depends on `core/config.js`; `cli/main.js`
-depends on `cli/options.js` and `mongo-shell/launcher.js`. `build.js` composes
-`core/formatters/` + `core/option-validation.js` + `core/config.js` +
-`core/engine.js` + `core/analyzer.js` + `mongo-shell/adapter.js` → `variety.js`.
+`core/config.js` and `core/analyzer.js`. `mongo-shell/transport-options.js`
+depends on `core/option-validation.js`; `mongo-shell/launcher.js` has no
+`core` dep. `cli/options.js` depends on `core/config.js` and
+`mongo-shell/transport-options.js`; `cli/main.js` depends on `cli/options.js`
+and `mongo-shell/launcher.js`. `build.js` composes `core/formatters/` +
+`core/option-validation.js` + `core/config.js` + `core/engine.js` +
+`core/analyzer.js` + `mongo-shell/adapter.js` → `variety.js`.
 
 `build.js` concatenates those source files under a generated-file banner.
 Edit the sources in `core/` or `mongo-shell/adapter.js`, then run:
@@ -190,7 +197,7 @@ Node-side JavaScript such as `bin/variety`, `cli/**/*.js`, `mongo-shell/launcher
 
 #### Checked Files
 
-`npm run typecheck` runs TypeScript `checkJs` over the published Node CLI surface (`bin/variety` plus `cli/**/*.js`, `core/option-validation.js`, `core/config.js`, and `mongo-shell/launcher.js`), `.eslint.config.js`, `build.js`, and the Node-side test code via `.tsconfig.checkjs.json`. The `test` tree also uses type-aware `typescript-eslint` rules, while shell-executed fixtures under `test/fixtures` stay on the shared baseline.
+`npm run typecheck` runs TypeScript `checkJs` over the published Node CLI surface (`bin/variety` plus `cli/**/*.js`, `core/option-validation.js`, `core/config.js`, `mongo-shell/transport-options.js`, and `mongo-shell/launcher.js`), `.eslint.config.js`, `build.js`, and the Node-side test code via `.tsconfig.checkjs.json`. The `test` tree also uses type-aware `typescript-eslint` rules, while shell-executed fixtures under `test/fixtures` stay on the shared baseline.
 
 #### Extra Strictness
 
