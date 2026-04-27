@@ -71,6 +71,25 @@
    */
 
   /**
+   * @typedef {'boolean' | 'nonNegativeInteger' | 'object' | 'string' | 'stringArray'} OptionKind
+   */
+
+  /**
+   * @typedef {{
+   *   name: string,
+   *   kind: OptionKind,
+   *   allowNull?: boolean,
+   *   requireNonEmpty?: boolean,
+   * }} OptionDescriptor
+   */
+
+  /**
+   * @typedef {{
+   *   validateOptions: (source: Record<string, unknown>, descriptors: OptionDescriptor[]) => Record<string, unknown>,
+   * }} OptionValidationApi
+   */
+
+  /**
    * @typedef {{
    *   ANALYSIS_OPTION_NAMES: AnalysisOptionName[],
    *   materializeAnalysisConfig: (resolvedOptions: ResolvedAnalysisOptions) => MaterializedAnalysisConfig,
@@ -79,9 +98,19 @@
    * }} VarietyConfigApi
    */
 
-  const root = /** @type {typeof globalThis & { __varietyConfig?: VarietyConfigApi }} */ (
+  const root = /** @type {typeof globalThis & { __varietyConfig?: VarietyConfigApi, __varietyOptionValidation?: OptionValidationApi }} */ (
     typeof globalThis !== 'undefined' ? globalThis : shellContext
   );
+
+  /** @type {OptionValidationApi | undefined} */
+  const optionValidation = root.__varietyOptionValidation ||
+    (typeof module !== 'undefined' && module && module.exports && typeof require === 'function'
+      ? /** @type {OptionValidationApi} */ (require('./option-validation.js'))
+      : undefined);
+  if (!optionValidation) {
+    throw new Error('Expected core/option-validation.js to register __varietyOptionValidation.');
+  }
+  const { validateOptions } = optionValidation;
 
   /**
    * @param {object} value
@@ -90,27 +119,30 @@
    */
   const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
 
-  /** @type {AnalysisOptionName[]} */
-  const ANALYSIS_OPTION_NAMES = [
-    'query',
-    'limit',
-    'maxDepth',
-    'sort',
-    'outputFormat',
-    'hideFrequencyColumns',
-    'persistResults',
-    'resultsDatabase',
-    'resultsCollection',
-    'resultsUser',
-    'resultsPass',
-    'logKeysContinuously',
-    'excludeSubkeys',
-    'arrayEscape',
-    'showArrayElements',
-    'compactArrayTypes',
-    'lastValue',
-    'maxExamples',
+  /** @type {OptionDescriptor[]} */
+  const ANALYSIS_OPTION_DESCRIPTORS = [
+    { name: 'query',               kind: 'object' },
+    { name: 'limit',               kind: 'nonNegativeInteger' },
+    { name: 'maxDepth',            kind: 'nonNegativeInteger' },
+    { name: 'sort',                kind: 'object' },
+    { name: 'outputFormat',        kind: 'string',      allowNull: false, requireNonEmpty: false },
+    { name: 'hideFrequencyColumns',kind: 'boolean' },
+    { name: 'persistResults',      kind: 'boolean' },
+    { name: 'resultsDatabase',     kind: 'string',      allowNull: false, requireNonEmpty: false },
+    { name: 'resultsCollection',   kind: 'string',      allowNull: false, requireNonEmpty: false },
+    { name: 'resultsUser',         kind: 'string',      allowNull: true,  requireNonEmpty: false },
+    { name: 'resultsPass',         kind: 'string',      allowNull: true,  requireNonEmpty: false },
+    { name: 'logKeysContinuously', kind: 'boolean' },
+    { name: 'excludeSubkeys',      kind: 'stringArray' },
+    { name: 'arrayEscape',         kind: 'string',      allowNull: false, requireNonEmpty: true },
+    { name: 'showArrayElements',   kind: 'boolean' },
+    { name: 'compactArrayTypes',   kind: 'boolean' },
+    { name: 'lastValue',           kind: 'boolean' },
+    { name: 'maxExamples',         kind: 'nonNegativeInteger' },
   ];
+
+  /** @type {AnalysisOptionName[]} */
+  const ANALYSIS_OPTION_NAMES = ANALYSIS_OPTION_DESCRIPTORS.map((d) => /** @type {AnalysisOptionName} */ (d.name));
 
   /**
    * @param {unknown} value
@@ -145,69 +177,6 @@
   /**
    * @param {string} name
    * @param {unknown} value
-   * @returns {boolean}
-   */
-  const validateBooleanOption = (name, value) => {
-    if (typeof value !== 'boolean') {
-      throw new Error(`${name} must be a boolean.`);
-    }
-
-    return value;
-  };
-
-  /**
-   * @param {string} name
-   * @param {unknown} value
-   * @param {boolean} allowNull
-   * @param {boolean} requireNonEmpty
-   * @returns {string | null}
-   */
-  const validateStringOption = (name, value, allowNull, requireNonEmpty) => {
-    if (allowNull && value === null) {
-      return value;
-    }
-
-    if (typeof value !== 'string') {
-      const nullClause = allowNull ? ' or null' : '';
-      throw new Error(`${name} must be a string${nullClause}.`);
-    }
-
-    if (requireNonEmpty && value.length === 0) {
-      throw new Error(`${name} must not be empty.`);
-    }
-
-    return value;
-  };
-
-  /**
-   * @param {string} name
-   * @param {unknown} value
-   * @returns {string[]}
-   */
-  const validateStringArrayOption = (name, value) => {
-    if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) {
-      throw new Error(`${name} must be an array of strings.`);
-    }
-
-    return value.slice();
-  };
-
-  /**
-   * @param {string} name
-   * @param {unknown} value
-   * @returns {Record<string, unknown>}
-   */
-  const validateObjectOption = (name, value) => {
-    if (!isPlainObject(value)) {
-      throw new Error(`${name} must be an object.`);
-    }
-
-    return cloneObject(value);
-  };
-
-  /**
-   * @param {string} name
-   * @param {unknown} value
    * @returns {number}
    */
   const validateNonNegativeIntegerOption = (name, value) => {
@@ -235,82 +204,7 @@
    */
   const validateAnalysisOptions = (input) => {
     const source = ensureInputObject(input);
-    /** @type {AnalysisOptionsInput} */
-    const validated = {};
-
-    if (hasOwn(source, 'query') && typeof source['query'] !== 'undefined') {
-      validated.query = validateObjectOption('query', source['query']);
-    }
-
-    if (hasOwn(source, 'sort') && typeof source['sort'] !== 'undefined') {
-      validated.sort = validateObjectOption('sort', source['sort']);
-    }
-
-    if (hasOwn(source, 'limit') && typeof source['limit'] !== 'undefined') {
-      validated.limit = validateNonNegativeIntegerOption('limit', source['limit']);
-    }
-
-    if (hasOwn(source, 'maxDepth') && typeof source['maxDepth'] !== 'undefined') {
-      validated.maxDepth = validateNonNegativeIntegerOption('maxDepth', source['maxDepth']);
-    }
-
-    if (hasOwn(source, 'outputFormat') && typeof source['outputFormat'] !== 'undefined') {
-      validated.outputFormat = /** @type {string} */ (validateStringOption('outputFormat', source['outputFormat'], false, false));
-    }
-
-    if (hasOwn(source, 'maxExamples') && typeof source['maxExamples'] !== 'undefined') {
-      validated.maxExamples = validateNonNegativeIntegerOption('maxExamples', source['maxExamples']);
-    }
-
-    if (hasOwn(source, 'hideFrequencyColumns') && typeof source['hideFrequencyColumns'] !== 'undefined') {
-      validated.hideFrequencyColumns = validateBooleanOption('hideFrequencyColumns', source['hideFrequencyColumns']);
-    }
-
-    if (hasOwn(source, 'lastValue') && typeof source['lastValue'] !== 'undefined') {
-      validated.lastValue = validateBooleanOption('lastValue', source['lastValue']);
-    }
-
-    if (hasOwn(source, 'showArrayElements') && typeof source['showArrayElements'] !== 'undefined') {
-      validated.showArrayElements = validateBooleanOption('showArrayElements', source['showArrayElements']);
-    }
-
-    if (hasOwn(source, 'compactArrayTypes') && typeof source['compactArrayTypes'] !== 'undefined') {
-      validated.compactArrayTypes = validateBooleanOption('compactArrayTypes', source['compactArrayTypes']);
-    }
-
-    if (hasOwn(source, 'arrayEscape') && typeof source['arrayEscape'] !== 'undefined') {
-      validated.arrayEscape = /** @type {string} */ (validateStringOption('arrayEscape', source['arrayEscape'], false, true));
-    }
-
-    if (hasOwn(source, 'excludeSubkeys') && typeof source['excludeSubkeys'] !== 'undefined') {
-      validated.excludeSubkeys = validateStringArrayOption('excludeSubkeys', source['excludeSubkeys']);
-    }
-
-    if (hasOwn(source, 'logKeysContinuously') && typeof source['logKeysContinuously'] !== 'undefined') {
-      validated.logKeysContinuously = validateBooleanOption('logKeysContinuously', source['logKeysContinuously']);
-    }
-
-    if (hasOwn(source, 'persistResults') && typeof source['persistResults'] !== 'undefined') {
-      validated.persistResults = validateBooleanOption('persistResults', source['persistResults']);
-    }
-
-    if (hasOwn(source, 'resultsDatabase') && typeof source['resultsDatabase'] !== 'undefined') {
-      validated.resultsDatabase = /** @type {string} */ (validateStringOption('resultsDatabase', source['resultsDatabase'], false, false));
-    }
-
-    if (hasOwn(source, 'resultsCollection') && typeof source['resultsCollection'] !== 'undefined') {
-      validated.resultsCollection = /** @type {string} */ (validateStringOption('resultsCollection', source['resultsCollection'], false, false));
-    }
-
-    if (hasOwn(source, 'resultsUser') && typeof source['resultsUser'] !== 'undefined') {
-      validated.resultsUser = validateStringOption('resultsUser', source['resultsUser'], true, false);
-    }
-
-    if (hasOwn(source, 'resultsPass') && typeof source['resultsPass'] !== 'undefined') {
-      validated.resultsPass = validateStringOption('resultsPass', source['resultsPass'], true, false);
-    }
-
-    return validated;
+    return /** @type {AnalysisOptionsInput} */ (validateOptions(source, ANALYSIS_OPTION_DESCRIPTORS));
   };
 
   /**

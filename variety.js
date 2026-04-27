@@ -13,7 +13,7 @@ Please see https://github.com/variety/variety for details. */
 // GENERATED FILE — do not edit directly.
 //
 // Assembled by build.js from:
-//   core/formatters/ascii.js, core/formatters/json.js,
+//   core/formatters/ascii.js, core/formatters/json.js, core/option-validation.js,
 //   core/config.js, core/engine.js, core/analyzer.js, mongo-shell/adapter.js.
 // To change behavior, edit those source files and run `npm run build`. The
 // build output is committed so `mongosh variety.js` works from a fresh clone
@@ -30,18 +30,24 @@ Please see https://github.com/variety/variety for details. */
 // See .eslint.config.js for the enforced rule set.
 
 // -----------------------------------------------------------------------------
-// This file is organized in five sections, sourced from six separate files:
+// This file is organized in six sections, sourced from seven separate files:
 //
 //   1. FORMATTER SECTION (core/formatters/ascii.js, core/formatters/json.js) —
 //      built-in output formatters. Each is a self-contained IIFE that registers
 //      a factory function on `shellContext.__varietyFormatters`. Third-party
 //      formatters can be supplied as plugins instead (see README).
 //
-//   2. CONFIG SECTION (core/config.js) — shared analysis-option validation,
+//   2. OPTION VALIDATION SECTION (core/option-validation.js) — shared,
+//      table-driven option validation dispatcher. Registers the dispatcher on
+//      `shellContext.__varietyOptionValidation` for consumption by the config
+//      section and any future option-validation boundaries (e.g. transport
+//      options).
+//
+//   3. CONFIG SECTION (core/config.js) — shared analysis-option validation,
 //      default resolution, and engine-facing materialization. Future callable
 //      APIs can reuse this boundary without inheriting shell-launch details.
 //
-//   3. ENGINE SECTION (core/engine.js) — reusable analysis logic that keeps
+//   4. ENGINE SECTION (core/engine.js) — reusable analysis logic that keeps
 //      persistence, formatter dispatch, and output side effects out of the
 //      engine. It still tolerates shell/runtime helpers when they are
 //      available. Functions take their dependencies (config, and where needed
@@ -49,12 +55,12 @@ Please see https://github.com/variety/variety for details. */
 //      analysis rows. The section hands a reusable engine to later sections
 //      via `shellContext.__varietyEngine`.
 //
-//   4. ANALYZER SECTION (core/analyzer.js) — shell-adjacent orchestration for
+//   5. ANALYZER SECTION (core/analyzer.js) — shell-adjacent orchestration for
 //      cursor traversal, optional persistence, and formatter dispatch. Depends
 //      on the engine and hands the combined internal API to the interface
 //      section via `shellContext.__varietyImpl`.
 //
-//   5. INTERFACE SECTION (mongo-shell/adapter.js) — everything that touches
+//   6. INTERFACE SECTION (mongo-shell/adapter.js) — everything that touches
 //      shell globals: reading input (`collection`, `plugins`, `__quiet`,
 //      `secondaryOk`, etc.), the config-echo logging, plugin loading via
 //      `load()`, input validation, and constructing the dependency bag
@@ -165,6 +171,182 @@ Please see https://github.com/variety/variety for details. */
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
 // =============================================================================
+// OPTION VALIDATION SECTION
+// =============================================================================
+/**
+ * @param {typeof globalThis} shellContext
+ */
+(function (shellContext) {
+  'use strict';
+
+  /**
+   * @typedef {'boolean' | 'nonNegativeInteger' | 'object' | 'string' | 'stringArray'} OptionKind
+   */
+
+  /**
+   * @typedef {{
+   *   name: string,
+   *   kind: OptionKind,
+   *   allowNull?: boolean,
+   *   requireNonEmpty?: boolean,
+   * }} OptionDescriptor
+   */
+
+  /**
+   * @typedef {{
+   *   validateOptions: (source: Record<string, unknown>, descriptors: OptionDescriptor[]) => Record<string, unknown>,
+   * }} VarietyOptionValidationApi
+   */
+
+  const root = /** @type {typeof globalThis & { __varietyOptionValidation?: VarietyOptionValidationApi }} */ (
+    typeof globalThis !== 'undefined' ? globalThis : shellContext
+  );
+
+  /**
+   * @param {object} value
+   * @param {string} key
+   * @returns {boolean}
+   */
+  const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
+
+  /**
+   * @param {unknown} value
+   * @returns {value is Record<string, unknown>}
+   */
+  const isPlainObject = (value) => {
+    return value !== null && !Array.isArray(value) && typeof value === 'object';
+  };
+
+  /**
+   * @param {Record<string, unknown>} value
+   * @returns {Record<string, unknown>}
+   */
+  const cloneObject = (value) => ({ ...value });
+
+  /**
+   * @param {string} name
+   * @param {unknown} value
+   * @returns {boolean}
+   */
+  const validateBooleanOption = (name, value) => {
+    if (typeof value !== 'boolean') {
+      throw new Error(`${name} must be a boolean.`);
+    }
+    return value;
+  };
+
+  /**
+   * @param {string} name
+   * @param {unknown} value
+   * @param {boolean} allowNull
+   * @param {boolean} requireNonEmpty
+   * @returns {string | null}
+   */
+  const validateStringOption = (name, value, allowNull, requireNonEmpty) => {
+    if (allowNull && value === null) {
+      return value;
+    }
+    if (typeof value !== 'string') {
+      const nullClause = allowNull ? ' or null' : '';
+      throw new Error(`${name} must be a string${nullClause}.`);
+    }
+    if (requireNonEmpty && value.length === 0) {
+      throw new Error(`${name} must not be empty.`);
+    }
+    return value;
+  };
+
+  /**
+   * @param {string} name
+   * @param {unknown} value
+   * @returns {string[]}
+   */
+  const validateStringArrayOption = (name, value) => {
+    if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) {
+      throw new Error(`${name} must be an array of strings.`);
+    }
+    return value.slice();
+  };
+
+  /**
+   * @param {string} name
+   * @param {unknown} value
+   * @returns {Record<string, unknown>}
+   */
+  const validateObjectOption = (name, value) => {
+    if (!isPlainObject(value)) {
+      throw new Error(`${name} must be an object.`);
+    }
+    return cloneObject(value);
+  };
+
+  /**
+   * @param {string} name
+   * @param {unknown} value
+   * @returns {number}
+   */
+  const validateNonNegativeIntegerOption = (name, value) => {
+    if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) {
+      throw new Error(`${name} must be a non-negative integer.`);
+    }
+    return value;
+  };
+
+  /**
+   * Validates a set of named options against a descriptor table, dispatching each
+   * present key to the appropriate validator by kind. Unknown keys are ignored;
+   * undefined-valued keys are skipped (treated as absent).
+   *
+   * @param {Record<string, unknown>} source
+   * @param {OptionDescriptor[]} descriptors
+   * @returns {Record<string, unknown>}
+   */
+  const validateOptions = (source, descriptors) => {
+    /** @type {Record<string, unknown>} */
+    const result = {};
+    for (const desc of descriptors) {
+      const { name, kind } = desc;
+      if (!hasOwn(source, name)) {
+        continue;
+      }
+      const value = source[name];
+      if (typeof value === 'undefined') {
+        continue;
+      }
+      switch (kind) {
+      case 'boolean':
+        result[name] = validateBooleanOption(name, value);
+        break;
+      case 'nonNegativeInteger':
+        result[name] = validateNonNegativeIntegerOption(name, value);
+        break;
+      case 'object':
+        result[name] = validateObjectOption(name, value);
+        break;
+      case 'string':
+        result[name] = validateStringOption(name, value, desc.allowNull ?? false, desc.requireNonEmpty ?? false);
+        break;
+      case 'stringArray':
+        result[name] = validateStringArrayOption(name, value);
+        break;
+      }
+    }
+    return result;
+  };
+
+  const optionValidationApi = /** @type {VarietyOptionValidationApi} */ ({ validateOptions });
+
+  root.__varietyOptionValidation = optionValidationApi;
+
+  if (typeof module !== 'undefined' && module && module.exports) {
+    module.exports = optionValidationApi;
+  }
+}(this));
+
+
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: © 2026 James Cropcho <numerate_penniless652@dralias.com>
+// =============================================================================
 // CONFIG SECTION
 // =============================================================================
 /**
@@ -235,6 +417,25 @@ Please see https://github.com/variety/variety for details. */
    */
 
   /**
+   * @typedef {'boolean' | 'nonNegativeInteger' | 'object' | 'string' | 'stringArray'} OptionKind
+   */
+
+  /**
+   * @typedef {{
+   *   name: string,
+   *   kind: OptionKind,
+   *   allowNull?: boolean,
+   *   requireNonEmpty?: boolean,
+   * }} OptionDescriptor
+   */
+
+  /**
+   * @typedef {{
+   *   validateOptions: (source: Record<string, unknown>, descriptors: OptionDescriptor[]) => Record<string, unknown>,
+   * }} OptionValidationApi
+   */
+
+  /**
    * @typedef {{
    *   ANALYSIS_OPTION_NAMES: AnalysisOptionName[],
    *   materializeAnalysisConfig: (resolvedOptions: ResolvedAnalysisOptions) => MaterializedAnalysisConfig,
@@ -243,9 +444,19 @@ Please see https://github.com/variety/variety for details. */
    * }} VarietyConfigApi
    */
 
-  const root = /** @type {typeof globalThis & { __varietyConfig?: VarietyConfigApi }} */ (
+  const root = /** @type {typeof globalThis & { __varietyConfig?: VarietyConfigApi, __varietyOptionValidation?: OptionValidationApi }} */ (
     typeof globalThis !== 'undefined' ? globalThis : shellContext
   );
+
+  /** @type {OptionValidationApi | undefined} */
+  const optionValidation = root.__varietyOptionValidation ||
+    (typeof module !== 'undefined' && module && module.exports && typeof require === 'function'
+      ? /** @type {OptionValidationApi} */ (require('./option-validation.js'))
+      : undefined);
+  if (!optionValidation) {
+    throw new Error('Expected core/option-validation.js to register __varietyOptionValidation.');
+  }
+  const { validateOptions } = optionValidation;
 
   /**
    * @param {object} value
@@ -254,27 +465,30 @@ Please see https://github.com/variety/variety for details. */
    */
   const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
 
-  /** @type {AnalysisOptionName[]} */
-  const ANALYSIS_OPTION_NAMES = [
-    'query',
-    'limit',
-    'maxDepth',
-    'sort',
-    'outputFormat',
-    'hideFrequencyColumns',
-    'persistResults',
-    'resultsDatabase',
-    'resultsCollection',
-    'resultsUser',
-    'resultsPass',
-    'logKeysContinuously',
-    'excludeSubkeys',
-    'arrayEscape',
-    'showArrayElements',
-    'compactArrayTypes',
-    'lastValue',
-    'maxExamples',
+  /** @type {OptionDescriptor[]} */
+  const ANALYSIS_OPTION_DESCRIPTORS = [
+    { name: 'query',               kind: 'object' },
+    { name: 'limit',               kind: 'nonNegativeInteger' },
+    { name: 'maxDepth',            kind: 'nonNegativeInteger' },
+    { name: 'sort',                kind: 'object' },
+    { name: 'outputFormat',        kind: 'string',      allowNull: false, requireNonEmpty: false },
+    { name: 'hideFrequencyColumns',kind: 'boolean' },
+    { name: 'persistResults',      kind: 'boolean' },
+    { name: 'resultsDatabase',     kind: 'string',      allowNull: false, requireNonEmpty: false },
+    { name: 'resultsCollection',   kind: 'string',      allowNull: false, requireNonEmpty: false },
+    { name: 'resultsUser',         kind: 'string',      allowNull: true,  requireNonEmpty: false },
+    { name: 'resultsPass',         kind: 'string',      allowNull: true,  requireNonEmpty: false },
+    { name: 'logKeysContinuously', kind: 'boolean' },
+    { name: 'excludeSubkeys',      kind: 'stringArray' },
+    { name: 'arrayEscape',         kind: 'string',      allowNull: false, requireNonEmpty: true },
+    { name: 'showArrayElements',   kind: 'boolean' },
+    { name: 'compactArrayTypes',   kind: 'boolean' },
+    { name: 'lastValue',           kind: 'boolean' },
+    { name: 'maxExamples',         kind: 'nonNegativeInteger' },
   ];
+
+  /** @type {AnalysisOptionName[]} */
+  const ANALYSIS_OPTION_NAMES = ANALYSIS_OPTION_DESCRIPTORS.map((d) => /** @type {AnalysisOptionName} */ (d.name));
 
   /**
    * @param {unknown} value
@@ -309,69 +523,6 @@ Please see https://github.com/variety/variety for details. */
   /**
    * @param {string} name
    * @param {unknown} value
-   * @returns {boolean}
-   */
-  const validateBooleanOption = (name, value) => {
-    if (typeof value !== 'boolean') {
-      throw new Error(`${name} must be a boolean.`);
-    }
-
-    return value;
-  };
-
-  /**
-   * @param {string} name
-   * @param {unknown} value
-   * @param {boolean} allowNull
-   * @param {boolean} requireNonEmpty
-   * @returns {string | null}
-   */
-  const validateStringOption = (name, value, allowNull, requireNonEmpty) => {
-    if (allowNull && value === null) {
-      return value;
-    }
-
-    if (typeof value !== 'string') {
-      const nullClause = allowNull ? ' or null' : '';
-      throw new Error(`${name} must be a string${nullClause}.`);
-    }
-
-    if (requireNonEmpty && value.length === 0) {
-      throw new Error(`${name} must not be empty.`);
-    }
-
-    return value;
-  };
-
-  /**
-   * @param {string} name
-   * @param {unknown} value
-   * @returns {string[]}
-   */
-  const validateStringArrayOption = (name, value) => {
-    if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) {
-      throw new Error(`${name} must be an array of strings.`);
-    }
-
-    return value.slice();
-  };
-
-  /**
-   * @param {string} name
-   * @param {unknown} value
-   * @returns {Record<string, unknown>}
-   */
-  const validateObjectOption = (name, value) => {
-    if (!isPlainObject(value)) {
-      throw new Error(`${name} must be an object.`);
-    }
-
-    return cloneObject(value);
-  };
-
-  /**
-   * @param {string} name
-   * @param {unknown} value
    * @returns {number}
    */
   const validateNonNegativeIntegerOption = (name, value) => {
@@ -399,82 +550,7 @@ Please see https://github.com/variety/variety for details. */
    */
   const validateAnalysisOptions = (input) => {
     const source = ensureInputObject(input);
-    /** @type {AnalysisOptionsInput} */
-    const validated = {};
-
-    if (hasOwn(source, 'query') && typeof source['query'] !== 'undefined') {
-      validated.query = validateObjectOption('query', source['query']);
-    }
-
-    if (hasOwn(source, 'sort') && typeof source['sort'] !== 'undefined') {
-      validated.sort = validateObjectOption('sort', source['sort']);
-    }
-
-    if (hasOwn(source, 'limit') && typeof source['limit'] !== 'undefined') {
-      validated.limit = validateNonNegativeIntegerOption('limit', source['limit']);
-    }
-
-    if (hasOwn(source, 'maxDepth') && typeof source['maxDepth'] !== 'undefined') {
-      validated.maxDepth = validateNonNegativeIntegerOption('maxDepth', source['maxDepth']);
-    }
-
-    if (hasOwn(source, 'outputFormat') && typeof source['outputFormat'] !== 'undefined') {
-      validated.outputFormat = /** @type {string} */ (validateStringOption('outputFormat', source['outputFormat'], false, false));
-    }
-
-    if (hasOwn(source, 'maxExamples') && typeof source['maxExamples'] !== 'undefined') {
-      validated.maxExamples = validateNonNegativeIntegerOption('maxExamples', source['maxExamples']);
-    }
-
-    if (hasOwn(source, 'hideFrequencyColumns') && typeof source['hideFrequencyColumns'] !== 'undefined') {
-      validated.hideFrequencyColumns = validateBooleanOption('hideFrequencyColumns', source['hideFrequencyColumns']);
-    }
-
-    if (hasOwn(source, 'lastValue') && typeof source['lastValue'] !== 'undefined') {
-      validated.lastValue = validateBooleanOption('lastValue', source['lastValue']);
-    }
-
-    if (hasOwn(source, 'showArrayElements') && typeof source['showArrayElements'] !== 'undefined') {
-      validated.showArrayElements = validateBooleanOption('showArrayElements', source['showArrayElements']);
-    }
-
-    if (hasOwn(source, 'compactArrayTypes') && typeof source['compactArrayTypes'] !== 'undefined') {
-      validated.compactArrayTypes = validateBooleanOption('compactArrayTypes', source['compactArrayTypes']);
-    }
-
-    if (hasOwn(source, 'arrayEscape') && typeof source['arrayEscape'] !== 'undefined') {
-      validated.arrayEscape = /** @type {string} */ (validateStringOption('arrayEscape', source['arrayEscape'], false, true));
-    }
-
-    if (hasOwn(source, 'excludeSubkeys') && typeof source['excludeSubkeys'] !== 'undefined') {
-      validated.excludeSubkeys = validateStringArrayOption('excludeSubkeys', source['excludeSubkeys']);
-    }
-
-    if (hasOwn(source, 'logKeysContinuously') && typeof source['logKeysContinuously'] !== 'undefined') {
-      validated.logKeysContinuously = validateBooleanOption('logKeysContinuously', source['logKeysContinuously']);
-    }
-
-    if (hasOwn(source, 'persistResults') && typeof source['persistResults'] !== 'undefined') {
-      validated.persistResults = validateBooleanOption('persistResults', source['persistResults']);
-    }
-
-    if (hasOwn(source, 'resultsDatabase') && typeof source['resultsDatabase'] !== 'undefined') {
-      validated.resultsDatabase = /** @type {string} */ (validateStringOption('resultsDatabase', source['resultsDatabase'], false, false));
-    }
-
-    if (hasOwn(source, 'resultsCollection') && typeof source['resultsCollection'] !== 'undefined') {
-      validated.resultsCollection = /** @type {string} */ (validateStringOption('resultsCollection', source['resultsCollection'], false, false));
-    }
-
-    if (hasOwn(source, 'resultsUser') && typeof source['resultsUser'] !== 'undefined') {
-      validated.resultsUser = validateStringOption('resultsUser', source['resultsUser'], true, false);
-    }
-
-    if (hasOwn(source, 'resultsPass') && typeof source['resultsPass'] !== 'undefined') {
-      validated.resultsPass = validateStringOption('resultsPass', source['resultsPass'], true, false);
-    }
-
-    return validated;
+    return /** @type {AnalysisOptionsInput} */ (validateOptions(source, ANALYSIS_OPTION_DESCRIPTORS));
   };
 
   /**
@@ -1319,6 +1395,7 @@ Please see https://github.com/variety/variety for details. */
 
   // Clean up the implementation handoffs so repeated loads remain idempotent
   // and no ad hoc internals leak onto globalThis after execution.
+  delete shellContext.__varietyOptionValidation;
   delete shellContext.__varietyConfig;
   delete shellContext.__varietyEngine;
   delete shellContext.__varietyImpl;
