@@ -5,6 +5,8 @@
 const { spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const transportOptionsModule = /** @type {typeof import('./transport-options.js')} */ (require('./transport-options.js'));
+const { validateShellOptions } = transportOptionsModule;
 
 /** @typedef {import('./transport-options.js').ShellOptions} ShellOptions */
 
@@ -94,7 +96,7 @@ const buildShellInvocation = (plan, env) => {
   const command = selectMongoShell(env);
   const args = [];
   /** @type {ShellOptions} */
-  const shellOptions = plan.shellOptions || {};
+  const shellOptions = validateShellOptions(plan.shellOptions);
 
   if (shellOptions.host) {
     args.push('--host', shellOptions.host);

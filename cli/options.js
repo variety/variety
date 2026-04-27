@@ -438,27 +438,6 @@ const resolveShellOptions = (shellOptions, target) => {
     return resolved;
   }
 
-  const conflictingFlags = [];
-  if (Object.hasOwn(resolved, 'host')) {
-    conflictingFlags.push('--host');
-  }
-  if (typeof resolved.port === 'number') {
-    conflictingFlags.push('--port');
-  }
-  if (Object.hasOwn(resolved, 'username')) {
-    conflictingFlags.push('--username');
-  }
-  if (Object.hasOwn(resolved, 'password')) {
-    conflictingFlags.push('--password');
-  }
-  if (Object.hasOwn(resolved, 'authenticationDatabase')) {
-    conflictingFlags.push('--authenticationDatabase');
-  }
-
-  if (conflictingFlags.length > 0) {
-    throw new CliUsageError(`--uri cannot be combined with ${conflictingFlags.join(', ')}.`);
-  }
-
   resolved.uri = resolveMongoUriForTarget(resolved.uri, target);
   return resolved;
 };

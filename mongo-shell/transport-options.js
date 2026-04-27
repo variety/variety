@@ -5,6 +5,9 @@
 const optionValidationModule = /** @type {typeof import('../core/option-validation.js')} */ (require('../core/option-validation.js'));
 const { validateOptions } = optionValidationModule;
 
+const MONGODB_URI_PREFIXES = ['mongodb://', 'mongodb+srv://'];
+const URI_CONFLICTING_KEYS = ['host', 'port', 'username', 'password', 'authenticationDatabase'];
+
 /**
  * @typedef {{
  *   authenticationDatabase?: string,
@@ -41,6 +44,9 @@ const SHELL_OPTION_DESCRIPTORS = [
   { name: 'uri',                    kind: 'string',  requireNonEmpty: true },
 ];
 
+/** @type {Set<string>} */
+const KNOWN_SHELL_OPTION_KEYS = new Set(SHELL_OPTION_DESCRIPTORS.map((d) => d.name));
+
 /**
  * @param {ShellOptions | undefined} input
  * @returns {ShellOptions}
@@ -54,7 +60,26 @@ const validateShellOptions = (input) => {
     throw new Error('Shell options must be an object.');
   }
 
-  return /** @type {ShellOptions} */ (validateOptions(/** @type {Record<string, unknown>} */ (input), SHELL_OPTION_DESCRIPTORS));
+  for (const key of Object.keys(input)) {
+    if (!KNOWN_SHELL_OPTION_KEYS.has(key)) {
+      throw new Error(`Unknown shell option: ${JSON.stringify(key)}.`);
+    }
+  }
+
+  const validated = /** @type {ShellOptions} */ (validateOptions(/** @type {Record<string, unknown>} */ (input), SHELL_OPTION_DESCRIPTORS));
+
+  if (typeof validated.uri === 'string') {
+    if (!MONGODB_URI_PREFIXES.some((prefix) => /** @type {string} */ (validated.uri).startsWith(prefix))) {
+      throw new Error('uri must start with "mongodb://" or "mongodb+srv://".');
+    }
+
+    const conflicting = URI_CONFLICTING_KEYS.filter((key) => Object.hasOwn(validated, key));
+    if (conflicting.length > 0) {
+      throw new Error(`uri cannot be combined with ${conflicting.join(', ')}.`);
+    }
+  }
+
+  return validated;
 };
 
 module.exports = {
