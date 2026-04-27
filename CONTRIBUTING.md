@@ -41,9 +41,10 @@ As an additional (not required) dependency, [Docker](https://www.docker.com/) or
   tolerates shell/runtime helpers when they are available. Intentionally
   exports only `analyzeDocuments`, `createAnalysisState`, `ingestDocument`,
   `finalizeResults`, and `varietyTypeOf`; implementation helpers stay
-  file-local. This reducer/finalization engine is used by both the
-  shell-facing analyzer and Node-side tests, and is the future `@variety/core`
-  package boundary.
+  file-local, while `varietyTypeOf` remains public as the direct
+  type-classification entrypoint used by focused tests and future callers.
+  This reducer/finalization engine is used by both the shell-facing analyzer
+  and Node-side tests, and is the future `@variety/core` package boundary.
 - `core/analyzer.js` — shell-adjacent orchestration that traverses the cursor,
   optionally persists results, dispatches to formatters, and exposes `run()`
   on top of `core/engine.js`. Depends on `core/formatters/` and `core/engine.js`.
