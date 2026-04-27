@@ -183,6 +183,8 @@ Otherwise `npm run lint:pre-commit` runs all of the following in parallel via [n
 
 All checks run to completion even when one fails, so all errors surface in a single commit attempt.
 
+Repo-root recursive scans intentionally skip nested worktree directories at `./.claude/worktrees/`, `./.worktrees/`, and `./worktrees/` so sibling checkouts parked inside the repository do not create duplicate or unrelated failures. When you run the same commands from inside a worktree, they still lint and validate that worktree normally.
+
 Markdownlint allows only one inline HTML element, `<br />`, for intentional line breaks inside compact Markdown tables.
 
 ### ESLint Rulesets
