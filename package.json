@@ -54,7 +54,7 @@
     "lint:markdown": "./node_modules/.bin/markdownlint '**/*.md' '**/*.markdown' --ignore 'node_modules/**' --ignore '.claude/worktrees/**' --ignore '.worktrees/**' --ignore 'worktrees/**'",
     "lint:yaml": "git ls-files -z -- '*.yml' '*.yaml' | node scripts/lint-yaml.js",
     "lint:dockerfile": "hadolint docker/Dockerfile.template",
-    "lint:shell": "shellcheck docker/init.sh test/bin/test-in-container.sh",
+    "lint:shell": "shellcheck docker/init.sh test/bin/test-in-container.sh test/bin/mongosh-in-service-container.sh",
     "lint:spdx": "node scripts/check-spdx.js",
     "lint:pre-commit": "run-p verify:build lint typecheck",
     "typecheck": "./node_modules/.bin/tsc --project .tsconfig.checkjs.json",

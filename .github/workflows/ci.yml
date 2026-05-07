@@ -82,10 +82,48 @@ jobs:
     needs: changes
     if: needs.changes.outputs.only-markdown != 'true'
     runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:${{ matrix.mongodb-version }}
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     strategy:
       fail-fast: false
       matrix:
-        mongodb-version: ['8.2', '8.0', '7.0', '5.0']
+        mongodb-version: ['8.2', '8.0', '7.0']
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+        env:
+          HUSKY: '0'
+      - name: Start Mongo shell client
+        run: |
+          # The mongodb service has already pulled this image; avoid a duplicate registry pull.
+          docker run --detach --rm --pull never \
+            --name variety-mongosh-client \
+            --network host \
+            --volume "$PWD:$PWD" \
+            --workdir "$PWD" \
+            mongo:${{ matrix.mongodb-version }} \
+            tail -f /dev/null
+      - run: npm run test:mocha
+        env:
+          MONGO_SHELL_COMMAND: ./test/bin/mongosh-in-service-container.sh
+
+  test-legacy:
+    name: Test (Node 22, MongoDB 5.0)
+    needs: changes
+    if: needs.changes.outputs.only-markdown != 'true'
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
@@ -102,16 +140,26 @@ jobs:
       - run: mkdir -p docker/Dockerfiles
       - run: npm run test:container
         env:
-          MONGODB_VERSION: ${{ matrix.mongodb-version }}
+          MONGODB_VERSION: '5.0'
           NODEJS_VERSION: '22'
           DOCKER_BUILD_CACHE: gha
-          DOCKER_BUILD_CACHE_SCOPE: variety-test-${{ runner.os }}-${{ runner.arch }}-mongodb-${{ matrix.mongodb-version }}-node-22
+          DOCKER_BUILD_CACHE_SCOPE: variety-test-${{ runner.os }}-${{ runner.arch }}-mongodb-5.0-node-22
 
   test-smoke:
     name: Smoke Test (Node 24, MongoDB 8.2)
     needs: changes
     if: needs.changes.outputs.only-markdown != 'true'
     runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:8.2
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
@@ -121,21 +169,23 @@ jobs:
       - run: npm ci
         env:
           HUSKY: '0'
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
-      - name: Expose GitHub Actions cache runtime
-        uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # v4.0.0
-      - run: mkdir -p docker/Dockerfiles
-      - run: npm run test:container
+      - name: Start Mongo shell client
+        run: |
+          # The mongodb service has already pulled this image; avoid a duplicate registry pull.
+          docker run --detach --rm --pull never \
+            --name variety-mongosh-client \
+            --network host \
+            --volume "$PWD:$PWD" \
+            --workdir "$PWD" \
+            mongo:8.2 \
+            tail -f /dev/null
+      - run: npm run test:mocha
         env:
-          MONGODB_VERSION: '8.2'
-          NODEJS_VERSION: '24'
-          DOCKER_BUILD_CACHE: gha
-          DOCKER_BUILD_CACHE_SCOPE: variety-test-${{ runner.os }}-${{ runner.arch }}-mongodb-8.2-node-24
+          MONGO_SHELL_COMMAND: ./test/bin/mongosh-in-service-container.sh
 
   required-ci-gate:
     name: Required CI Gate
-    needs: [changes, lint, test, test-smoke]
+    needs: [changes, lint, test, test-legacy, test-smoke]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -145,6 +195,7 @@ jobs:
           CHANGES_RESULT: ${{ needs.changes.result }}
           LINT_RESULT: ${{ needs.lint.result }}
           TEST_RESULT: ${{ needs.test.result }}
+          TEST_LEGACY_RESULT: ${{ needs.test-legacy.result }}
           SMOKE_RESULT: ${{ needs.test-smoke.result }}
         run: |
           {
@@ -155,6 +206,7 @@ jobs:
             echo "| Detect changes | $CHANGES_RESULT |"
             echo "| Lint | $LINT_RESULT |"
             echo "| Test matrix | $TEST_RESULT |"
+            echo "| Legacy test | $TEST_LEGACY_RESULT |"
             echo "| Smoke test | $SMOKE_RESULT |"
             echo
             echo "only-markdown: \`$ONLY_MARKDOWN\`"
@@ -171,8 +223,8 @@ jobs:
           fi
 
           if [ "$ONLY_MARKDOWN" = "true" ]; then
-            if [ "$TEST_RESULT" != "skipped" ] || [ "$SMOKE_RESULT" != "skipped" ]; then
-              echo "Markdown-only changes should skip test jobs; got test=$TEST_RESULT smoke=$SMOKE_RESULT." >&2
+            if [ "$TEST_RESULT" != "skipped" ] || [ "$TEST_LEGACY_RESULT" != "skipped" ] || [ "$SMOKE_RESULT" != "skipped" ]; then
+              echo "Markdown-only changes should skip test jobs; got test=$TEST_RESULT legacy=$TEST_LEGACY_RESULT smoke=$SMOKE_RESULT." >&2
               exit 1
             fi
 
@@ -182,6 +234,11 @@ jobs:
 
           if [ "$TEST_RESULT" != "success" ]; then
             echo "Test matrix did not succeed." >&2
+            exit 1
+          fi
+
+          if [ "$TEST_LEGACY_RESULT" != "success" ]; then
+            echo "Legacy test did not succeed." >&2
             exit 1
           fi
 

@@ -27,16 +27,20 @@ const toOutputText = (value) => value ? String(value) : '';
  */
 const findMongoShellCommand = async () => {
   if (!mongoShellCommandPromise) {
-    mongoShellCommandPromise = execFile('sh', ['-lc', `
-      if command -v mongosh >/dev/null 2>&1; then
-        printf mongosh
-      elif command -v mongo >/dev/null 2>&1; then
-        printf mongo
-      else
-        printf 'Neither mongosh nor mongo is available in PATH.' >&2
-        exit 127
-      fi
-    `]).then((result) => toOutputText(result.stdout).trim());
+    if (process.env['MONGO_SHELL_COMMAND']) {
+      mongoShellCommandPromise = Promise.resolve(process.env['MONGO_SHELL_COMMAND']);
+    } else {
+      mongoShellCommandPromise = execFile('sh', ['-lc', `
+        if command -v mongosh >/dev/null 2>&1; then
+          printf mongosh
+        elif command -v mongo >/dev/null 2>&1; then
+          printf mongo
+        else
+          printf 'Neither mongosh nor mongo is available in PATH.' >&2
+          exit 127
+        fi
+      `]).then((result) => toOutputText(result.stdout).trim());
+    }
   }
 
   return mongoShellCommandPromise;
