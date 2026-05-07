@@ -48,6 +48,8 @@ const engine = /** @type {VarietyEngineApi} */ (
   /** @type {unknown} */ (require(path.join(__dirname, '..', 'core', 'engine.js')))
 );
 
+// Keep this analysis-only allowlist in sync with core/config.js when new shared
+// options become meaningful for direct MongoDB Node driver callers.
 const SUPPORTED_ANALYSIS_OPTION_NAMES = new Set([
   'query',
   'limit',
@@ -74,22 +76,6 @@ const UNSUPPORTED_OPTION_REASONS = {
   resultsPass: 'result persistence is deferred and not yet supported here.',
   resultsUser: 'result persistence is deferred and not yet supported here.',
   secondaryOk: 'secondaryOk is a Mongo shell runtime option, not a Node-driver analysis option.',
-};
-
-/**
- * @param {AnalysisOptionsInput | undefined} input
- * @returns {Record<string, unknown>}
- */
-const ensureOptionsObject = (input) => {
-  if (typeof input === 'undefined') {
-    return {};
-  }
-
-  if (input === null || typeof input !== 'object' || Array.isArray(input)) {
-    throw new Error('MongoDB Node driver analysis options must be an object.');
-  }
-
-  return input;
 };
 
 /**
@@ -215,17 +201,18 @@ const buildCursor = (collection, config) => {
  */
 const analyzeCollection = async (collection, options) => {
   const typedCollection = ensureCollection(collection);
-  const source = ensureOptionsObject(options);
+  const validatedOptions = /** @type {AnalysisOptionsInput} */ (validateAnalysisOptions(options));
+  const source = typeof options === 'undefined' ? {} : /** @type {Record<string, unknown>} */ (options);
   assertSupportedOptions(source);
-  const validatedOptions = /** @type {AnalysisOptionsInput} */ (validateAnalysisOptions(source));
   const config = await resolveDriverConfig(typedCollection, validatedOptions);
   const interimResults = engine.createAnalysisState();
+  let documentsCount = 0;
 
   for await (const document of buildCursor(typedCollection, config)) {
     engine.ingestDocument(config, interimResults, document, () => {});
+    documentsCount += 1;
   }
 
-  const documentsCount = await countMatchingDocuments(typedCollection, config.query, config.limit);
   return /** @type {VarietyResultRow[]} */ (engine.finalizeResults(config, interimResults, documentsCount));
 };
 

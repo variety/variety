@@ -110,6 +110,14 @@ describe('MongoDB Node driver adapter', () => {
     results.validate('symbol', 1, 100.0, { BSONSymbol: 1 });
   });
 
+  it('returns empty results for an empty cursor', async () => {
+    const results = new AnalysisResultsValidator(
+      await analyzeCollection(createFakeCollection([]))
+    );
+
+    results.validateResultsCount(0);
+  });
+
   it('rejects formatter, persistence, plugin, and shell-only options clearly', async () => {
     await assert.rejects(
       analyzeCollection(createFakeCollection([]), { outputFormat: 'json' }),
