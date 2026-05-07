@@ -49,7 +49,7 @@
     "verify:build": "node build.js --check",
     "lint": "run-p lint:eslint lint:json lint:markdown lint:yaml lint:dockerfile lint:shell lint:spdx",
     "lint:eslint": "./node_modules/.bin/eslint --config .eslint.config.js . --cache --cache-strategy content",
-    "lint:eslint:fix": "./node_modules/.bin/eslint --config .eslint.config.js . --fix",
+    "lint:eslint:fix": "./node_modules/.bin/eslint --config .eslint.config.js . --fix --cache --cache-strategy content",
     "lint:json": "find . \\( -name node_modules -o -path './.git' -o -path './.claude/worktrees' -o -path './.worktrees' -o -path './worktrees' \\) -prune -o \\( -name '*.json' ! -name 'package-lock.json' -print0 \\) | xargs -0 ./node_modules/@prantlf/jsonlint/lib/cli.js -q",
     "lint:markdown": "./node_modules/.bin/markdownlint '**/*.md' '**/*.markdown' --ignore 'node_modules/**' --ignore '.claude/worktrees/**' --ignore '.worktrees/**' --ignore 'worktrees/**'",
     "lint:yaml": "git ls-files -z -- '*.yml' '*.yaml' | node scripts/lint-yaml.js",

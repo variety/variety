@@ -201,7 +201,7 @@ Markdownlint allows only one inline HTML element, `<br />`, for intentional line
 
 #### Shared Baseline
 
-`npm run lint:eslint` applies a shared baseline of formatting and safety rules across the repo. Through `@eslint/markdown`, JavaScript fenced code blocks in Markdown are extracted into virtual files and checked by the same ESLint pass, while Markdown prose remains covered by `npm run lint:markdown`. That baseline also bans a few repo-specific legacy patterns, including `Function('return this')`, `indexOf(...)` presence checks, and unguarded `for...in` loops.
+`npm run lint:eslint` applies a shared baseline of formatting and safety rules across the repo. Results are cached in `.eslintcache` at the repo root (gitignored); delete it if lint behavior ever seems stale. Through `@eslint/markdown`, JavaScript fenced code blocks in Markdown are extracted into virtual files and checked by the same ESLint pass, while Markdown prose remains covered by `npm run lint:markdown`. That baseline also bans a few repo-specific legacy patterns, including `Function('return this')`, `indexOf(...)` presence checks, and unguarded `for...in` loops.
 
 #### Node-side Modernization
 
