@@ -58,7 +58,7 @@ jobs:
           HUSKY: '0'
       - run: npm run verify:build
         if: needs.changes.outputs.only-markdown != 'true'
-      - run: npm run lint
+      - run: npm run lint:eslint
         if: needs.changes.outputs.only-markdown != 'true'
       - run: npm run lint:json
         if: needs.changes.outputs.only-markdown != 'true'
