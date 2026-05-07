@@ -22,7 +22,8 @@ As an additional (not required) dependency, [Docker](https://www.docker.com/) or
 
 ## Repo Layout and the `variety.js` Build
 
-`variety.js` at the repo root is a generated file, assembled from seven sources in this order:
+The repo is organized around these sources and layers. The generated `variety.js`
+bundle is assembled from the shell-compatible sources among them, in build order:
 
 - `core/formatters/ascii.js` — built-in ASCII table formatter. Self-contained
   IIFE; registers an `ascii` factory on `shellContext.__varietyFormatters`.
@@ -68,6 +69,13 @@ As an additional (not required) dependency, [Docker](https://www.docker.com/) or
   The only place that touches Node `spawnSync` for spawning `mongosh`/`mongo`.
   Future interfaces (MCP, etc.) can import from `mongo-shell/` without
   reaching into `cli/`.
+- `mongo-driver/adapter.js` — internal MongoDB Node driver adapter that runs
+  Variety analysis directly against a `Collection` or `Db` without shelling out.
+  Reuses `core/config.js` and `core/engine.js`, preserves driver-native BSON
+  values, and rejects formatter, persistence, plugin, and shell-only options so
+  this boundary stays analysis-only for now. Node-only; not compiled into
+  `variety.js`. A future `@variety/node` or `@variety/mcp-server` package could
+  grow on top of this layer.
 - `cli/main.js`, `cli/options.js` — Node-side CLI parsing and compatibility
   handling. Depends on `core` and `mongo-shell/`; this is the future
   `@variety/cli` package boundary.
@@ -79,7 +87,8 @@ has no runtime deps on any other layer. `core/analyzer.js` depends on
 `core/engine.js` plus `core/formatters/`. `mongo-shell/adapter.js` depends on
 `core/config.js` and `core/analyzer.js`. `mongo-shell/transport-options.js`
 depends on `core/option-validation.js`; `mongo-shell/launcher.js` has no
-`core` dep. `cli/options.js` depends on `core/config.js` and
+`core` dep. `mongo-driver/adapter.js` depends on `core/config.js` and
+`core/engine.js`. `cli/options.js` depends on `core/config.js` and
 `mongo-shell/transport-options.js`; `cli/main.js` depends on `cli/options.js`
 and `mongo-shell/launcher.js`. `build.js` composes `core/formatters/` +
 `core/option-validation.js` + `core/config.js` + `core/engine.js` +
@@ -102,7 +111,7 @@ The built `variety.js` is committed to the repository so that `mongosh variety.j
 npm run test:mocha
 ```
 
-The test suite under `test/` runs as native ESM through its own `test/package.json`, while the repository root intentionally stays CommonJS so the CLI entrypoint and config files keep their current behavior. Tests are grouped by concern under `test/cases/` — `test/cases/analysis/`, `test/cases/cli/`, `test/cases/formatters/`, `test/cases/persistence/`, and `test/cases/plugins/` — with shared helpers under `test/helpers/` and static inputs under `test/fixtures/`. That Mocha lane also includes focused CLI tests that execute `bin/variety` and stub `mongosh` / `mongo`, so the command-line translation layer can be validated without a live MongoDB shell install. Analysis tests include deterministic property-based fuzzing with `fast-check` to exercise generated Mongo-like documents against core analyzer invariants.
+The test suite under `test/` runs as native ESM through its own `test/package.json`, while the repository root intentionally stays CommonJS so the CLI entrypoint and config files keep their current behavior. Tests are grouped by concern under `test/cases/` — `test/cases/analysis/`, `test/cases/cli/`, `test/cases/formatters/`, `test/cases/mongo-driver/`, `test/cases/persistence/`, and `test/cases/plugins/` — with shared helpers under `test/helpers/` and static inputs under `test/fixtures/`. That Mocha lane also includes focused CLI tests that execute `bin/variety` and stub `mongosh` / `mongo`, plus MongoDB Node driver adapter tests that exercise the private programmatic boundary without shelling out. Analysis tests include deterministic property-based fuzzing with `fast-check` to exercise generated Mongo-like documents against core analyzer invariants.
 
 If you have Docker or Podman installed and don't want to test against your own MongoDB instance,
 you can execute tests against dockerized MongoDB:
@@ -179,7 +188,7 @@ Otherwise `npm run lint:pre-commit` runs all of the following in parallel via [n
 - `npm run lint:dockerfile` — hadolint (`docker/Dockerfile.template`); requires `hadolint` on `PATH` (`dnf install hadolint` / `brew install hadolint`)
 - `npm run lint:shell` — shellcheck (shell scripts); requires `shellcheck` on `PATH` (`dnf install ShellCheck` / `brew install shellcheck`)
 - `npm run lint:spdx` — verifies `SPDX-License-Identifier: MIT` headers in all tracked source files
-- `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for `bin/variety`, `cli/**/*.js`, `core/option-validation.js`, `core/config.js`, `.eslint.config.js`, `build.js`, and Node-side test code under `test`
+- `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for `bin/variety`, `cli/**/*.js`, `core/option-validation.js`, `core/config.js`, `mongo-driver/**/*.js`, `.eslint.config.js`, `build.js`, and Node-side test code under `test`
 
 All checks run to completion even when one fails, so all errors surface in a single commit attempt.
 
@@ -193,7 +202,7 @@ Markdownlint allows only one inline HTML element, `<br />`, for intentional line
 
 #### Node-side Modernization
 
-Node-side JavaScript such as `bin/variety`, `cli/**/*.js`, `mongo-shell/launcher.js`, `.eslint.config.js`, `build.js`, and the test suite under `test/` (excluding shell-executed fixtures under `test/fixtures/`) opts into a stricter modernization set: `const`, template literals, object shorthand, `Object.hasOwn`, and throwing `Error` objects.
+Node-side JavaScript such as `bin/variety`, `cli/**/*.js`, `mongo-driver/**/*.js`, `mongo-shell/launcher.js`, `.eslint.config.js`, `build.js`, and the test suite under `test/` (excluding shell-executed fixtures under `test/fixtures/`) opts into a stricter modernization set: `const`, template literals, object shorthand, `Object.hasOwn`, and throwing `Error` objects.
 
 #### Legacy Shell Compatibility
 
@@ -203,7 +212,7 @@ Node-side JavaScript such as `bin/variety`, `cli/**/*.js`, `mongo-shell/launcher
 
 #### Checked Files
 
-`npm run typecheck` runs TypeScript `checkJs` over the published Node CLI surface (`bin/variety` plus `cli/**/*.js`, `core/option-validation.js`, `core/config.js`, `mongo-shell/transport-options.js`, and `mongo-shell/launcher.js`), `.eslint.config.js`, `build.js`, and the Node-side test code via `.tsconfig.checkjs.json`. The `test` tree also uses type-aware `typescript-eslint` rules, while shell-executed fixtures under `test/fixtures` stay on the shared baseline.
+`npm run typecheck` runs TypeScript `checkJs` over the published Node CLI surface (`bin/variety` plus `cli/**/*.js`, `core/option-validation.js`, `core/config.js`, `mongo-driver/**/*.js`, `mongo-shell/transport-options.js`, and `mongo-shell/launcher.js`), `.eslint.config.js`, `build.js`, and the Node-side test code via `.tsconfig.checkjs.json`. The `test` tree also uses type-aware `typescript-eslint` rules, while shell-executed fixtures under `test/fixtures` stay on the shared baseline.
 
 #### Extra Strictness
 
