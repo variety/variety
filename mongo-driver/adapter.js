@@ -209,8 +209,8 @@ const buildCursor = (collection, config) => {
  */
 const analyzeCollection = async (collection, options) => {
   const typedCollection = ensureCollection(collection);
-  if (typeof options === 'undefined' || isPlainOptionsObject(options)) {
-    assertSupportedOptions(options ?? {});
+  if (isPlainOptionsObject(options)) {
+    assertSupportedOptions(options);
   }
   const validatedOptions = /** @type {AnalysisOptionsInput} */ (validateAnalysisOptions(options));
   const config = await resolveDriverConfig(typedCollection, validatedOptions);
