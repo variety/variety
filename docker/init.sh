@@ -20,10 +20,16 @@ cd "$VARIETY_DOCKERDIR" || exit
 # NVM is already sourced; redirect HOME so npm and mongosh keep their caches
 # and shell history out of /data/db, which mongod owns at runtime.
 # Keep it out of the mounted repo so shell logs do not pollute the worktree.
+# If dependencies must be installed in-container, keep that install hook-free.
+export HUSKY=0
 export HOME=/tmp/variety-home
 mkdir -p "$HOME"
 
-npm install || { echo "npm install failed"; exit 1; }
+if [ -x node_modules/.bin/mocha ]; then
+  echo "Using mounted node_modules"
+else
+  npm install || { echo "npm install failed"; exit 1; }
+fi
 
 mongo_ping() {
   if command -v mongosh > /dev/null 2>&1; then

@@ -105,7 +105,7 @@ The built `variety.js` is committed to the repository so that `mongosh variety.j
 
 ## Testing
 
-`npm test` runs ESLint plus the default Docker-backed integration test lane. If you already have MongoDB listening on `localhost:27017` and want to run only the mocha suite directly, use:
+`npm test` runs ESLint plus the default Docker-backed integration test lane. If you already have MongoDB listening on `localhost:27017` and a MongoDB shell (`mongosh` or the legacy `mongo`) on `PATH`, you can run only the mocha suite directly with:
 
 ```
 npm run test:mocha
@@ -123,7 +123,7 @@ npm run test:container
 The script downloads one of [the official MongoDB images](https://hub.docker.com/_/mongo/) (based on your provided version),
 starts the database, executes the test suite against it (inside the container) and stops the DB.
 
-The Docker harness prefers `mongosh` when it is available and falls back to the legacy `mongo` shell for older images.
+The Docker harness prefers `mongosh` when it is available and falls back to the legacy `mongo` shell for older images. When `node_modules` is already present in the mounted worktree, the container reuses it; otherwise it installs dependencies inside the container before running Mocha.
 
 Dockerized tests default to MongoDB 8.2 on Node.js 22. You can override `MONGODB_VERSION` and `NODEJS_VERSION` when you want to try another supported combination:
 
@@ -134,24 +134,25 @@ MONGODB_VERSION=5.0 npm run test:container
 MONGODB_VERSION=8.2 NODEJS_VERSION=24 npm run test:container
 ```
 
-GitHub Actions runs a MongoDB matrix on Node.js 22: `8.2` (current stable), `8.0` (current major baseline), `7.0` (previous stable), and `5.0` (which ships only the legacy `mongo` shell, exercising that code path). A single Node.js 24 smoke test also runs against MongoDB 8.2. MongoDB 6.0+ no longer ships the legacy `mongo` shell, so `5.0` is the newest version available for `mongo`-shell coverage.
+GitHub Actions runs a MongoDB matrix on Node.js 22: `8.2` (current stable), `8.0` (current major baseline), `7.0` (previous stable), and `5.0` (which ships only the legacy `mongo` shell, exercising that code path). The modern `8.2`, `8.0`, and `7.0` lanes run Mocha on the hosted Node.js runner against a MongoDB service container. Each modern lane also starts a mounted `mongo:<version>` shell-client container and sets `MONGO_SHELL_COMMAND` to `test/bin/mongosh-in-service-container.sh`, so shell-backed tests can execute the checked-out `variety.js` without building a custom test image. The MongoDB 5.0 lane keeps using `npm run test:container` for legacy `mongo` shell coverage. A single Node.js 24 smoke test runs against MongoDB 8.2 using the same service-container pattern. MongoDB 6.0+ no longer ships the legacy `mongo` shell, so `5.0` is the newest version available for `mongo`-shell coverage.
 
-In GitHub Actions, Dockerized test jobs opt into Docker Buildx's GitHub
-Actions cache for the generated test images. Cache scopes are separated by
-runner OS/architecture, MongoDB version, and Node.js version. This cache is
-only an optimization: cache misses, unavailable cache support, or cache-backed
-build failures fall back to a clean `docker build --no-cache` rebuild so CI
-behavior remains predictable. Local `npm run test:container` runs keep the clean
-rebuild behavior by default.
+In GitHub Actions, the remaining Dockerized MongoDB 5.0 test job opts into
+Docker Buildx's GitHub Actions cache for the generated test image. Cache scopes
+are separated by runner OS/architecture, MongoDB version, and Node.js version.
+This cache is only an optimization: cache misses, unavailable cache support, or
+cache-backed build failures fall back to a clean `docker build --no-cache`
+rebuild so CI behavior remains predictable. Local `npm run test:container` runs
+keep the clean rebuild behavior by default.
 
 **Required CI Gate and markdown-only pull requests:** The `changes` job detects
 pull requests that only modify existing `.md` files. For those PRs, CI still
-runs markdown linting, but the Dockerized test matrix and Node.js 24 smoke test
-are skipped at the job level so GitHub shows those jobs as skipped rather than
-successful. The always-running `Required CI Gate` job is the branch-protection
-status that should be required instead of the individual test-matrix and smoke
-test statuses: it passes only when either full CI passed, or the change is
-markdown-only and the test jobs were intentionally skipped. This replaces the
+runs markdown linting, but the service-backed test matrix, Dockerized legacy
+test, and Node.js 24 smoke test are skipped at the job level so GitHub shows
+those jobs as skipped rather than successful. The always-running `Required CI Gate`
+job is the branch-protection status that should be required instead of
+the individual test-matrix, legacy-test, and smoke-test statuses: it passes only
+when either full CI passed, or the change is markdown-only and the test jobs
+were intentionally skipped. This replaces the
 workaround from #295, which satisfied required matrix check names by reporting
 green test jobs even when the test commands did not run.
 
