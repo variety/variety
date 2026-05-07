@@ -178,16 +178,17 @@ If no `package.json` is present in the working tree (e.g. on the `gh-pages` bran
 
 If every staged change is a modification to an existing `.md` file (no new or deleted files), only `npm run lint:markdown` runs — all other checks are skipped as they have nothing to verify.
 
-Otherwise `npm run lint:pre-commit` runs all of the following in parallel via [npm-run-all2](https://github.com/bcomnes/npm-run-all2):
+Otherwise `npm run lint:pre-commit` runs the following in parallel via [npm-run-all2](https://github.com/bcomnes/npm-run-all2):
 
 - `npm run verify:build` — verifies `variety.js` matches what `build.js` would produce from `core/formatters/`, `core/`, and `mongo-shell/adapter.js`
-- `npm run lint` — ESLint (JavaScript, including fenced code blocks in Markdown)
-- `npm run lint:json` — `@prantlf/jsonlint` (JSON files)
-- `npm run lint:markdown` — markdownlint (Markdown files)
-- `npm run lint:yaml` — `scripts/lint-yaml.js` using `js-yaml` (git-tracked YAML files)
-- `npm run lint:dockerfile` — hadolint (`docker/Dockerfile.template`); requires `hadolint` on `PATH` (`dnf install hadolint` / `brew install hadolint`)
-- `npm run lint:shell` — shellcheck (shell scripts); requires `shellcheck` on `PATH` (`dnf install ShellCheck` / `brew install shellcheck`)
-- `npm run lint:spdx` — verifies `SPDX-License-Identifier: MIT` headers in all tracked source files
+- `npm run lint` — runs all linters in parallel:
+  - `npm run lint:eslint` — ESLint (JavaScript, including fenced code blocks in Markdown)
+  - `npm run lint:json` — `@prantlf/jsonlint` (JSON files)
+  - `npm run lint:markdown` — markdownlint (Markdown files)
+  - `npm run lint:yaml` — `scripts/lint-yaml.js` using `js-yaml` (git-tracked YAML files)
+  - `npm run lint:dockerfile` — hadolint (`docker/Dockerfile.template`); requires `hadolint` on `PATH` (`dnf install hadolint` / `brew install hadolint`)
+  - `npm run lint:shell` — shellcheck (shell scripts); requires `shellcheck` on `PATH` (`dnf install ShellCheck` / `brew install shellcheck`)
+  - `npm run lint:spdx` — verifies `SPDX-License-Identifier: MIT` headers in all tracked source files
 - `npm run typecheck` — TypeScript `checkJs`/JSDoc validation for `bin/variety`, `cli/**/*.js`, `core/option-validation.js`, `core/config.js`, `mongo-driver/**/*.js`, `.eslint.config.js`, `build.js`, and Node-side test code under `test`
 
 All checks run to completion even when one fails, so all errors surface in a single commit attempt.
@@ -200,7 +201,7 @@ Markdownlint allows only one inline HTML element, `<br />`, for intentional line
 
 #### Shared Baseline
 
-`npm run lint` applies a shared baseline of formatting and safety rules across the repo. Through `@eslint/markdown`, JavaScript fenced code blocks in Markdown are extracted into virtual files and checked by the same ESLint pass, while Markdown prose remains covered by `npm run lint:markdown`. That baseline also bans a few repo-specific legacy patterns, including `Function('return this')`, `indexOf(...)` presence checks, and unguarded `for...in` loops.
+`npm run lint:eslint` applies a shared baseline of formatting and safety rules across the repo. Through `@eslint/markdown`, JavaScript fenced code blocks in Markdown are extracted into virtual files and checked by the same ESLint pass, while Markdown prose remains covered by `npm run lint:markdown`. That baseline also bans a few repo-specific legacy patterns, including `Function('return this')`, `indexOf(...)` presence checks, and unguarded `for...in` loops.
 
 #### Node-side Modernization
 
