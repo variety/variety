@@ -1,5 +1,9 @@
 /node_modules/
 
+# Local Git worktree parking areas; tooling also skips these from repo-root scans.
+/.worktrees/
+/worktrees/
+
 # Generated from docker/Dockerfile.template for versioned test runs
 /docker/Dockerfiles/*.Dockerfile
 
