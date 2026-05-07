@@ -25,6 +25,7 @@
     "cli/**/*.js",
     "core/option-validation.js",
     "core/config.js",
+    "mongo-driver/**/*.js",
     "mongo-shell/transport-options.js",
     "mongo-shell/launcher.js",
     ".eslint.config.js",
