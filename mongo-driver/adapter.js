@@ -79,6 +79,14 @@ const UNSUPPORTED_OPTION_REASONS = {
 };
 
 /**
+ * @param {unknown} value
+ * @returns {value is Record<string, unknown>}
+ */
+const isPlainOptionsObject = (value) => {
+  return value !== null && !Array.isArray(value) && typeof value === 'object';
+};
+
+/**
  * @param {Record<string, unknown>} source
  * @returns {void}
  */
@@ -201,9 +209,10 @@ const buildCursor = (collection, config) => {
  */
 const analyzeCollection = async (collection, options) => {
   const typedCollection = ensureCollection(collection);
+  if (typeof options === 'undefined' || isPlainOptionsObject(options)) {
+    assertSupportedOptions(options ?? {});
+  }
   const validatedOptions = /** @type {AnalysisOptionsInput} */ (validateAnalysisOptions(options));
-  const source = typeof options === 'undefined' ? {} : /** @type {Record<string, unknown>} */ (options);
-  assertSupportedOptions(source);
   const config = await resolveDriverConfig(typedCollection, validatedOptions);
   const interimResults = engine.createAnalysisState();
   let documentsCount = 0;

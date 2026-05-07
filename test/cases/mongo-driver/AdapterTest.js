@@ -137,6 +137,13 @@ describe('MongoDB Node driver adapter', () => {
     );
   });
 
+  it('rejects unsupported options before validating their values', async () => {
+    await assert.rejects(
+      analyzeCollection(createFakeCollection([]), /** @type {any} */ ({ outputFormat: 123 })),
+      /does not support "outputFormat"/
+    );
+  });
+
   it('rejects unknown option keys before starting analysis', async () => {
     await assert.rejects(
       analyzeCollection(createFakeCollection([]), /** @type {any} */ ({ banana: true })),
