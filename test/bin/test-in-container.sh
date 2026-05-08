@@ -94,6 +94,7 @@ fi
 
 # Ensure the named container is removed even if this script is interrupted
 # (Ctrl-C or SIGTERM), which would otherwise leave it behind for the next run.
+# shellcheck disable=SC2317,SC2329
 cleanup_container() { "$RUNNER" rm "$CONTAINER" 2>/dev/null || true; }
 trap cleanup_container INT TERM
 
