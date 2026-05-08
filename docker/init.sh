@@ -79,7 +79,7 @@ echo "MongoDB ready"
 # EXIT trap: always report mongod's fate and, on failure, dump its log and a
 # resource snapshot. Runs before --rm removes the container, so diagnostics
 # reach the caller even when no docker cp is possible.
-# shellcheck disable=SC2329
+# shellcheck disable=SC2317,SC2329
 cleanup() {
   local rc=$?
 
