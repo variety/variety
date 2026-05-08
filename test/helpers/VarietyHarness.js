@@ -40,7 +40,10 @@ export default class VarietyHarness {
    * @returns {Promise<MongoClientType>}
    */
   async connect() {
-    const connection = await MongoClient.connect(defaultUrl);
+    const connection = await MongoClient.connect(defaultUrl, {
+      serverSelectionTimeoutMS: 3000,
+      connectTimeoutMS: 3000,
+    });
     this.connection = connection;
     this.coll = connection.db(this.databaseName).collection(this.collectionName);
     return connection;

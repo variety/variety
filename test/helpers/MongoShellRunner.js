@@ -46,6 +46,25 @@ const findMongoShellCommand = async () => {
   return mongoShellCommandPromise;
 };
 
+/** Patterns that appear in mongosh output when it cannot reach the server. */
+const CONNECTION_FAILURE_PATTERNS = [
+  'MongoServerSelectionError',
+  'MongoNetworkError',
+  'ECONNREFUSED',
+  'Connection refused',
+  'failed to connect',
+  'Could not connect',
+  'Unable to reach',
+  'getaddrinfo',
+];
+
+/**
+ * @param {string} output
+ * @returns {boolean}
+ */
+const looksLikeConnectionFailure = (output) =>
+  CONNECTION_FAILURE_PATTERNS.some((p) => output.toLowerCase().includes(p.toLowerCase()));
+
 /**
  * @param {string | undefined} database
  * @param {MongoShellCredentials | null} credentials
@@ -102,6 +121,19 @@ export default async (database, credentials, args, script, quiet, port) => {
         .filter(Boolean)
         .join('\n');
     }
+
+    // Distinguish a mongod connectivity failure from a variety.js script error
+    // so callers see "MongoDB unreachable on port N" rather than a confusing
+    // "expected stdout to include <variety error>" assertion mismatch.
+    const fullOutput = toOutputText(execError.stdout);
+    if (looksLikeConnectionFailure(fullOutput)) {
+      const connErr = new Error(
+        `mongosh could not connect to MongoDB on port ${port} — ` +
+        `the server may have crashed. mongosh output: ${fullOutput}`
+      );
+      throw connErr;
+    }
+
     throw execError;
   }
 };
