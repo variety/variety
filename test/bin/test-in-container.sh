@@ -92,6 +92,11 @@ fi
 # Remove any leftover container from a previous failed run before starting.
 "$RUNNER" rm "$CONTAINER" 2>/dev/null || true
 
+# Ensure the named container is removed even if this script is interrupted
+# (Ctrl-C or SIGTERM), which would otherwise leave it behind for the next run.
+cleanup_container() { "$RUNNER" rm "$CONTAINER" 2>/dev/null || true; }
+trap cleanup_container INT TERM
+
 # Suspend set -e for the container run so we can capture the exit code,
 # extract the mongod log on failure, and remove the container before exiting.
 set +e

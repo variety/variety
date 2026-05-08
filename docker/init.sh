@@ -129,7 +129,7 @@ mongod_watchdog() {
     echo "#################################################################"
     echo "# FATAL: mongod exited unexpectedly during the test run.        #"
     echo "# Aborting mocha — hook timeouts below are symptoms, not        #"
-    echo "# independent failures. See '=== mongod exited ===' above.      #"
+    echo "# independent failures. See mongod exit diagnostics below.      #"
     echo "#################################################################"
     kill "$MOCHA_PID" 2>/dev/null || true
     sleep 5
