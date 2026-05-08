@@ -144,6 +144,19 @@ cache-backed build failures fall back to a clean `docker build --no-cache`
 rebuild so CI behavior remains predictable. Local `npm run test:container` runs
 keep the clean rebuild behavior by default.
 
+### Diagnosing container test failures
+
+When `npm run test:container` or an ad hoc `docker run` / `podman run` fails, the container init script prints several diagnostic sections to stdout before exiting — these reach your terminal even when the container is removed with `--rm`:
+
+- **`=== variety container environment ===`** — mongod version, Node.js version, and OS details printed at run start. Confirms the exact lane involved.
+- **`=== mongod exited with status N (SIGNAL) ===`** — printed whenever mongod dies before the test run ends. Exit status `139` with signal `SIGSEGV` indicates a mongod crash rather than an OOM or configuration error.
+- **`=== mongod log ===`** — full mongod log, emitted on any non-zero exit. Look here for crash context, startup errors, or assertion failures inside mongod itself.
+- **`=== resource snapshot at exit ===`** — memory and process RSS table at the moment of failure. Helps distinguish resource exhaustion from a server-internal crash.
+
+Additionally, `npm run test:container` saves the mongod log to `./variety-mongod-debug.log` in the current directory when the run fails, giving a persistent copy even if the terminal output scrolls away.
+
+A cascade of `beforeEach timeout` or `MongoServerSelectionError` failures across unrelated test suites almost always means mongod exited mid-run. The mongod watchdog in `docker/init.sh` detects this and prints a `FATAL: mongod exited unexpectedly` banner before aborting mocha, so the root cause appears near the top of the failure output rather than only at the end of the cascade.
+
 **Required CI Gate and markdown-only pull requests:** The `changes` job detects
 pull requests that only modify existing `.md` files. For those PRs, CI still
 runs markdown linting, but the service-backed test matrix, Dockerized legacy

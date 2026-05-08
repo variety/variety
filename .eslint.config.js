@@ -60,7 +60,7 @@ module.exports = (async () => {
     { ignores: ['.claude/', '.worktrees/', 'worktrees/'] },
     js.configs.recommended,
     {
-      files: ['**/*.js', 'bin/variety'],
+      files: ['**/*.js', '**/*.cjs', 'bin/variety'],
       languageOptions: {
         sourceType: 'script',
         globals: {

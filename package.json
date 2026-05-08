@@ -60,7 +60,7 @@
     "typecheck": "./node_modules/.bin/tsc --project .tsconfig.checkjs.json",
     "test": "npm run lint:eslint && npm run test:container",
     "test:container": "./test/bin/test-in-container.sh",
-    "test:mocha": "./node_modules/.bin/mocha --reporter spec --timeout 15000 \"test/**/*Test.js\""
+    "test:mocha": "./node_modules/.bin/mocha --reporter spec --timeout 15000 --require test/helpers/mongod-liveness-hook.cjs \"test/**/*Test.js\""
   },
   "overrides": {
     "serialize-javascript": "7.0.5",
