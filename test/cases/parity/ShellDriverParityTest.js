@@ -33,19 +33,11 @@ const getConnectedCollection = () => {
  * @returns {Promise<VarietyResultRow[]>}
  */
 const analyzeWithShell = async (options) => {
-  /** @type {unknown} */
-  const parsedRows = JSON.parse(await test.runAnalysis({
+  const results = await test.runJsonAnalysis({
     collection: test.collectionName,
     ...options,
-    outputFormat: 'json',
-  }, true));
-
-  if (!Array.isArray(parsedRows)) {
-    throw new Error('Expected shell JSON output to be an array.');
-  }
-
-  const rows = /** @type {VarietyResultRow[]} */ (/** @type {unknown} */ (parsedRows));
-  return rows;
+  }, true);
+  return results.results;
 };
 
 /**
@@ -58,10 +50,15 @@ const analyzeWithDriver = async (options) => {
 
 /**
  * @param {VarietyResultRow[]} rows
- * @returns {unknown}
+ * @returns {VarietyResultRow[]}
  */
 const normalizeRows = (rows) => {
-  return JSON.parse(JSON.stringify(rows));
+  /** @type {unknown} */
+  const parsedRows = JSON.parse(JSON.stringify(rows));
+  const normalized = /** @type {VarietyResultRow[]} */ (
+    parsedRows
+  );
+  return normalized;
 };
 
 describe('shell and MongoDB Node driver analysis parity', () => {
@@ -90,12 +87,18 @@ describe('shell and MongoDB Node driver analysis parity', () => {
       },
     },
     {
-      name: 'array and excluded-subkey options',
+      name: 'array option interactions',
       options: {
         arrayEscape: 'ZZ',
         compactArrayTypes: true,
-        excludeSubkeys: ['profile.address'],
         showArrayElements: true,
+        sort: { rank: 1 },
+      },
+    },
+    {
+      name: 'excluded-subkey options',
+      options: {
+        excludeSubkeys: ['profile.address'],
         sort: { rank: 1 },
       },
     },
