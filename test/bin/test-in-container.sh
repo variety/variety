@@ -89,4 +89,24 @@ else
   build_without_cache
 fi
 
-"$RUNNER" run --rm --tty --volume "$VARIETY_SOURCECODE_PATH:$VARIETY_DOCKERDIR" --name "$CONTAINER" "$DOCKERIMAGE"
+# Remove any leftover container from a previous failed run before starting.
+"$RUNNER" rm "$CONTAINER" 2>/dev/null || true
+
+# Suspend set -e for the container run so we can capture the exit code,
+# extract the mongod log on failure, and remove the container before exiting.
+set +e
+# Run without --rm so we can extract the mongod log on failure before cleanup.
+"$RUNNER" run --tty --volume "$VARIETY_SOURCECODE_PATH:$VARIETY_DOCKERDIR" --name "$CONTAINER" "$DOCKERIMAGE"
+RUN_EXIT=$?
+set -e
+
+if [ "$RUN_EXIT" -ne 0 ]; then
+  echo ""
+  echo "=== container test run failed (exit $RUN_EXIT) — extracting mongod log ==="
+  "$RUNNER" cp "$CONTAINER:/tmp/variety-mongod.log" "./variety-mongod-debug.log" 2>/dev/null \
+    && echo "MongoDB log saved to ./variety-mongod-debug.log" \
+    || echo "(mongod log not available — it may have been captured in container stdout above)"
+fi
+
+"$RUNNER" rm "$CONTAINER" 2>/dev/null || true
+exit "$RUN_EXIT"
