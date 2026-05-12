@@ -22,6 +22,25 @@ echo "======================================"
 # setting ulimit here ensures the limit is not suppressed at the process level.
 ulimit -c unlimited 2>/dev/null || true
 
+# Work around a tcmalloc-google crash on Linux kernel 6.19+ (MongoDB SERVER-121912).
+# tcmalloc-google (introduced in mongod 8.0) implements per-CPU caches via
+# restartable sequences (rseq), but relies on rseq behavior the spec does not
+# guarantee. Linux kernel 6.19+ exposed this violation, causing mongod 8.0+ to
+# crash with SIGSEGV roughly 30 seconds into any workload that drives significant
+# memory allocation. mongod 7.x uses the old tcmalloc (no rseq) and is unaffected.
+#
+# Fix: setting glibc.pthread.rseq=1 causes glibc to register the per-thread rseq
+# struct before tcmalloc-google does. When tcmalloc-google then attempts its own
+# registration, the kernel rejects it — rseq is a per-thread singleton — and
+# tcmalloc falls back to per-thread caches, which do not use rseq. The crash is
+# prevented. Note: =0 (disabling glibc's rseq) does not help because tcmalloc-
+# google bypasses glibc and calls the rseq syscall directly.
+#
+# This line can be removed once MongoDB ships a corrected tcmalloc-google in all
+# affected release lines. Track: https://jira.mongodb.org/browse/SERVER-121912
+# Root-cause analysis: https://jira.mongodb.org/browse/SERVER-121912?focusedCommentId=8392408&focusedId=8392408&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-8392408
+# Workaround source:  https://jira.mongodb.org/browse/SERVER-121912?focusedCommentId=8395283&focusedId=8395283&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-8395283
+export GLIBC_TUNABLES="${GLIBC_TUNABLES:+${GLIBC_TUNABLES}:}glibc.pthread.rseq=1"
 # Start MongoDB quietly. Newer server releases removed --nojournal.
 MONGOD_LOG=/tmp/variety-mongod.log
 mongod --logpath "$MONGOD_LOG" &

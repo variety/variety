@@ -85,6 +85,9 @@ jobs:
     services:
       mongodb:
         image: mongo:${{ matrix.mongodb-version }}
+        # SERVER-121912 tcmalloc-google / kernel 6.19 rseq workaround — see docker/init.sh:25
+        env:
+          GLIBC_TUNABLES: glibc.pthread.rseq=1
         ports:
           - 27017:27017
         options: >-
@@ -153,6 +156,9 @@ jobs:
     services:
       mongodb:
         image: mongo:8.2
+        # SERVER-121912 tcmalloc-google / kernel 6.19 rseq workaround — see docker/init.sh:25
+        env:
+          GLIBC_TUNABLES: glibc.pthread.rseq=1
         ports:
           - 27017:27017
         options: >-
