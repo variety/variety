@@ -86,6 +86,6 @@
     "npm-run-all2": "^8.0.4",
     "promisify-child-process": "^5.0.1",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.2"
+    "typescript-eslint": "^8.59.3"
   }
 }
