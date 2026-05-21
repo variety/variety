@@ -81,7 +81,7 @@
     "husky": "^9.1.7",
     "js-yaml": "^4.1.1",
     "markdownlint-cli": "^0.48.0",
-    "mocha": "^11.7.5",
+    "mocha": "^11.7.6",
     "mongodb": "^7.2.0",
     "npm-run-all2": "^8.0.4",
     "promisify-child-process": "^5.0.1",
