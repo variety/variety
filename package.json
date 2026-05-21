@@ -74,18 +74,18 @@
     "@eslint/markdown": "^8.0.1",
     "@prantlf/jsonlint": "^17.0.1",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^25.6.0",
-    "eslint": "^10.3.0",
-    "fast-check": "^4.7.0",
+    "@types/node": "^25.9.1",
+    "eslint": "^10.4.0",
+    "fast-check": "^4.8.0",
     "globals": "^17.6.0",
     "husky": "^9.1.7",
     "js-yaml": "^4.1.1",
     "markdownlint-cli": "^0.48.0",
-    "mocha": "^11.7.5",
+    "mocha": "^11.7.6",
     "mongodb": "^7.2.0",
     "npm-run-all2": "^8.0.4",
     "promisify-child-process": "^5.0.1",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.2"
+    "typescript-eslint": "^8.59.4"
   }
 }
