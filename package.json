@@ -83,7 +83,7 @@
     "markdownlint-cli": "^0.48.0",
     "mocha": "^11.7.6",
     "mongodb": "^7.2.0",
-    "npm-run-all2": "^8.0.4",
+    "npm-run-all2": "^9.0.1",
     "promisify-child-process": "^5.0.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.4"
