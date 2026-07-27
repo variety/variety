@@ -79,7 +79,7 @@
     "fast-check": "^4.8.0",
     "globals": "^17.6.0",
     "husky": "^9.1.7",
-    "js-yaml": "^4.1.1",
+    "js-yaml": "^4.3.0",
     "markdownlint-cli": "^0.48.0",
     "mocha": "^11.7.6",
     "mongodb": "^7.2.0",
