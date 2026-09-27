@@ -1,0 +1,16 @@
+name: Generate OG Image
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  og-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astra-intelligence/og-image-action@v1
+        with:
+          repo: variety/variety
+          output-path: docs/assets/social-preview.png
+          template: default
